@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"golang.org/x/exp/slog"
 )
 
@@ -12,10 +13,12 @@ const (
 	envProd  = "prod"
 )
 
-func SetupLogger(env string) *slog.Logger {
-	var logger *slog.Logger
+var logger *slog.Logger
 
-	switch env {
+func init() {
+	cfg := config.LoadConfig()
+
+	switch cfg.Env {
 	case envLocal:
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	case envDev:
@@ -23,6 +26,8 @@ func SetupLogger(env string) *slog.Logger {
 	case envProd:
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
+}
 
+func Logger() *slog.Logger {
 	return logger
 }

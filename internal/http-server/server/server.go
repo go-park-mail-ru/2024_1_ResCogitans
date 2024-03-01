@@ -2,24 +2,27 @@ package server
 
 import (
 	"net/http"
-	"trip-advisor/internal/config"
+
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/logger"
 
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/exp/slog"
 )
 
-func StartServer(logger *slog.Logger, router *chi.Mux, cfg *config.Config) {
-	logger.Info("Server is starting:", "address", cfg.HTTPServer.Address)
+func StartServer(router *chi.Mux, cfg *config.Config) error {
+	logger.Logger().Info("Server is starting:", "address", cfg.HTTPServer.Address)
 
 	server := &http.Server{
 		Addr:         cfg.Address,
 		Handler:      router,
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		WriteTimeout: cfg.HTTPServer.Timeout,
-		IdleTimeout:  cfg.HTTPServer.Idle_timeoute,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		logger.Error("failed to start")
+		return err
 	}
+
+	return nil
 }

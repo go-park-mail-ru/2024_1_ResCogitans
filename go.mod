@@ -1,8 +1,9 @@
-module trip-advisor
+module github.com/go-park-mail-ru/2024_1_ResCogitans
 
 go 1.22.0
 
 require (
+	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/joho/godotenv v1.5.1

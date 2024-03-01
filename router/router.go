@@ -2,10 +2,11 @@ package router
 
 import (
 	"net/http"
-	"trip-advisor/internal/config"
 
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func SetupRouter(cfg *config.Config) *chi.Mux {
