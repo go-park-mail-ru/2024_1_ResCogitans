@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/logger"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
 func main() {
