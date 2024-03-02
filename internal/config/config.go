@@ -1,12 +1,12 @@
 package config
 
 import (
-	"log"
 	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -23,28 +23,26 @@ type HTTPServer struct {
 	Password    string        `yaml:"password" env-requiered:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
-func LoadConfig() *Config {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+func LoadConfig() (*Config, error) {
+	if err := godotenv.Load(); err != nil {
+		return nil, errors.Wrap(err, "error loading .env file")
 	}
 
 	configPath := os.Getenv("CONFIG_PATH")
 
 	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
+		return nil, errors.New("CONFIG_PATH is not set")
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatal("config file %s is not exist", configPath)
+		return nil, errors.Errorf("config file %s is not exist", configPath)
 	}
 
 	var cfg Config
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatal("cannot read config, error: %s", err)
+		return nil, errors.Wrap(err, "cannot read config")
 	}
 
-	return &cfg
+	return &cfg, nil
 }

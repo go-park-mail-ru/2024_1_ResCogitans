@@ -8,13 +8,19 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
 	logger := logger.Logger()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		logger.Error("Failed to load config", "error", err)
+		return
+	}
+
 	logger.Info("Start config", "config", cfg)
 
 	router := router.SetupRouter(cfg)
 
 	if err := server.StartServer(router, cfg); err != nil {
 		logger.Error("Failed to start server", "error", err)
+		return
 	}
 }

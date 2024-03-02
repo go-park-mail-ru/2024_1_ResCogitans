@@ -14,10 +14,14 @@ const (
 )
 
 var logger *slog.Logger
+var initError error
 
 func init() {
-	cfg := config.LoadConfig()
-
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		initError = err
+		return
+	}
 	switch cfg.Env {
 	case envLocal:
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -30,4 +34,8 @@ func init() {
 
 func Logger() *slog.Logger {
 	return logger
+}
+
+func InitError() error {
+	return initError
 }
