@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
-type Validator interface {
+type Handler interface {
+	ServeHTTP(context.Context, http.ResponseWriter, *http.Request) (interface{}, error)
 	Validate() error
 }
 
@@ -16,33 +18,25 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-type contextKey string
-
-func HandlerWrapper(handler func(context.Context, http.ResponseWriter, *http.Request) (interface{}, error)) http.HandlerFunc {
+func HandlerWrapper(handler Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		// TODO: parse path params
-
-		// const queryParamsKey contextKey = "id"
-		// queryParams := r.URL.Query()
-		// logger.Logger().Info("queryParams:", queryParams)
-		// ctx = context.WithValue(ctx, queryParamsKey, queryParams)
+		params := chi.RouteContext(r.Context()).URLParams
+		for k := len(params.Keys) - 1; k >= 0; k-- {
+			key := params.Keys[k]
+			value := params.Values[k]
+			ctx = context.WithValue(ctx, key, value)
+		}
 
 		r.Body = http.MaxBytesReader(w, r.Body, 1000000)
 
-		var requestBody Validator
-		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		if err := handler.Validate(); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if err := requestBody.Validate(); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		response, err := handler(ctx, w, r)
+		response, err := handler.ServeHTTP(ctx, w, r)
 		if err != nil {
 			logger.Logger().Error("Handler error", "error", err)
 
