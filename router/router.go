@@ -16,7 +16,10 @@ func (h *MyHandler) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *htt
 	return "Hello World", nil
 }
 
-func (h *MyHandler) Validate() error {
+type RequestData struct {
+}
+
+func (rd RequestData) Validate() error {
 	return nil
 }
 
@@ -29,7 +32,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
 
-	router.Get("/", wrapper.HandlerWrapper(&MyHandler{}))
+	router.Get("/", wrapper.HandlerWrapper[RequestData](&MyHandler{}))
 
 	return router
 }
