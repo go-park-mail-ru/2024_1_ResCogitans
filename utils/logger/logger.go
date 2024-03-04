@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"log"
 	"os"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
@@ -14,12 +15,12 @@ const (
 )
 
 var logger *slog.Logger
-var initError error
 
 func init() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		initError = err
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
+		log.Fatal("Error:", err.Error())
 		return
 	}
 	switch cfg.Env {
@@ -34,8 +35,4 @@ func init() {
 
 func Logger() *slog.Logger {
 	return logger
-}
-
-func InitError() error {
-	return initError
 }
