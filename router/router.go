@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	modelSight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/models/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/response"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -25,7 +26,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 
 func SightRoutes() chi.Router {
 	r := chi.NewRouter()
-	r.Get("/", wrapper.HandlerWrapper[modelSight.Sight](&sight.GetSights{}))
+	r.Get("/", wrapper.HandlerWrapper[modelSight.Sight, response.Response](&sight.GetSights{}))
 
 	return r
 }

@@ -2,9 +2,9 @@ package sight
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/models/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/response"
 )
 
 // GetSights godoc
@@ -17,8 +17,8 @@ import (
 // @Router /sights [get]
 type GetSights struct{}
 
-func (h *GetSights) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (h *GetSights) ServeHTTP(ctx context.Context, s sight.Sight) (response.Response, error) {
 	sights := sight.GetSightsList()
 
-	return sights, nil
+	return response.OK(sights), nil
 }
