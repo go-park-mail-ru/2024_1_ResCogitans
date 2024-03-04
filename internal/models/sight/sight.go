@@ -13,6 +13,10 @@ func GetSightsList() []Sight {
 	return sights
 }
 
+func (h Sight) Validate() error {
+	return nil
+}
+
 var sights = []Sight{
 	{
 		ID:          1,

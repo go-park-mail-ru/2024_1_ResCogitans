@@ -22,7 +22,3 @@ func (h *GetSights) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *htt
 
 	return sights, nil
 }
-
-func (h *GetSights) Validate() error {
-	return nil
-}
