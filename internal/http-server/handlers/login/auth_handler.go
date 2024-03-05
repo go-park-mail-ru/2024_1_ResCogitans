@@ -2,12 +2,14 @@ package login
 
 import (
 	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/pkg/errors"
 
+	"net/http"
+
 	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/gorilla/securecookie"
-	"net/http"
 )
 
 type Authorization struct{}
@@ -21,13 +23,19 @@ type contextKey string
 const responseWriterKey = contextKey("responseWriter")
 
 func ContextWriter(ctx context.Context) (http.ResponseWriter, bool) {
-	w, ok := ctx.Value(responseWriterKey).(http.ResponseWriter)
+	w, ok := ctx.Value("responseWriter").(http.ResponseWriter)
 	return w, ok
 }
 
 func (h *Authorization) Authorize(ctx context.Context, _ entities.User) (*entities.User, error) {
-	username := ctx.Value("username").(string)
-	password := ctx.Value("password").(string)
+	requestData, ok := ctx.Value("requestData").(entities.User)
+	if !ok {
+		return nil, errors.New("requestData not found in context")
+	}
+
+	username := requestData.Username
+	password := requestData.Password
+
 	responseWriter, ok := ContextWriter(ctx)
 	if !ok {
 		return nil, errors.New("Response Writer not found in context")

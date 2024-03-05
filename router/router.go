@@ -2,6 +2,8 @@ package router
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
@@ -10,7 +12,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
-	"net/http"
 )
 
 func SetupRouter(cfg *config.Config) *chi.Mux {
@@ -46,7 +47,7 @@ func SignUpRoutes() chi.Router {
 	wrapperInstance := &wrapper.Wrapper[entities.User, *entities.User]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "<h1>Signup Page</h1>")
 		fmt.Fprintln(w, "<form method='post' action='/signup'>")
 		fmt.Fprintln(w, "<label>Username:</label>")

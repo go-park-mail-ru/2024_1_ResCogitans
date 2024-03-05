@@ -54,11 +54,11 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 
 	var requestData T
 	err := json.NewDecoder(limitedReader).Decode(&requestData)
-	// if err != nil {
-	// 	logger.Error("Error decoding request body", "error", err)
-	// 	errors.WriteHttpError(decodingErr, resWriter)
-	// 	return
-	// }
+	if err != nil {
+		logger.Error("Error decoding request body", "error", err)
+		errors.WriteHttpError(decodingErr, resWriter)
+		return
+	}
 
 	if err := requestData.Validate(); err != nil {
 		logger.Error("Validation error", "error", err)

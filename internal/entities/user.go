@@ -2,6 +2,7 @@ package entities
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,10 +37,10 @@ func UserValidation(username, password string) bool {
 	return user.Password == password
 }
 
-func CreateUser(username, password string) (*User, error) {
+func CreateUser(username, password string) (User, error) {
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.New("Failed creating hash password")
+		return User{}, errors.New("Failed creating hash password")
 	}
 	var lastUser User
 
@@ -59,7 +60,7 @@ func CreateUser(username, password string) (*User, error) {
 
 	fmt.Printf("Created new user: ID=%d, Username=%s\n", newUser.ID, newUser.Username)
 
-	return &newUser, nil
+	return newUser, nil
 }
 
 func UserDataVerification(username, password string) error {
