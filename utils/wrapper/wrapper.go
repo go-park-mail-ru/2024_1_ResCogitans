@@ -41,50 +41,48 @@ type Validator interface {
 	Validate() error
 }
 
-func HandlerWrapper[T Validator, Resp any](handler func(ctx context.Context, req T) (Resp, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		logger := logger.Logger()
+func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq *http.Request) {
+	ctx := httpReq.Context()
+	logger := logger.Logger()
 
-		pathParams := GetPathParams(r)
-		ctx = SetPathParamsToCtx(ctx, pathParams)
+	pathParams := GetPathParams(httpReq)
+	ctx = SetPathParamsToCtx(ctx, pathParams)
 
-		limitedReader := io.LimitReader(r.Body, 1_000_000)
+	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
-		var requestData T
-		err := json.NewDecoder(limitedReader).Decode(&requestData)
-		// if err != nil {
-		// 	logger.Error("Error decoding request body", "error", err)
-		// 	errors.WriteHttpError(decodingErr, w)
-		// 	return
-		// }
+	var requestData T
+	err := json.NewDecoder(limitedReader).Decode(&requestData)
+	// if err != nil {
+	// 	logger.Error("Error decoding request body", "error", err)
+	// 	errors.WriteHttpError(decodingErr, w)
+	// 	return
+	// }
 
-		if err := requestData.Validate(); err != nil {
-			logger.Error("Validation error", "error", err)
-			errors.WriteHttpError(validationErr, w)
-			return
-		}
-
-		ctx = context.WithValue(ctx, requestDataKey, requestData)
-
-		response, err := handler(ctx, requestData)
-		if err != nil {
-			logger.Error("Handler error", "error", err)
-			errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, w)
-			return
-		}
-
-		rawJSON, err := json.Marshal(response)
-		if err != nil {
-			logger.Error("Error encoding response", "error", err)
-			errors.WriteHttpError(encodingErr, w)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(rawJSON)
+	if err := requestData.Validate(); err != nil {
+		logger.Error("Validation error", "error", err)
+		errors.WriteHttpError(validationErr, resWriter)
+		return
 	}
+
+	ctx = context.WithValue(ctx, requestDataKey, requestData)
+
+	response, err := w.ServeHTTP(ctx, requestData)
+	if err != nil {
+		logger.Error("Handler error", "error", err)
+		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)
+		return
+	}
+
+	rawJSON, err := json.Marshal(response)
+	if err != nil {
+		logger.Error("Error encoding response", "error", err)
+		errors.WriteHttpError(encodingErr, resWriter)
+		return
+	}
+
+	resWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
+	resWriter.WriteHeader(http.StatusOK)
+	_, _ = resWriter.Write(rawJSON)
 }
 
 func GetPathParams(r *http.Request) map[string]string {
@@ -94,6 +92,18 @@ func GetPathParams(r *http.Request) map[string]string {
 		key := params.Keys[k]
 		value := params.Values[k]
 		pathParams[key] = value
+	}
+	return pathParams
+}
+
+func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
+	return context.WithValue(ctx, requestPathParamsKey, pathParams)
+}
+
+func GetPathParamsFromCtx(ctx context.Context) map[string]string {
+	pathParams, ok := ctx.Value(requestPathParamsKey).(map[string]string)
+	if !ok {
+		return nil
 	}
 	return pathParams
 }
