@@ -16,7 +16,7 @@ func (rd RequestData) Validate() error {
 	return nil
 }
 
-func myHandler(ctx context.Context, req RequestData) (string, error) {
+func myHandler(ctx context.Context) (string, error) {
 	return "Hello World", nil
 }
 

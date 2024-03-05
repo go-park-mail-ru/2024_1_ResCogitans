@@ -14,6 +14,7 @@ import (
 const (
 	requestPathParamsKey = "requestPathParams"
 	requestDataKey       = "requestData"
+	ResponseWriterKey    = "responseWriter"
 )
 
 var (
@@ -33,12 +34,8 @@ var (
 	}
 )
 
-// type Handler[, Resp any] interface {
-// 	ServeHTTP(context.Context, T) (Resp, error)
-// }
-
 type Wrapper[T Validator, Resp any] struct {
-	ServeHTTP func(ctx context.Context, req T) (Resp, error)
+	ServeHTTP func(ctx context.Context) (Resp, error)
 }
 
 type Validator interface {
@@ -51,26 +48,27 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 
 	pathParams := GetPathParams(httpReq)
 	ctx = SetPathParamsToCtx(ctx, pathParams)
-
+	ctx = context.WithValue(ctx, ResponseWriterKey, resWriter)
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
-	var requestData T
-	err := json.NewDecoder(limitedReader).Decode(&requestData)
-	// if err != nil {
-	// 	logger.Error("Error decoding request body", "error", err)
-	// 	errors.WriteHttpError(decodingErr, w)
-	// 	return
-	// }
+	if httpReq.ContentLength > 0 {
+		var requestData T
+		err := json.NewDecoder(limitedReader).Decode(&requestData)
+		if err != nil {
+			logger.Error("Error decoding request body", "error", err)
+			errors.WriteHttpError(decodingErr, resWriter)
+			return
+		}
 
-	if err := requestData.Validate(); err != nil {
-		logger.Error("Validation error", "error", err)
-		errors.WriteHttpError(validationErr, resWriter)
-		return
+		if err = requestData.Validate(); err != nil {
+			logger.Error("Validation error", "error", err)
+			errors.WriteHttpError(validationErr, resWriter)
+			return
+		}
+
+		ctx = context.WithValue(ctx, requestDataKey, requestData)
 	}
-
-	ctx = context.WithValue(ctx, requestDataKey, requestData)
-
-	response, err := w.ServeHTTP(ctx, requestData)
+	response, err := w.ServeHTTP(ctx)
 	if err != nil {
 		logger.Error("Handler error", "error", err)
 		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)

@@ -18,14 +18,14 @@ var (
 		Code:    http.StatusInternalServerError,
 		Message: "internal error",
 	}
-	errInternalBytes = []byte("{\n\t\"error\": \"internal error\"\n}")
+	errInternalBytes = []byte(`{"error": "internal error"}`)
 )
 
 func (e HttpError) Error() string {
 	return e.Message
 }
 
-func WriteHttpError(errIn error, w http.ResponseWriter) {
+func WriteHttpError(errIn error, w http.ResponseWriter) error {
 	var httpErr HttpError
 	if !errors.As(errIn, &httpErr) {
 		httpErr = errFallBack
@@ -36,10 +36,16 @@ func WriteHttpError(errIn error, w http.ResponseWriter) {
 	if err != nil {
 		logger.Logger().Error("error marshal err", "error", errIn)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(errInternalBytes)
-		return
+		if _, writeErr := w.Write(errInternalBytes); writeErr != nil {
+			logger.Logger().Error("error writing fallback error", "error", writeErr)
+		}
+		return err
 	}
 
 	w.WriteHeader(httpErr.Code)
-	w.Write(bytes)
+	if _, writeErr := w.Write(bytes); writeErr != nil {
+		logger.Logger().Error("error writing http error", "error", writeErr)
+		return writeErr
+	}
+	return nil
 }
