@@ -1,4 +1,4 @@
-package sight
+package entities
 
 type Sight struct {
 	ID          int      `json:"id"`

@@ -1,42 +1,27 @@
 package sight_test
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
+	"context"
 	"testing"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/models/sight"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetSights(t *testing.T) {
-	cfg, _ := config.LoadConfig()
-	router := router.SetupRouter(cfg)
-	server := httptest.NewServer(router)
-	defer server.Close()
+	handler := &sight.SightsHandler{}
 
-	client := server.Client()
+	ctx := context.Background()
 
-	resp, err := client.Get(server.URL + "/sights")
+	resp, err := handler.GetSights(ctx, entities.Sight{})
 	if err != nil {
-		t.Fatalf("Failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	var sights []sight.Sight
-	err = json.NewDecoder(resp.Body).Decode(&sights)
-	if err != nil {
-		t.Fatalf("Failed to decode response body: %v", err)
+		t.Fatalf("Failed to get sights: %v", err)
 	}
 
-	assert.NotEmpty(t, sights)
+	assert.NotEmpty(t, resp.Sight)
 
-	expectedFirstSight := sight.Sight{
+	expectedFirstSight := entities.Sight{
 		ID:          1,
 		Rating:      4.3434,
 		Name:        "Парижская башня",
@@ -44,5 +29,5 @@ func TestGetSights(t *testing.T) {
 		City:        "Париж",
 		Images:      []string{"path/to/image1.jpg", "path/to/image2.jpg"},
 	}
-	assert.Equal(t, expectedFirstSight, sights[0])
+	assert.Equal(t, expectedFirstSight, resp.Sight[0])
 }
