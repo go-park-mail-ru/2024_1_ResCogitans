@@ -1,12 +1,12 @@
 package entities
 
 type Sight struct {
-	ID          int      `json:"id"`
-	Rating      float32  `json:"rating"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	City        string   `json:"city"`
-	Images      []string `json:"images"`
+	ID          int     `json:"id"`
+	Rating      float32 `json:"rating"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	City        string  `json:"city"`
+	Url         string  `json:"url"`
 }
 
 func GetSightsList() []Sight {
@@ -20,26 +20,42 @@ func (h Sight) Validate() error {
 var sights = []Sight{
 	{
 		ID:          1,
-		Rating:      4.3434,
-		Name:        "Парижская башня",
-		Description: "Самая высокая башня в мире.",
-		City:        "Париж",
-		Images:      []string{"path/to/image1.jpg", "path/to/image2.jpg"},
+		Rating:      2.1,
+		Name:        "У дяди Вани",
+		Description: "Ресторан с видом на Сталинскую высотку.",
+		City:        "Москва",
+		Url:         "1.jpg",
 	},
 	{
 		ID:          2,
-		Rating:      4.9,
-		Name:        "Колосс Родосский",
-		Description: "Один из семи чудес древнего мира.",
-		City:        "Родос",
-		Images:      []string{"path/to/image3.jpg"},
+		Rating:      3.1,
+		Name:        "Государственный музей изобразительных искусств имени А.С. Пушкина",
+		Description: "Музей.",
+		City:        "Москва",
+		Url:         "2.jpg",
 	},
 	{
-		ID:          2,
+		ID:          3,
 		Rating:      4.99,
-		Name:        "Дом-музей Паисия Мальцева",
-		Description: "Просто потому что находится рядом с Вольском.",
-		City:        "Балаково",
-		Images:      []string{"path/to/image4.jpg"},
+		Name:        "МГТУ им. Н. Э. Баумана",
+		Description: "Хороший вуз.",
+		City:        "Москва",
+		Url:         "3.jpg",
+	},
+	{
+		ID:          4,
+		Rating:      3.2,
+		Name:        "Вкусно - и точка",
+		Description: "Неплохое кафе, вызывает гастрит.",
+		City:        "Москва",
+		Url:         "4.jpg",
+	},
+	{
+		ID:          5,
+		Rating:      4.1,
+		Name:        "Краеведческий музей",
+		Description: "Один из самых больших провинциальных музеев краеведческого профиля.",
+		City:        "Вольск",
+		Url:         "5.jpg",
 	},
 }
