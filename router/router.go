@@ -4,9 +4,8 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
-	modelSight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/models/sight"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/response"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -25,8 +24,9 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 }
 
 func SightRoutes() chi.Router {
-	r := chi.NewRouter()
-	r.Get("/", wrapper.HandlerWrapper[modelSight.Sight, response.Response](&sight.GetSights{}))
-
-	return r
+	router := chi.NewRouter()
+	sightsHandler := sight.SightsHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.Sights]{ServeHTTP: sightsHandler.GetSights}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
 }

@@ -33,8 +33,8 @@ var (
 	}
 )
 
-type Handler[T Validator, Resp any] interface {
-	ServeHTTP(context.Context, T) (Resp, error)
+type Wrapper[T Validator, Resp any] struct {
+	ServeHTTP func(ctx context.Context, req T) (Resp, error)
 }
 
 type Validator interface {
@@ -54,7 +54,7 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	err := json.NewDecoder(limitedReader).Decode(&requestData)
 	// if err != nil {
 	// 	logger.Error("Error decoding request body", "error", err)
-	// 	errors.WriteHttpError(decodingErr, w)
+	// 	errors.WriteHttpError(decodingErr, resWriter)
 	// 	return
 	// }
 
@@ -92,18 +92,6 @@ func GetPathParams(r *http.Request) map[string]string {
 		key := params.Keys[k]
 		value := params.Values[k]
 		pathParams[key] = value
-	}
-	return pathParams
-}
-
-func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
-	return context.WithValue(ctx, requestPathParamsKey, pathParams)
-}
-
-func GetPathParamsFromCtx(ctx context.Context) map[string]string {
-	pathParams, ok := ctx.Value(requestPathParamsKey).(map[string]string)
-	if !ok {
-		return nil
 	}
 	return pathParams
 }
