@@ -6,21 +6,18 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/response"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
-
-type MyHandler struct{}
-
-func (h *MyHandler) ServeHTTP(ctx context.Context, a RequestData) (response.Response, error) {
-	return response.OK("Hello World"), nil
-}
 
 type RequestData struct {
 }
 
 func (rd RequestData) Validate() error {
 	return nil
+}
+
+func myHandler(ctx context.Context, req RequestData) (string, error) {
+	return "Hello World", nil
 }
 
 func SetupRouter(cfg *config.Config) *chi.Mux {
@@ -32,7 +29,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
 
-	router.Get("/", wrapper.HandlerWrapper[RequestData, response.Response](&MyHandler{}))
+	router.Get("/", wrapper.HandlerWrapper[RequestData, string](myHandler))
 
 	return router
 }
