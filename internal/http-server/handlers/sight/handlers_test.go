@@ -14,7 +14,7 @@ func TestGetSights(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, err := handler.GetSights(ctx, entities.Sight{})
+	resp, err := handler.GetSights(ctx)
 	if err != nil {
 		t.Fatalf("Failed to get sights: %v", err)
 	}
