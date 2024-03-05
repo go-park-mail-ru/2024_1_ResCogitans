@@ -29,7 +29,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 func SightRoutes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", wrapper.HandlerWrapper[modelSight.Sight, response.Response](&sight.GetSights{}))
-	r.Get("/user", wrapper.HandlerWrapper[modelLogin.User, response.Response](&login.Authorization{}))
+	r.Get("/login", wrapper.HandlerWrapper[modelLogin.User, response.Response](&login.Authorization{}))
 
 	return r
 }
