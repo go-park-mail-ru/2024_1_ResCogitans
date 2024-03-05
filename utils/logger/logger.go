@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"log"
 	"os"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
@@ -16,8 +17,12 @@ const (
 var logger *slog.Logger
 
 func init() {
-	cfg := config.LoadConfig()
-
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
+		log.Fatal("Error:", err.Error())
+		return
+	}
 	switch cfg.Env {
 	case envLocal:
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))

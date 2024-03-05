@@ -1,12 +1,13 @@
 package router
 
 import (
-	"net/http"
-
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
 func SetupRouter(cfg *config.Config) *chi.Mux {
@@ -17,10 +18,17 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
+	router.Use(cors.CorsMiddleware)
 
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
-	})
+	router.Mount("/sights", SightRoutes())
 
+	return router
+}
+
+func SightRoutes() chi.Router {
+	router := chi.NewRouter()
+	sightsHandler := sight.SightsHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.Sights]{ServeHTTP: sightsHandler.GetSights}
+	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }

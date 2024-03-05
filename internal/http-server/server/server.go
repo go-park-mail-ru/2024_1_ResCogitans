@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/logger"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
 func StartServer(router *chi.Mux, cfg *config.Config) error {
