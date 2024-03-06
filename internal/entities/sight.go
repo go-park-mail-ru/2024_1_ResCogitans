@@ -24,7 +24,7 @@ var sights = []Sight{
 		Name:        "У дяди Вани",
 		Description: "Ресторан с видом на Сталинскую высотку.",
 		City:        "Москва",
-		Url:         "1.jpg",
+		Url:         "public/1.jpg",
 	},
 	{
 		ID:          2,
@@ -32,7 +32,7 @@ var sights = []Sight{
 		Name:        "Государственный музей изобразительных искусств имени А.С. Пушкина",
 		Description: "Музей.",
 		City:        "Москва",
-		Url:         "2.jpg",
+		Url:         "public/2.jpg",
 	},
 	{
 		ID:          3,
@@ -40,7 +40,7 @@ var sights = []Sight{
 		Name:        "МГТУ им. Н. Э. Баумана",
 		Description: "Хороший вуз.",
 		City:        "Москва",
-		Url:         "3.jpg",
+		Url:         "public/3.jpg",
 	},
 	{
 		ID:          4,
@@ -48,7 +48,7 @@ var sights = []Sight{
 		Name:        "Вкусно - и точка",
 		Description: "Неплохое кафе, вызывает гастрит.",
 		City:        "Москва",
-		Url:         "4.jpg",
+		Url:         "public/4.jpg",
 	},
 	{
 		ID:          5,
@@ -56,6 +56,6 @@ var sights = []Sight{
 		Name:        "Краеведческий музей",
 		Description: "Один из самых больших провинциальных музеев краеведческого профиля.",
 		City:        "Вольск",
-		Url:         "5.jpg",
+		Url:         "public/5.jpg",
 	},
 }

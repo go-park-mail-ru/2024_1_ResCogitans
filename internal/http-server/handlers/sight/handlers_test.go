@@ -23,11 +23,11 @@ func TestGetSights(t *testing.T) {
 
 	expectedFirstSight := entities.Sight{
 		ID:          1,
-		Rating:      2.1,
-		Name:        "У дяди Вани",
-		Description: "Ресторан с видом на Сталинскую высотку.",
-		City:        "Москва",
-		Url:         "1.jpg",
+		Rating:      4.3434,
+		Name:        "Парижская башня",
+		Description: "Самая высокая башня в мире.",
+		City:        "Париж",
+		Url:         "public/1.jpg",
 	}
 	assert.Equal(t, expectedFirstSight, resp.Sight[0])
 }
