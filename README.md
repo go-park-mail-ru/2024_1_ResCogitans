@@ -44,4 +44,9 @@ TODO - _UX_
 ## 1. Запуск
 * go run .
 ## 4. Деплой
-* [Сайт](http://jantugan.ru) 
+* [Сайт](http://jantugan.ru)
+Тестовый юзер
+{
+"username": "testuser",
+"password": "testpassword"
+}
