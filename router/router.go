@@ -1,13 +1,11 @@
 package router
 
 import (
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/logout"
-
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/login"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
@@ -39,14 +37,13 @@ func SightRoutes() chi.Router {
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
-
 }
 
 func SignUpRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	regHandler := registration.Registration{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, registration.Response]{ServeHTTP: regHandler.SignUp}
+	regHandler := registration.RegistrationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, registration.RegResponse]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	router.Mount("/sights", SightRoutes())
@@ -57,9 +54,9 @@ func SignUpRoutes() chi.Router {
 func LogOutRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	logOutHandler := logout.Logout{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, logout.Response]{ServeHTTP: logOutHandler.LogOut}
-	router.Get("/", wrapperInstance.HandlerWrapper)
+	logOutHandler := authorization.AuthorizationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.Response]{ServeHTTP: logOutHandler.LogOut}
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
@@ -67,8 +64,8 @@ func LogOutRoutes() chi.Router {
 func AuthRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	authHandler := login.Authorization{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, login.Response]{ServeHTTP: authHandler.Authorize}
+	authHandler := authorization.AuthorizationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.Response]{ServeHTTP: authHandler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router

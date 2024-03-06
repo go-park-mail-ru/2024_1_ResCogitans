@@ -2,7 +2,9 @@ package entities
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -11,10 +13,13 @@ import (
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Password string `json:"password"`
+	Password string
 }
 
-var users []User
+var (
+	users []User
+	mu    sync.Mutex
+)
 
 func (h User) Validate() error {
 	return nil
@@ -46,9 +51,10 @@ func CreateUser(username, password string) (User, error) {
 	}
 	var lastUser User
 
-	if len(users) == 0 {
-		lastUser = User{}
-	} else {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(users) != 0 {
 		lastUser = users[len(users)-1]
 	}
 
@@ -78,5 +84,16 @@ func UserDataVerification(username, password string) (int, error) {
 		}
 	}
 
+	// if !isPasswordComplex(password) {
+	// 	return http.StatusBadRequest, errors.New("Password is not complex enough")
+	// }
+
 	return http.StatusOK, nil
+}
+
+func isPasswordComplex(password string) bool {
+	// Соответствует паролю, содержащему как минимум одну цифру, одну заглавную букву, одну строчную букву и имеет длину не менее 8 символов
+	complexityRegex := `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$`
+	match, _ := regexp.MatchString(complexityRegex, password)
+	return match
 }

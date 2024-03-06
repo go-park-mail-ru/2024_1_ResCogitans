@@ -2,37 +2,41 @@ package registration
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
-type Registration struct{}
+type RegistrationHandler struct{}
 
-type Response struct {
-	Status  int    `json:"status"`
-	Message string `json:"message,omitempty"`
+type RegResponse struct {
+	User      entities.User
+	SessionID string
 }
 
-func (h *Registration) SignUp(ctx context.Context) (Response, error) {
-	requestData, ok := ctx.Value("requestData").(entities.User)
-	logger.Logger().DebugContext(ctx, "str")
-	if !ok {
-		return Response{Status: http.StatusBadRequest, Message: "requestData not found in context"}, nil
-	}
-
+func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (RegResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
-	if status, err := entities.UserDataVerification(username, password); err != nil {
-		return Response{Status: status, Message: err.Error()}, err
+	if _, err := entities.UserDataVerification(username, password); err != nil {
+		return RegResponse{}, errors.Wrap(err, "User data verification failed")
 	}
 
-	_, err := entities.CreateUser(username, password)
+	user, err := entities.CreateUser(username, password)
 	if err != nil {
-		return Response{Status: http.StatusBadRequest, Message: "Failed creating new profile"}, err
+		return RegResponse{}, errors.Wrap(err, "Failed creating new profile")
 	}
 
-	return Response{Status: http.StatusCreated}, nil
+	responseWriter, ok := authorization.ContextWriter(ctx)
+	if !ok {
+		return RegResponse{}, errors.New("Internal Error")
+	}
+
+	sessionID := uuid.New().String()
+	authorization.SessionStore[sessionID] = username
+	authorization.SetSession(sessionID, responseWriter)
+
+	return RegResponse{User: user, SessionID: sessionID}, nil
 }

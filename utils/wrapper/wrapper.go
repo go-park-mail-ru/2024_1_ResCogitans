@@ -13,8 +13,8 @@ import (
 
 const (
 	requestPathParamsKey = "requestPathParams"
-	requestDataKey       = "requestData"
 	ResponseWriterKey    = "responseWriter"
+	HttpRequestKey       = "HttpRequest"
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 )
 
 type Wrapper[T Validator, Resp any] struct {
-	ServeHTTP func(ctx context.Context) (Resp, error)
+	ServeHTTP func(ctx context.Context, parsedRequest T) (Resp, error)
 }
 
 type Validator interface {
@@ -49,10 +49,11 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	pathParams := GetPathParams(httpReq)
 	ctx = SetPathParamsToCtx(ctx, pathParams)
 	ctx = context.WithValue(ctx, ResponseWriterKey, resWriter)
+	ctx = context.WithValue(ctx, HttpRequestKey, httpReq)
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
+	var requestData T
 	if httpReq.ContentLength > 0 {
-		var requestData T
 		err := json.NewDecoder(limitedReader).Decode(&requestData)
 		if err != nil {
 			logger.Error("Error decoding request body", "error", err)
@@ -65,10 +66,9 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 			errors.WriteHttpError(validationErr, resWriter)
 			return
 		}
-
-		ctx = context.WithValue(ctx, requestDataKey, requestData)
 	}
-	response, err := w.ServeHTTP(ctx)
+
+	response, err := w.ServeHTTP(ctx, requestData)
 	if err != nil {
 		logger.Error("Handler error", "error", err)
 		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)
