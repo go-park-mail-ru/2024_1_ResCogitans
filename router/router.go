@@ -1,17 +1,16 @@
 package router
 
 import (
-	"fmt"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/logout"
-	"net/http"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/login"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -23,6 +22,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
+	router.Use(cors.CorsMiddleware)
 
 	router.Mount("/sights", SightRoutes())
 	router.Mount("/signup", SignUpRoutes())
@@ -49,37 +49,7 @@ func SignUpRoutes() chi.Router {
 	wrapperInstance := &wrapper.Wrapper[entities.User, registration.Response]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "<h1>Signup Page</h1>")
-		fmt.Fprintln(w, "<form method='post' action='/signup'>")
-		fmt.Fprintln(w, "<label>Username:</label>")
-		fmt.Fprintln(w, "<input type='text' name='username'>")
-		fmt.Fprintln(w, "<label>Password:</label>")
-		fmt.Fprintln(w, "<input type='password' name='password'>")
-		fmt.Fprintln(w, "<button type='submit'>Sign Up</button>")
-		fmt.Fprintln(w, "</form>")
-	})
-
-	return router
-}
-
-func AuthRoutes() chi.Router {
-	router := chi.NewRouter()
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "<h1>Login Page</h1>")
-		fmt.Fprintln(w, "<form method='post' action='/login'>")
-		fmt.Fprintln(w, "<label>Username:</label>")
-		fmt.Fprintln(w, "<input type='text' name='username'>")
-		fmt.Fprintln(w, "<label>Password:</label>")
-		fmt.Fprintln(w, "<input type='password' name='password'>")
-		fmt.Fprintln(w, "<button type='submit'>Login</button>")
-		fmt.Fprintln(w, "</form>")
-	})
-
-	authHandler := login.Authorization{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, login.Response]{ServeHTTP: authHandler.Authorize}
-	router.Post("/", wrapperInstance.HandlerWrapper)
+	router.Mount("/sights", SightRoutes())
 
 	return router
 }
@@ -90,6 +60,16 @@ func LogOutRoutes() chi.Router {
 	logOutHandler := logout.Logout{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, logout.Response]{ServeHTTP: logOutHandler.LogOut}
 	router.Get("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func AuthRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	authHandler := login.Authorization{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, login.Response]{ServeHTTP: authHandler.Authorize}
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

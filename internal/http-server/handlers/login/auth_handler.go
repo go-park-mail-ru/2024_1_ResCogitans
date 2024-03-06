@@ -3,8 +3,9 @@ package login
 import (
 	"context"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"net/http"
+
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 
 	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/gorilla/securecookie"
@@ -26,7 +27,7 @@ func ContextWriter(ctx context.Context) (http.ResponseWriter, bool) {
 	return w, ok
 }
 
-func (h *Authorization) Authorize(ctx context.Context, _ entities.User) (Response, error) {
+func (h *Authorization) Authorize(ctx context.Context) (Response, error) {
 	requestData, ok := ctx.Value("requestData").(entities.User)
 	if !ok {
 		return Response{Status: http.StatusBadRequest, Message: "requestData not found in context"}, nil

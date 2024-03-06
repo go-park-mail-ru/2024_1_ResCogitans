@@ -24,7 +24,7 @@ func TestSignUp(t *testing.T) {
 		{
 			name:           "Successful registration",
 			inputJSON:      `{"username": "testuser", "password": "testpassword"}`,
-			expectedStatus: http.StatusCreated, // Измененное значение статуса
+			expectedStatus: http.StatusCreated,
 			expectedError:  "",
 		},
 		{
@@ -64,7 +64,7 @@ func TestSignUp(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), "requestData", user)
 
-			response, err := regHandler.SignUp(ctx, user)
+			response, err := regHandler.SignUp(ctx)
 			if err != nil && tc.expectedError == "" {
 				t.Errorf("Ошибка при вызове SignUp: %v", err)
 			}

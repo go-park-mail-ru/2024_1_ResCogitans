@@ -15,7 +15,7 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
-func (h *Registration) SignUp(ctx context.Context, _ entities.User) (Response, error) {
+func (h *Registration) SignUp(ctx context.Context) (Response, error) {
 	requestData, ok := ctx.Value("requestData").(entities.User)
 	logger.Logger().DebugContext(ctx, "str")
 	if !ok {

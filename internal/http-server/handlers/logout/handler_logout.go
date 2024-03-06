@@ -2,7 +2,6 @@ package logout
 
 import (
 	"context"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"net/http"
 )
 
@@ -13,7 +12,7 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
-func (h *Logout) LogOut(ctx context.Context, _ entities.User) (Response, error) {
+func (h *Logout) LogOut(ctx context.Context) (Response, error) {
 	w, ok := ctx.Value("responseWriter").(http.ResponseWriter)
 	if !ok {
 		return Response{Status: http.StatusBadRequest, Message: "failed getting responseWriter"}, nil

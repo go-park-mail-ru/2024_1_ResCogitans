@@ -2,6 +2,7 @@ package sight
 
 import (
 	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 )
 
@@ -19,7 +20,7 @@ type Sights struct {
 	Sight []entities.Sight `json:"sights"`
 }
 
-func (h *SightsHandler) GetSights(ctx context.Context, s entities.Sight) (Sights, error) {
+func (h *SightsHandler) GetSights(ctx context.Context) (Sights, error) {
 	sights := entities.GetSightsList()
 
 	return Sights{Sight: sights}, nil

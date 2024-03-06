@@ -68,7 +68,7 @@ func TestAuthorize(t *testing.T) {
 			ctx := context.WithValue(req.Context(), "responseWriter", rr)
 			ctx = context.WithValue(ctx, "requestData", user)
 
-			response, err := authHandler.Authorize(ctx, user)
+			response, err := authHandler.Authorize(ctx)
 
 			assert.Equal(t, tc.expectedStatus, response.Status, "handler returned wrong status code")
 		})
