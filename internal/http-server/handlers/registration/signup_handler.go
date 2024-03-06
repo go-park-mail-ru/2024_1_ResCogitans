@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -29,7 +30,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return RegResponse{}, errors.Wrap(err, "Failed creating new profile")
 	}
 
-	responseWriter, ok := authorization.ContextWriter(ctx)
+	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
 		return RegResponse{}, errors.New("Internal Error")
 	}
