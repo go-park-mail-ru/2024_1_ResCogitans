@@ -20,7 +20,7 @@ type Sights struct {
 	Sight []entities.Sight `json:"sights"`
 }
 
-func (h *SightsHandler) GetSights(ctx context.Context) (Sights, error) {
+func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, error) {
 	sights := entities.GetSightsList()
 
 	return Sights{Sight: sights}, nil
