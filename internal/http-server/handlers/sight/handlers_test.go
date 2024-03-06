@@ -27,7 +27,7 @@ func TestGetSights(t *testing.T) {
 		Name:        "Парижская башня",
 		Description: "Самая высокая башня в мире.",
 		City:        "Париж",
-		Url:         "path/to/image1.jpg",
+		Url:         "public/1.jpg",
 	}
 	assert.Equal(t, expectedFirstSight, resp.Sight[0])
 }
