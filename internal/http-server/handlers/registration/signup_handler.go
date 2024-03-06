@@ -5,14 +5,20 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 type RegistrationHandler struct{}
 
+type UserResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+}
+
 type RegResponse struct {
-	User      entities.User
+	User      UserResponse
 	SessionID string
 }
 
@@ -29,14 +35,22 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return RegResponse{}, errors.Wrap(err, "Failed creating new profile")
 	}
 
-	responseWriter, ok := authorization.ContextWriter(ctx)
+	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
 		return RegResponse{}, errors.New("Internal Error")
 	}
 
 	sessionID := uuid.New().String()
 	authorization.SessionStore[sessionID] = username
-	authorization.SetSession(sessionID, responseWriter)
 
-	return RegResponse{User: user, SessionID: sessionID}, nil
+	if err := authorization.SetSession(sessionID, responseWriter); err != nil {
+		return RegResponse{}, errors.Wrap(err, "failed to set session cookie")
+	}
+
+	userResponse := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	return RegResponse{User: userResponse, SessionID: sessionID}, nil
 }

@@ -8,13 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
-)
-
-const (
-	requestPathParamsKey = "requestPathParams"
-	ResponseWriterKey    = "responseWriter"
-	HttpRequestKey       = "HttpRequest"
 )
 
 var (
@@ -48,8 +43,8 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 
 	pathParams := GetPathParams(httpReq)
 	ctx = SetPathParamsToCtx(ctx, pathParams)
-	ctx = context.WithValue(ctx, ResponseWriterKey, resWriter)
-	ctx = context.WithValue(ctx, HttpRequestKey, httpReq)
+	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, resWriter)
+	ctx = context.WithValue(ctx, httputils.HttpRequestKey, *httpReq)
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
 	var requestData T
@@ -99,11 +94,11 @@ func GetPathParams(r *http.Request) map[string]string {
 }
 
 func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
-	return context.WithValue(ctx, requestPathParamsKey, pathParams)
+	return context.WithValue(ctx, httputils.RequestPathParamsKey, pathParams)
 }
 
 func GetPathParamsFromCtx(ctx context.Context) map[string]string {
-	pathParams, ok := ctx.Value(requestPathParamsKey).(map[string]string)
+	pathParams, ok := ctx.Value(httputils.RequestPathParamsKey).(map[string]string)
 	if !ok {
 		return nil
 	}
