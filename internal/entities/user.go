@@ -25,6 +25,22 @@ func (h User) Validate() error {
 	return nil
 }
 
+func init() {
+	testUser := User{
+		ID:       1,
+		Username: "testuser",
+		Password: "testpassword",
+	}
+
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		panic("Failed creating hash password for test user")
+	}
+
+	testUser.Password = string(hashPassword)
+	users = append(users, testUser)
+}
+
 func GetUserByUsername(username string) (*User, error) {
 	for _, user := range users {
 		if user.Username == username {
