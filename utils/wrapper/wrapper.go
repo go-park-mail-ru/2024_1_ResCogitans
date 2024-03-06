@@ -14,6 +14,7 @@ import (
 const (
 	requestPathParamsKey = "requestPathParams"
 	requestDataKey       = "requestData"
+	responseWriterKey    = "responseWriter"
 )
 
 var (
@@ -40,8 +41,6 @@ type Wrapper[T Validator, Resp any] struct {
 type Validator interface {
 	Validate() error
 }
-
-const responseWriterKey = "responseWriter"
 
 func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq *http.Request) {
 	ctx := httpReq.Context()

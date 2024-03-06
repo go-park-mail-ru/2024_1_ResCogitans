@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/logout"
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
@@ -26,6 +27,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/sights", SightRoutes())
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
+	router.Mount("/logout", LogOutRoutes())
 
 	return router
 }
@@ -44,7 +46,7 @@ func SignUpRoutes() chi.Router {
 	router := chi.NewRouter()
 
 	regHandler := registration.Registration{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, *entities.User]{ServeHTTP: regHandler.SignUp}
+	wrapperInstance := &wrapper.Wrapper[entities.User, registration.Response]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -76,8 +78,18 @@ func AuthRoutes() chi.Router {
 	})
 
 	authHandler := login.Authorization{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, *entities.User]{ServeHTTP: authHandler.Authorize}
+	wrapperInstance := &wrapper.Wrapper[entities.User, login.Response]{ServeHTTP: authHandler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func LogOutRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	logOutHandler := logout.Logout{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, logout.Response]{ServeHTTP: logOutHandler.LogOut}
+	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

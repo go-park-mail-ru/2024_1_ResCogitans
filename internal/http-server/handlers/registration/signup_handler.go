@@ -2,32 +2,37 @@ package registration
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
-	"github.com/pkg/errors"
 )
 
 type Registration struct{}
 
-func (h *Registration) SignUp(ctx context.Context, _ entities.User) (*entities.User, error) {
+type Response struct {
+	Status  int    `json:"status"`
+	Message string `json:"message,omitempty"`
+}
+
+func (h *Registration) SignUp(ctx context.Context, _ entities.User) (Response, error) {
 	requestData, ok := ctx.Value("requestData").(entities.User)
 	logger.Logger().DebugContext(ctx, "str")
 	if !ok {
-		return nil, errors.New("requestData not found in context")
+		return Response{Status: http.StatusBadRequest, Message: "requestData not found in context"}, nil
 	}
 
 	username := requestData.Username
 	password := requestData.Password
 
-	if err := entities.UserDataVerification(username, password); err != nil {
-		return nil, err
+	if status, err := entities.UserDataVerification(username, password); err != nil {
+		return Response{Status: status, Message: err.Error()}, err
 	}
 
-	newUser, err := entities.CreateUser(username, password)
+	_, err := entities.CreateUser(username, password)
 	if err != nil {
-		return nil, errors.New("Failed creating new profile")
+		return Response{Status: http.StatusBadRequest, Message: "Failed creating new profile"}, err
 	}
 
-	return &newUser, nil
+	return Response{Status: http.StatusCreated}, nil
 }

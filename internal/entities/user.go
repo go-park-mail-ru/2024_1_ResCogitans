@@ -1,7 +1,8 @@
 package entities
 
 import (
-	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -34,7 +35,8 @@ func UserValidation(username, password string) bool {
 		return false
 	}
 
-	return user.Password == password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	return err == nil
 }
 
 func CreateUser(username, password string) (User, error) {
@@ -58,14 +60,23 @@ func CreateUser(username, password string) (User, error) {
 
 	users = append(users, newUser)
 
-	fmt.Printf("Created new user: ID=%d, Username=%s\n", newUser.ID, newUser.Username)
-
 	return newUser, nil
 }
 
-func UserDataVerification(username, password string) error {
+func UserDataVerification(username, password string) (int, error) {
 	if username == "" || password == "" {
-		return errors.New("Data must not be empty")
+		return http.StatusBadRequest, errors.New("username and password must not be empty")
 	}
-	return nil
+
+	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
+		return http.StatusBadRequest, errors.New("username and password must not contain only whitespace")
+	}
+
+	for _, user := range users {
+		if user.Username == username {
+			return http.StatusBadRequest, errors.New("username already exists")
+		}
+	}
+
+	return http.StatusOK, nil
 }
