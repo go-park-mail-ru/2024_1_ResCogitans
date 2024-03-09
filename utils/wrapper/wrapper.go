@@ -30,7 +30,7 @@ var (
 )
 
 type Wrapper[T Validator, Resp any] struct {
-	ServeHTTP func(ctx context.Context, parsedRequest T) (Resp, error)
+	ServeHTTP func(ctx context.Context, parsedRequest T) (Resp, *errors.HttpError)
 }
 
 type Validator interface {
@@ -64,10 +64,10 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 		}
 	}
 
-	response, err := w.ServeHTTP(ctx, requestData)
-	if err != nil {
-		logger.Error("Handler error", "error", err)
-		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)
+	response, httpErr := w.ServeHTTP(ctx, requestData)
+	if httpErr != nil {
+		logger.Error("Handler error", "error", httpErr)
+		errors.WriteHttpError(*httpErr, resWriter)
 		return
 	}
 

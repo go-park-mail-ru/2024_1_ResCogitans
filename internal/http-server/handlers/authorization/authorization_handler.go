@@ -2,11 +2,12 @@ package authorization
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/pkg/errors"
 )
 
 type AuthorizationHandler struct{}
@@ -16,57 +17,80 @@ type UserResponse struct {
 	Username string `json:"username"`
 }
 
-func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
+var (
+	errLoginUser = &errors.HttpError{
+		Code:    http.StatusBadRequest,
+		Message: "failed authorize",
+	}
+	errSetSession = &errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed setting session",
+	}
+	errClearSession = &errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed clearing session",
+	}
+	errInternal = &errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "internal Error",
+	}
+	errSessionNotSet = &errors.HttpError{
+		Code:    http.StatusUnauthorized,
+		Message: "session is not set",
+	}
+)
+
+func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, *errors.HttpError) {
 	username := requestData.Username
 	password := requestData.Password
 
 	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
-		return UserResponse{}, errors.New("Internal Error")
+		return UserResponse{}, errInternal
 	}
 
-	if entities.UserValidation(username, password) {
-		user, err := entities.GetUserByUsername(username)
-		if err != nil {
-			return UserResponse{}, errors.Wrap(err, "problem with searching for a profile by username")
-		}
-
-		err = usecase.SetSession(responseWriter, user.ID)
-		if err != nil {
-			return UserResponse{}, errors.Wrap(err, "failed setting session")
-		}
-
-		userResponse := UserResponse{
-			ID:       user.ID,
-			Username: user.Username,
-		}
-
-		return userResponse, nil
+	user, err := entities.GetUserByUsername(username)
+	if err != nil {
+		return UserResponse{}, errLoginUser
 	}
 
-	return UserResponse{}, errors.New("Authorization failed")
+	if ok = entities.IsAuthenticated(username, password); !ok {
+		return UserResponse{}, errLoginUser
+	}
+
+	err = usecase.SetSession(responseWriter, user.ID)
+	if err != nil {
+		return UserResponse{}, errSetSession
+	}
+
+	userResponse := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	return userResponse, nil
 }
 
-func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, error) {
+func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, *errors.HttpError) {
 	request, ok := httputils.HttpRequest(ctx)
 	if !ok {
-		return UserResponse{}, errors.New("failed getting http.request")
+		return UserResponse{}, errInternal
 	}
 
 	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
-		return UserResponse{}, errors.New("Internal Error")
+		return UserResponse{}, errInternal
 	}
 
 	userID := usecase.GetSession(request)
 
 	if userID == 0 {
-		return UserResponse{}, errors.New("session is not set")
+		return UserResponse{}, errSessionNotSet
 	}
 
 	err := usecase.ClearSession(responseWriter, request)
 	if err != nil {
-		return UserResponse{}, errors.Wrap(err, "failed clearing session")
+		return UserResponse{}, errClearSession
 	}
 
 	return UserResponse{}, nil
