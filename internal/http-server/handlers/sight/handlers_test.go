@@ -14,7 +14,7 @@ func TestGetSights(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, err := handler.GetSights(ctx)
+	resp, err := handler.GetSights(ctx, entities.Sight{})
 	if err != nil {
 		t.Fatalf("Failed to get sights: %v", err)
 	}
@@ -23,11 +23,19 @@ func TestGetSights(t *testing.T) {
 
 	expectedFirstSight := entities.Sight{
 		ID:          1,
+<<<<<<< HEAD
 		Rating:      4.3434,
 		Name:        "Парижская башня",
 		Description: "Самая высокая башня в мире.",
 		City:        "Париж",
 		Url:         "public/1.jpg",
+=======
+		Rating:      2.1,
+		Name:        "У дяди Вани",
+		Description: "Ресторан с видом на Сталинскую высотку.",
+		City:        "Москва",
+		Url:         "1.jpg",
+>>>>>>> auth
 	}
 	assert.Equal(t, expectedFirstSight, resp.Sight[0])
 }
