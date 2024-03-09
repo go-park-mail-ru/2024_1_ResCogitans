@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/pkg/errors"
 )
@@ -33,6 +34,9 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return UserResponse{}, errors.New("Internal Error")
 	}
 
-	entities.SetSession(responseWriter, user.ID)
+	err = usecase.SetSession(responseWriter, user.ID)
+	if err != nil {
+		return UserResponse{}, errors.Wrap(err, "failed setting session")
+	}
 	return UserResponse{ID: user.ID, Username: user.Username}, nil
 }

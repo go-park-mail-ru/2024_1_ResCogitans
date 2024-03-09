@@ -45,6 +45,7 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	ctx = SetPathParamsToCtx(ctx, pathParams)
 	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, resWriter)
 	ctx = context.WithValue(ctx, httputils.HttpRequestKey, httpReq)
+
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
 	var requestData T

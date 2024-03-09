@@ -2,10 +2,11 @@ package authorization
 
 import (
 	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 type AuthorizationHandler struct{}
@@ -27,10 +28,13 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 	if entities.UserValidation(username, password) {
 		user, err := entities.GetUserByUsername(username)
 		if err != nil {
-			return UserResponse{}, errors.Wrap(err, "Problem with searching for a profile by username")
+			return UserResponse{}, errors.Wrap(err, "problem with searching for a profile by username")
 		}
 
-		entities.SetSession(responseWriter, user.ID)
+		err = usecase.SetSession(responseWriter, user.ID)
+		if err != nil {
+			return UserResponse{}, errors.Wrap(err, "failed setting session")
+		}
 
 		userResponse := UserResponse{
 			ID:       user.ID,
@@ -44,7 +48,7 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 }
 
 func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, error) {
-	request, ok := ctx.Value(httputils.HttpRequestKey).(*http.Request)
+	request, ok := httputils.HttpRequest(ctx)
 	if !ok {
 		return UserResponse{}, errors.New("failed getting http.request")
 	}
@@ -54,13 +58,16 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.
 		return UserResponse{}, errors.New("Internal Error")
 	}
 
-	userID := entities.GetSession(request)
+	userID := usecase.GetSession(request)
 
 	if userID == 0 {
 		return UserResponse{}, errors.New("session is not set")
 	}
 
-	entities.ClearSession(responseWriter, request)
+	err := usecase.ClearSession(responseWriter, request)
+	if err != nil {
+		return UserResponse{}, errors.Wrap(err, "failed clearing session")
+	}
 
 	return UserResponse{}, nil
 }

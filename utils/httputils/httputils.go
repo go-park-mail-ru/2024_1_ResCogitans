@@ -16,7 +16,7 @@ func ContextWriter(ctx context.Context) (http.ResponseWriter, bool) {
 	return w, ok
 }
 
-func HttpRequest(ctx context.Context) (http.Request, bool) {
-	w, ok := ctx.Value(HttpRequestKey).(http.Request)
+func HttpRequest(ctx context.Context) (*http.Request, bool) {
+	w, ok := ctx.Value(HttpRequestKey).(*http.Request)
 	return w, ok
 }
