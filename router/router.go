@@ -11,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func SetupRouter(cfg *config.Config) *chi.Mux {
@@ -28,6 +29,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
+	router.Mount("/swagger", SwaggerRoutes())
 
 	return router
 }
@@ -69,6 +71,15 @@ func AuthRoutes() chi.Router {
 	authHandler := authorization.AuthorizationHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.UserResponse]{ServeHTTP: authHandler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func SwaggerRoutes() chi.Router {
+	router := chi.NewRouter()
+	router.Get("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger.json"),
+	))
 
 	return router
 }

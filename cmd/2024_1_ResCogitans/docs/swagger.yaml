@@ -1,0 +1,9 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample API with Swagger documentation.
+  title: Your API Title
+  version: "1.0"
+paths: {}
+swagger: "2.0"

@@ -7,6 +7,11 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
+// @title Your API Title
+// @version 1.0
+// @description This is a sample API with Swagger documentation.
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	logger := logger.Logger()
 	cfg, err := config.LoadConfig()
