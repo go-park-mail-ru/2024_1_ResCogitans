@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization" // Swagger должен видеть остальные модули, чтобы делать документацию
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"

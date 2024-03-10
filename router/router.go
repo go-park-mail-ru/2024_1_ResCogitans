@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/cmd/2024_1_ResCogitans/docs"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
@@ -78,7 +79,7 @@ func AuthRoutes() chi.Router {
 func SwaggerRoutes() chi.Router {
 	router := chi.NewRouter()
 	router.Get("/swagger/", httpSwagger.Handler(
-		httpSwagger.URL("/swagger.json"),
+		httpSwagger.URL("swagger.json"),
 	))
 
 	return router
