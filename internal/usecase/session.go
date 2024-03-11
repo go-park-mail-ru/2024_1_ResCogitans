@@ -23,17 +23,18 @@ func SetSession(w http.ResponseWriter, userID int) error {
 	mu.Lock()
 	SessionStore[sessionID] = userID
 	mu.Unlock()
-	if encoded, err := CookieHandler.Encode(sessionId, sessionID); err == nil {
-		http.SetCookie(w, &http.Cookie{
-			Name:    sessionId,
-			Value:   encoded,
-			Path:    "/",
-			Expires: time.Now().Add(24 * time.Hour),
-		})
-		return nil
-	} else {
+	encoded, err := CookieHandler.Encode(sessionId, sessionID)
+	if err != nil {
 		return err
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    sessionId,
+		Value:   encoded,
+		Path:    "/",
+		Expires: time.Now().Add(24 * time.Hour),
+	})
+	return nil
 }
 
 func GetSession(r *http.Request) int {
@@ -58,11 +59,15 @@ func ClearSession(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	var sessionID string
-	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		mu.Lock()
-		delete(SessionStore, sessionID)
-		mu.Unlock()
+	err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID)
+	if err != nil {
+		return err
 	}
+
+	mu.Lock()
+	delete(SessionStore, sessionID)
+	mu.Unlock()
+
 	http.SetCookie(w, &http.Cookie{
 		Name:   sessionId,
 		Value:  "",
