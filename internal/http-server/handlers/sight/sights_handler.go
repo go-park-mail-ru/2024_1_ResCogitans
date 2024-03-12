@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 )
 
 // GetSights godoc
@@ -21,7 +20,7 @@ type Sights struct {
 	Sight []entities.Sight `json:"sights"`
 }
 
-func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, *errors.HttpError) {
+func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, error) {
 	sights := entities.GetSightsList()
 
 	return Sights{Sight: sights}, nil

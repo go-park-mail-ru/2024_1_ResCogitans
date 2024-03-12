@@ -18,26 +18,26 @@ type UserResponse struct {
 }
 
 var (
-	errCreateUser = &errors.HttpError{
+	errCreateUser = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed creating new profile",
 	}
-	errSetSession = &errors.HttpError{
+	errSetSession = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed setting session",
 	}
-	errInternal = &errors.HttpError{
+	errInternal = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "internal Error",
 	}
 )
 
-func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, *errors.HttpError) {
+func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
 	if err := entities.UserDataVerification(username, password); err != nil {
-		return UserResponse{}, &errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	user, err := entities.CreateUser(username, password)

@@ -18,29 +18,29 @@ type UserResponse struct {
 }
 
 var (
-	errLoginUser = &errors.HttpError{
+	errLoginUser = errors.HttpError{
 		Code:    http.StatusBadRequest,
 		Message: "failed authorize",
 	}
-	errSetSession = &errors.HttpError{
+	errSetSession = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed setting session",
 	}
-	errClearSession = &errors.HttpError{
+	errClearSession = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed clearing session",
 	}
-	errInternal = &errors.HttpError{
+	errInternal = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "internal Error",
 	}
-	errSessionNotSet = &errors.HttpError{
+	errSessionNotSet = errors.HttpError{
 		Code:    http.StatusUnauthorized,
 		Message: "session is not set",
 	}
 )
 
-func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, *errors.HttpError) {
+func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
@@ -71,7 +71,7 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 	return userResponse, nil
 }
 
-func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, *errors.HttpError) {
+func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	request, ok := httputils.HttpRequest(ctx)
 	if !ok {
 		return UserResponse{}, errInternal

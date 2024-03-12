@@ -48,8 +48,6 @@ func SignUpRoutes() chi.Router {
 	wrapperInstance := &wrapper.Wrapper[entities.User, registration.UserResponse]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
-	router.Mount("/sights", SightRoutes())
-
 	return router
 }
 
