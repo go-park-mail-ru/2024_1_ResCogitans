@@ -2,11 +2,12 @@ package registration
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/pkg/errors"
 )
 
 type RegistrationHandler struct{}
@@ -16,27 +17,42 @@ type UserResponse struct {
 	Username string `json:"username"`
 }
 
+var (
+	errCreateUser = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed creating new profile",
+	}
+	errSetSession = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed setting session",
+	}
+	errInternal = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "internal Error",
+	}
+)
+
 func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
-	if _, err := entities.UserDataVerification(username, password); err != nil {
-		return UserResponse{}, errors.Wrap(err, "User data verification failed")
+	if err := entities.UserDataVerification(username, password); err != nil {
+		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	user, err := entities.CreateUser(username, password)
 	if err != nil {
-		return UserResponse{}, errors.Wrap(err, "Failed creating new profile")
+		return UserResponse{}, errCreateUser
 	}
 
 	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
-		return UserResponse{}, errors.New("Internal Error")
+		return UserResponse{}, errInternal
 	}
 
 	err = usecase.SetSession(responseWriter, user.ID)
 	if err != nil {
-		return UserResponse{}, errors.Wrap(err, "failed setting session")
+		return UserResponse{}, errSetSession
 	}
 	return UserResponse{ID: user.ID, Username: user.Username}, nil
 }
