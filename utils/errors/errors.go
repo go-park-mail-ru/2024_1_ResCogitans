@@ -9,7 +9,7 @@ import (
 )
 
 type HttpError struct {
-	Code    int
+	Code    int    `json:"code"`
 	Message string `json:"error"`
 }
 

@@ -44,7 +44,8 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	pathParams := GetPathParams(httpReq)
 	ctx = SetPathParamsToCtx(ctx, pathParams)
 	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, resWriter)
-	ctx = context.WithValue(ctx, httputils.HttpRequestKey, *httpReq)
+	ctx = context.WithValue(ctx, httputils.HttpRequestKey, httpReq)
+
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
 	var requestData T
@@ -63,10 +64,10 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 		}
 	}
 
-	response, err := w.ServeHTTP(ctx, requestData)
-	if err != nil {
-		logger.Error("Handler error", "error", err)
-		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)
+	response, httpErr := w.ServeHTTP(ctx, requestData)
+	if httpErr != nil {
+		logger.Error("Handler error", "error", httpErr)
+		errors.WriteHttpError(httpErr, resWriter)
 		return
 	}
 
