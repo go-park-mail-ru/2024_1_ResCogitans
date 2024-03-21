@@ -44,9 +44,13 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 	username := requestData.Username
 	password := requestData.Password
 
-	responseWriter, ok := httputils.ContextWriter(ctx)
+	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
 		return UserResponse{}, errInternal
+	}
+
+	if err := entities.UserDataVerification(username, password); err != nil {
+		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	user, err := entities.GetUserByUsername(username)
@@ -58,7 +62,7 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return UserResponse{}, errLoginUser
 	}
 
-	err = usecase.SetSession(responseWriter, user.ID)
+	err = usecase.Auth.SetSession(responseWriter, user.ID)
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}
@@ -72,23 +76,23 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 }
 
 func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, error) {
-	request, ok := httputils.HttpRequest(ctx)
+	request, ok := httputils.GetRequestFromCtx(ctx)
 	if !ok {
 		return UserResponse{}, errInternal
 	}
 
-	responseWriter, ok := httputils.ContextWriter(ctx)
+	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
 		return UserResponse{}, errInternal
 	}
 
-	userID := usecase.GetSession(request)
+	userID := usecase.Auth.GetSession(request)
 
 	if userID == 0 {
 		return UserResponse{}, errSessionNotSet
 	}
 
-	err := usecase.ClearSession(responseWriter, request)
+	err := usecase.Auth.ClearSession(responseWriter, request)
 	if err != nil {
 		return UserResponse{}, errClearSession
 	}

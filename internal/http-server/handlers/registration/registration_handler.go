@@ -40,17 +40,21 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
+	if err := entities.UserExists(username); err != nil {
+		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+	}
+
 	user, err := entities.CreateUser(username, password)
 	if err != nil {
 		return UserResponse{}, errCreateUser
 	}
 
-	responseWriter, ok := httputils.ContextWriter(ctx)
+	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
 		return UserResponse{}, errInternal
 	}
 
-	err = usecase.SetSession(responseWriter, user.ID)
+	err = usecase.Auth.SetSession(responseWriter, user.ID)
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}

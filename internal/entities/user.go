@@ -83,15 +83,19 @@ func CreateUser(username, password string) (User, error) {
 	return newUser, nil
 }
 
-func UserDataVerification(username, password string) error {
-	if username == "" || password == "" {
-		return errors.New("username and password must not be empty")
-	}
-
+func UserExists(username string) error {
 	for _, user := range users {
 		if user.Username == username {
 			return errors.New("username already exists")
 		}
+	}
+
+	return nil
+}
+
+func UserDataVerification(username, password string) error {
+	if username == "" || password == "" {
+		return errors.New("username and password must not be empty")
 	}
 
 	if !ValidatePassword(password) {

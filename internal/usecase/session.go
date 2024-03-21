@@ -15,14 +15,24 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
-var SessionStore = make(map[string]int)
-var mu sync.Mutex
+type AuthUseCase struct {
+	SessionStore map[string]int
+	mu           sync.Mutex
+}
 
-func SetSession(w http.ResponseWriter, userID int) error {
+var Auth *AuthUseCase
+
+func init() {
+	Auth = &AuthUseCase{
+		SessionStore: make(map[string]int),
+	}
+}
+
+func (a *AuthUseCase) SetSession(w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
-	mu.Lock()
-	SessionStore[sessionID] = userID
-	mu.Unlock()
+	a.mu.Lock()
+	a.SessionStore[sessionID] = userID
+	a.mu.Unlock()
 	encoded, err := CookieHandler.Encode(sessionId, sessionID)
 	if err != nil {
 		return err
@@ -37,7 +47,7 @@ func SetSession(w http.ResponseWriter, userID int) error {
 	return nil
 }
 
-func GetSession(r *http.Request) int {
+func (a *AuthUseCase) GetSession(r *http.Request) int {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return 0
@@ -45,14 +55,14 @@ func GetSession(r *http.Request) int {
 
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		mu.Lock()
-		defer mu.Unlock()
-		return SessionStore[sessionID]
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		return a.SessionStore[sessionID]
 	}
 	return 0
 }
 
-func ClearSession(w http.ResponseWriter, r *http.Request) error {
+func (a *AuthUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err
@@ -64,9 +74,9 @@ func ClearSession(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	mu.Lock()
-	delete(SessionStore, sessionID)
-	mu.Unlock()
+	a.mu.Lock()
+	delete(a.SessionStore, sessionID)
+	a.mu.Unlock()
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   sessionId,

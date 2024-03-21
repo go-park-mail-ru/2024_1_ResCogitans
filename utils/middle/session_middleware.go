@@ -13,7 +13,7 @@ var userIDKey userIDType
 
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := usecase.GetSession(r)
+		userID := usecase.Auth.GetSession(r)
 
 		ctx := context.WithValue(r.Context(), userIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))

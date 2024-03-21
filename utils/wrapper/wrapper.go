@@ -42,9 +42,9 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	logger := logger.Logger()
 
 	pathParams := GetPathParams(httpReq)
-	ctx = SetPathParamsToCtx(ctx, pathParams)
-	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, resWriter)
-	ctx = context.WithValue(ctx, httputils.HttpRequestKey, httpReq)
+	ctx = httputils.SetPathParamsToCtx(ctx, pathParams)
+	ctx = httputils.SetResponseWriterToCtx(ctx, resWriter)
+	ctx = httputils.SetRequestToCtx(ctx, httpReq)
 
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
@@ -90,18 +90,6 @@ func GetPathParams(r *http.Request) map[string]string {
 		key := params.Keys[k]
 		value := params.Values[k]
 		pathParams[key] = value
-	}
-	return pathParams
-}
-
-func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
-	return context.WithValue(ctx, httputils.RequestPathParamsKey, pathParams)
-}
-
-func GetPathParamsFromCtx(ctx context.Context) map[string]string {
-	pathParams, ok := ctx.Value(httputils.RequestPathParamsKey).(map[string]string)
-	if !ok {
-		return nil
 	}
 	return pathParams
 }
