@@ -2,9 +2,9 @@ package usecase
 
 import (
 	"net/http"
-	"sync"
 	"time"
 
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage"
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 )
@@ -15,24 +15,25 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
-type AuthUseCase struct {
-	SessionStore map[string]int
-	mu           sync.Mutex
+type AuthInterface interface {
+	SetSession(w http.ResponseWriter, userID int) error
+	GetSession(r *http.Request) (int, error)
+	ClearSession(w http.ResponseWriter, r *http.Request) error
 }
 
-var Auth *AuthUseCase
+type AuthUseCase struct {
+	SessionStorage storage.StorageInterface
+}
 
-func init() {
-	Auth = &AuthUseCase{
-		SessionStore: make(map[string]int),
+func NewAuthUseCase(storage storage.StorageInterface) AuthInterface {
+	return &AuthUseCase{
+		SessionStorage: storage,
 	}
 }
 
 func (a *AuthUseCase) SetSession(w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
-	a.mu.Lock()
-	a.SessionStore[sessionID] = userID
-	a.mu.Unlock()
+	a.SessionStorage.SaveSession(sessionID, userID)
 	encoded, err := CookieHandler.Encode(sessionId, sessionID)
 	if err != nil {
 		return err
@@ -47,19 +48,17 @@ func (a *AuthUseCase) SetSession(w http.ResponseWriter, userID int) error {
 	return nil
 }
 
-func (a *AuthUseCase) GetSession(r *http.Request) int {
+func (a *AuthUseCase) GetSession(r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
-		return 0
+		return 0, err
 	}
 
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		a.mu.Lock()
-		defer a.mu.Unlock()
-		return a.SessionStore[sessionID]
+		return a.SessionStorage.GetSession(sessionID)
 	}
-	return 0
+	return 0, err
 }
 
 func (a *AuthUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
@@ -73,10 +72,7 @@ func (a *AuthUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
-
-	a.mu.Lock()
-	delete(a.SessionStore, sessionID)
-	a.mu.Unlock()
+	a.SessionStorage.DeleteSession(sessionID)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   sessionId,

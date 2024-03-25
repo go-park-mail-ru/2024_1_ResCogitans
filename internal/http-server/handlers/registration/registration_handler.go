@@ -10,7 +10,9 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 )
 
-type RegistrationHandler struct{}
+type RegistrationHandler struct {
+	useCase usecase.AuthInterface
+}
 
 type UserResponse struct {
 	ID       int    `json:"id"`
@@ -31,6 +33,12 @@ var (
 		Message: "internal Error",
 	}
 )
+
+func NewRegistrationHandler(useCase usecase.AuthInterface) *RegistrationHandler {
+	return &RegistrationHandler{
+		useCase: useCase,
+	}
+}
 
 func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	username := requestData.Username
@@ -54,7 +62,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return UserResponse{}, errInternal
 	}
 
-	err = usecase.Auth.SetSession(responseWriter, user.ID)
+	err = h.useCase.SetSession(responseWriter, user.ID)
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}

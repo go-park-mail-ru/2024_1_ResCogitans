@@ -10,7 +10,9 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 )
 
-type AuthorizationHandler struct{}
+type AuthorizationHandler struct {
+	useCase usecase.AuthInterface
+}
 
 type UserResponse struct {
 	ID       int    `json:"id"`
@@ -40,6 +42,12 @@ var (
 	}
 )
 
+func NewAuthorizationHandler(useCase usecase.AuthInterface) *AuthorizationHandler {
+	return &AuthorizationHandler{
+		useCase: useCase,
+	}
+}
+
 func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
@@ -62,7 +70,8 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return UserResponse{}, errLoginUser
 	}
 
-	err = usecase.Auth.SetSession(responseWriter, user.ID)
+	err = h.useCase.SetSession(responseWriter, user.ID)
+
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}
@@ -86,13 +95,16 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.
 		return UserResponse{}, errInternal
 	}
 
-	userID := usecase.Auth.GetSession(request)
+	userID, err := h.useCase.GetSession(request)
+	if err != nil {
+		return UserResponse{}, errSetSession
+	}
 
 	if userID == 0 {
 		return UserResponse{}, errSessionNotSet
 	}
 
-	err := usecase.Auth.ClearSession(responseWriter, request)
+	err = h.useCase.ClearSession(responseWriter, request)
 	if err != nil {
 		return UserResponse{}, errClearSession
 	}
