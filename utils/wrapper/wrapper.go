@@ -29,8 +29,10 @@ var (
 	}
 )
 
+type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
+
 type Wrapper[T Validator, Resp any] struct {
-	ServeHTTP func(ctx context.Context, parsedRequest T) (Resp, error)
+	ServeHTTP ServeHTTPFunc[T, Resp]
 }
 
 type Validator interface {

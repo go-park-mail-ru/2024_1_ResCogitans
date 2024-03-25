@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"fmt"
 	"regexp"
 	"sync"
 
@@ -12,6 +13,11 @@ type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type UserResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
 }
 
 var (
@@ -27,7 +33,7 @@ func init() {
 	testUser := User{
 		ID:       1,
 		Username: "testuser",
-		Password: "testpassword",
+		Password: "Testpassword123",
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Password), bcrypt.DefaultCost)
@@ -46,6 +52,15 @@ func GetUserByUsername(username string) (*User, error) {
 		}
 	}
 	return nil, errors.New("User not found")
+}
+
+func GetUserByID(userID int) (*User, error) {
+	for _, user := range users {
+		if user.ID == userID {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("can't find user by ID")
 }
 
 func IsAuthenticated(username, password string) bool {
@@ -112,4 +127,35 @@ func ValidatePassword(password string) bool {
 	hasMinLength := len(password) >= 8
 
 	return hasDigit && hasUppercase && hasLowercase && hasMinLength
+}
+
+func ChangeData(userID int, username string, password string) (*User, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
+	user, err := GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	err = UserDataVerification(username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Username != username {
+		user.Username = username
+	}
+	if user.Password != password {
+		user.Password = string(hashPassword)
+	}
+
+	for i := range users {
+		if users[i].ID == userID {
+			users[i] = *user
+			break
+		}
+	}
+
+	return user, nil
 }

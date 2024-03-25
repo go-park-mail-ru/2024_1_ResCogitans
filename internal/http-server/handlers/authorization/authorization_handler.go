@@ -14,11 +14,6 @@ type AuthorizationHandler struct {
 	useCase usecase.AuthInterface
 }
 
-type UserResponse struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-}
-
 var (
 	errLoginUser = errors.HttpError{
 		Code:    http.StatusBadRequest,
@@ -48,35 +43,35 @@ func NewAuthorizationHandler(useCase usecase.AuthInterface) *AuthorizationHandle
 	}
 }
 
-func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
+func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
 	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
-		return UserResponse{}, errInternal
+		return entities.UserResponse{}, errInternal
 	}
 
 	if err := entities.UserDataVerification(username, password); err != nil {
-		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+		return entities.UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	user, err := entities.GetUserByUsername(username)
 	if err != nil {
-		return UserResponse{}, errLoginUser
+		return entities.UserResponse{}, errLoginUser
 	}
 
 	if ok = entities.IsAuthenticated(username, password); !ok {
-		return UserResponse{}, errLoginUser
+		return entities.UserResponse{}, errLoginUser
 	}
 
 	err = h.useCase.SetSession(responseWriter, user.ID)
 
 	if err != nil {
-		return UserResponse{}, errSetSession
+		return entities.UserResponse{}, errSetSession
 	}
 
-	userResponse := UserResponse{
+	userResponse := entities.UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 	}
@@ -84,30 +79,30 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 	return userResponse, nil
 }
 
-func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (UserResponse, error) {
+func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
 	request, ok := httputils.GetRequestFromCtx(ctx)
 	if !ok {
-		return UserResponse{}, errInternal
+		return entities.UserResponse{}, errInternal
 	}
 
 	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
-		return UserResponse{}, errInternal
+		return entities.UserResponse{}, errInternal
 	}
 
 	userID, err := h.useCase.GetSession(request)
 	if err != nil {
-		return UserResponse{}, errSetSession
+		return entities.UserResponse{}, errSetSession
 	}
 
 	if userID == 0 {
-		return UserResponse{}, errSessionNotSet
+		return entities.UserResponse{}, errSessionNotSet
 	}
 
 	err = h.useCase.ClearSession(responseWriter, request)
 	if err != nil {
-		return UserResponse{}, errClearSession
+		return entities.UserResponse{}, errClearSession
 	}
 
-	return UserResponse{}, nil
+	return entities.UserResponse{}, nil
 }

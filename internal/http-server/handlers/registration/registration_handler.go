@@ -14,11 +14,6 @@ type RegistrationHandler struct {
 	useCase usecase.AuthInterface
 }
 
-type UserResponse struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-}
-
 var (
 	errCreateUser = errors.HttpError{
 		Code:    http.StatusInternalServerError,
@@ -40,31 +35,31 @@ func NewRegistrationHandler(useCase usecase.AuthInterface) *RegistrationHandler 
 	}
 }
 
-func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, error) {
+func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
 	if err := entities.UserDataVerification(username, password); err != nil {
-		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+		return entities.UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	if err := entities.UserExists(username); err != nil {
-		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+		return entities.UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	user, err := entities.CreateUser(username, password)
 	if err != nil {
-		return UserResponse{}, errCreateUser
+		return entities.UserResponse{}, errCreateUser
 	}
 
 	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
 	if !ok {
-		return UserResponse{}, errInternal
+		return entities.UserResponse{}, errInternal
 	}
 
 	err = h.useCase.SetSession(responseWriter, user.ID)
 	if err != nil {
-		return UserResponse{}, errSetSession
+		return entities.UserResponse{}, errSetSession
 	}
-	return UserResponse{ID: user.ID, Username: user.Username}, nil
+	return entities.UserResponse{ID: user.ID, Username: user.Username}, nil
 }
