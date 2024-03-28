@@ -2,10 +2,10 @@ package updateUserData
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 )
 
@@ -19,24 +19,30 @@ func NewUpdateDataHandler(useCase usecase.AuthInterface) *UpdateDataHandler {
 	}
 }
 
-func (h *UpdateDataHandler) Update(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+func (h *UpdateDataHandler) Update(ctx context.Context, requestData entities.User) (entities.UserResponse, httperrors.HttpError) {
 	username := requestData.Username
 	password := requestData.Password
 
-	request, ok := httputils.GetRequestFromCtx(ctx)
-	if !ok {
-		return entities.UserResponse{}, fmt.Errorf("can't get request from context")
+	request, err := httputils.GetRequestFromCtx(ctx)
+	if err != nil {
+		errInternal := httperrors.ErrInternal
+		errInternal.Message = err
+		return entities.UserResponse{}, errInternal
 	}
 
 	userID, err := h.useCase.GetSession(request)
 	if err != nil {
-		return entities.UserResponse{}, err
+		errUnauthorized := httperrors.ErrUnauthorized
+		errUnauthorized.Message = err
+		return entities.UserResponse{}, errUnauthorized
 	}
 
 	user, err := entities.ChangeData(userID, username, password)
 	if err != nil {
-		return entities.UserResponse{}, err
+		errInternal := httperrors.ErrInternal
+		errInternal.Message = err
+		return entities.UserResponse{}, errInternal
 	}
 
-	return entities.UserResponse{ID: user.ID, Username: user.Username}, nil
+	return entities.UserResponse{ID: user.ID, Username: user.Username}, httperrors.HttpError{}
 }

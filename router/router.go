@@ -7,11 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/updateUserData"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/app"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -31,6 +33,7 @@ func SetupRouter(app *app.App) *chi.Mux {
 	router.Mount("/login", AuthRoute(app.AuthHandler))
 	router.Mount("/logout", LogOutRoute(app.AuthHandler))
 	router.Mount("/updatedata", UpdateDateRoute(app.UpdateUserDataHandler))
+	router.Mount("/deleteuser", DeleteUserRoute(app.DeactivationHandler))
 
 	return router
 }
@@ -51,7 +54,7 @@ func CreateRoute[T wrapper.Validator, Resp any](f wrapper.ServeHTTPFunc[T, Resp]
 	return router
 }
 
-func CreateServeHTTPFunc[T wrapper.Validator, R any](f func(ctx context.Context, request T) (R, error)) wrapper.ServeHTTPFunc[T, R] {
+func CreateServeHTTPFunc[T wrapper.Validator, R any](f func(ctx context.Context, request T) (R, httperrors.HttpError)) wrapper.ServeHTTPFunc[T, R] {
 	return f
 }
 
@@ -72,5 +75,10 @@ func AuthRoute(authHandler *authorization.AuthorizationHandler) chi.Router {
 
 func UpdateDateRoute(updateHandler *updateUserData.UpdateDataHandler) chi.Router {
 	ServeHTTPFunc := CreateServeHTTPFunc[entities.User, entities.UserResponse](updateHandler.Update)
+	return CreateRoute[entities.User, entities.UserResponse](ServeHTTPFunc)
+}
+
+func DeleteUserRoute(deactivateHandler *deactivation.DeactivationHandler) chi.Router {
+	ServeHTTPFunc := CreateServeHTTPFunc[entities.User, entities.UserResponse](deactivateHandler.Deactivate)
 	return CreateRoute[entities.User, entities.UserResponse](ServeHTTPFunc)
 }

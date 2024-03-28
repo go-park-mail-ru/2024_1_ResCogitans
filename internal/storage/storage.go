@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 )
 
@@ -33,7 +33,7 @@ func (ss *SessionStorage) GetSession(sessionID string) (int, error) {
 	defer ss.mu.Unlock()
 	userID, ok := ss.Store[sessionID]
 	if !ok {
-		return 0, fmt.Errorf("session not found")
+		return 0, errors.New("Session not found")
 	}
 	return userID, nil
 }

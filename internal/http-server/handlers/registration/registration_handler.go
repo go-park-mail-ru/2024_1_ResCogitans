@@ -2,32 +2,17 @@ package registration
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
+	"github.com/pkg/errors"
 )
 
 type RegistrationHandler struct {
 	useCase usecase.AuthInterface
 }
-
-var (
-	errCreateUser = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "failed creating new profile",
-	}
-	errSetSession = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "failed setting session",
-	}
-	errInternal = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "internal Error",
-	}
-)
 
 func NewRegistrationHandler(useCase usecase.AuthInterface) *RegistrationHandler {
 	return &RegistrationHandler{
@@ -35,31 +20,41 @@ func NewRegistrationHandler(useCase usecase.AuthInterface) *RegistrationHandler 
 	}
 }
 
-func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (entities.UserResponse, httperrors.HttpError) {
 	username := requestData.Username
 	password := requestData.Password
 
-	if err := entities.UserDataVerification(username, password); err != nil {
-		return entities.UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+	if _, err := entities.GetUserByUsername(username); err == nil {
+		errBadRequest := httperrors.ErrBadRequest
+		errBadRequest.Message = errors.New("User with this username is already exists")
+		return entities.UserResponse{}, errBadRequest
 	}
 
-	if err := entities.UserExists(username); err != nil {
-		return entities.UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+	if err := entities.UserDataVerification(username, password); err != nil {
+		errBadRequest := httperrors.ErrBadRequest
+		errBadRequest.Message = err
+		return entities.UserResponse{}, errBadRequest
 	}
 
 	user, err := entities.CreateUser(username, password)
 	if err != nil {
-		return entities.UserResponse{}, errCreateUser
+		errInternal := httperrors.ErrInternal
+		errInternal.Message = err
+		return entities.UserResponse{}, errInternal
 	}
 
-	responseWriter, ok := httputils.GetResponseWriterFromCtx(ctx)
-	if !ok {
+	responseWriter, err := httputils.GetResponseWriterFromCtx(ctx)
+	if err != nil {
+		errInternal := httperrors.ErrInternal
+		errInternal.Message = err
 		return entities.UserResponse{}, errInternal
 	}
 
 	err = h.useCase.SetSession(responseWriter, user.ID)
 	if err != nil {
-		return entities.UserResponse{}, errSetSession
+		errInternal := httperrors.ErrInternal
+		errInternal.Message = err
+		return entities.UserResponse{}, errInternal
 	}
-	return entities.UserResponse{ID: user.ID, Username: user.Username}, nil
+	return entities.UserResponse{ID: user.ID, Username: user.Username}, httperrors.HttpError{}
 }

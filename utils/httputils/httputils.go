@@ -3,6 +3,8 @@ package httputils
 import (
 	"context"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -15,9 +17,12 @@ func SetRequestToCtx(ctx context.Context, r *http.Request) context.Context {
 	return context.WithValue(ctx, HttpRequestKey, r)
 }
 
-func GetRequestFromCtx(ctx context.Context) (*http.Request, bool) {
+func GetRequestFromCtx(ctx context.Context) (*http.Request, error) {
 	r, ok := ctx.Value(HttpRequestKey).(*http.Request)
-	return r, ok
+	if !ok {
+		return nil, errors.New("failed getting request")
+	}
+	return r, nil
 }
 
 func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
@@ -37,7 +42,10 @@ func SetResponseWriterToCtx(ctx context.Context, w http.ResponseWriter) context.
 }
 
 // GetResponseWriterFromCtx извлекает http.ResponseWriter из контекста.
-func GetResponseWriterFromCtx(ctx context.Context) (http.ResponseWriter, bool) {
+func GetResponseWriterFromCtx(ctx context.Context) (http.ResponseWriter, error) {
 	w, ok := ctx.Value(ResponseWriterKey).(http.ResponseWriter)
-	return w, ok
+	if !ok {
+		return nil, errors.New("failed getting response writer")
+	}
+	return w, nil
 }

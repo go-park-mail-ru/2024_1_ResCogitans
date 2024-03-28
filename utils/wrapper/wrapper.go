@@ -10,26 +10,10 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/pkg/errors"
 )
 
-var (
-	validationErr = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "invalid request data",
-	}
-
-	decodingErr = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "json decoding error",
-	}
-
-	encodingErr = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "json encoding error",
-	}
-)
-
-type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
+type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, httperrors.HttpError)
 
 type Wrapper[T Validator, Resp any] struct {
 	ServeHTTP ServeHTTPFunc[T, Resp]
@@ -54,29 +38,37 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	if httpReq.ContentLength > 0 {
 		err := json.NewDecoder(limitedReader).Decode(&requestData)
 		if err != nil {
-			logger.Error("Error decoding request body", "error", err)
-			errors.WriteHttpError(decodingErr, resWriter)
+			errText := "Error decoding request body"
+			logger.Error(errText, "error", err)
+			httperrors.ErrInternal.Message = errors.Wrap(httperrors.ErrInternal.Message, errText)
+			httperrors.WriteHttpError(httperrors.ErrInternal, resWriter)
 			return
 		}
 
 		if err = requestData.Validate(); err != nil {
-			logger.Error("Validation error", "error", err)
-			errors.WriteHttpError(validationErr, resWriter)
+			errorText := "Validation error"
+			logger.Error(errorText, "error", err)
+			httperrors.ErrInternal.Message = errors.Wrap(httperrors.ErrInternal.Message, errorText)
+			httperrors.WriteHttpError(httperrors.ErrInternal, resWriter)
 			return
 		}
 	}
 
 	response, httpErr := w.ServeHTTP(ctx, requestData)
-	if httpErr != nil {
-		logger.Error("Handler error", "error", httpErr)
-		errors.WriteHttpError(httpErr, resWriter)
+	if httpErr != (httperrors.HttpError{}) {
+		errorText := "Handler error"
+		logger.Error("Handler error", "error", httpErr.Message)
+		httperrors.ErrInternal.Message = errors.Wrap(httperrors.ErrInternal.Message, errorText)
+		httperrors.WriteHttpError(httpErr, resWriter)
 		return
 	}
 
 	rawJSON, err := json.Marshal(response)
 	if err != nil {
+		errorText := "Error encoding response"
 		logger.Error("Error encoding response", "error", err)
-		errors.WriteHttpError(encodingErr, resWriter)
+		httperrors.ErrInternal.Message = errors.Wrap(httperrors.ErrInternal.Message, errorText)
+		httperrors.WriteHttpError(httperrors.ErrInternal, resWriter)
 		return
 	}
 

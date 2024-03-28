@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/updateUserData"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server"
@@ -28,9 +29,10 @@ func main() {
 	authHandler := authorization.NewAuthorizationHandler(useCase)
 	regHandler := registration.NewRegistrationHandler(useCase)
 	updateHandler := updateUserData.NewUpdateDataHandler(useCase)
+	deactivationHandler := deactivation.NewDeactivationHandler(useCase)
 	authMiddleware := middle.NewAuthMiddleware(useCase)
 
-	app := app.NewApp(authHandler, regHandler, updateHandler, authMiddleware)
+	app := app.NewApp(authHandler, regHandler, updateHandler, deactivationHandler, authMiddleware)
 
 	logger.Info("Start config", "config", cfg)
 

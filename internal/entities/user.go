@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"fmt"
 	"regexp"
 	"sync"
 
@@ -32,8 +31,8 @@ func (h User) Validate() error {
 func init() {
 	testUser := User{
 		ID:       1,
-		Username: "testuser",
-		Password: "Testpassword123",
+		Username: "test_user",
+		Password: "TestPassword123",
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Password), bcrypt.DefaultCost)
@@ -60,17 +59,7 @@ func GetUserByID(userID int) (*User, error) {
 			return &user, nil
 		}
 	}
-	return nil, fmt.Errorf("can't find user by ID")
-}
-
-func IsAuthenticated(username, password string) bool {
-	user, err := GetUserByUsername(username)
-	if err != nil {
-		return false
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	return err == nil
+	return nil, errors.New("User not found")
 }
 
 func CreateUser(username, password string) (User, error) {
@@ -94,30 +83,36 @@ func CreateUser(username, password string) (User, error) {
 	}
 
 	users = append(users, newUser)
-
 	return newUser, nil
 }
 
-func UserExists(username string) error {
+func UserExists(username string, password string) error {
 	for _, user := range users {
 		if user.Username == username {
-			return errors.New("username already exists")
+			err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+			if err != nil {
+				return errors.New("Wrong password")
+			}
+			return nil
 		}
+	}
+	return errors.New("User with this username doesn't exists")
+}
+
+func UserDataVerification(username, password string) error {
+	if !ValidateUsername(username) {
+		return errors.New("Username doesn't meet requirements")
+	}
+	if !ValidatePassword(password) {
+		return errors.New("Password doesn't meet requirements")
 	}
 
 	return nil
 }
 
-func UserDataVerification(username, password string) error {
-	if username == "" || password == "" {
-		return errors.New("username and password must not be empty")
-	}
-
-	if !ValidatePassword(password) {
-		return errors.New("password is not complex")
-	}
-
-	return nil
+func ValidateUsername(username string) bool {
+	matched, _ := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9_]{2,}$`, username)
+	return matched
 }
 
 func ValidatePassword(password string) bool {
@@ -125,8 +120,8 @@ func ValidatePassword(password string) bool {
 	hasUppercase := regexp.MustCompile(`[A-Z]`).MatchString(password)
 	hasLowercase := regexp.MustCompile(`[a-z]`).MatchString(password)
 	hasMinLength := len(password) >= 8
-
-	return hasDigit && hasUppercase && hasLowercase && hasMinLength
+	hasMaxLength := len(password) <= 40
+	return hasDigit && hasUppercase && hasLowercase && hasMinLength && hasMaxLength
 }
 
 func ChangeData(userID int, username string, password string) (*User, error) {
@@ -156,6 +151,18 @@ func ChangeData(userID int, username string, password string) (*User, error) {
 			break
 		}
 	}
-
 	return user, nil
+}
+
+func DeleteUser(userID int) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for i, user := range users {
+		if user.ID == userID {
+			users = append(users[:i], users[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("User not found")
 }
