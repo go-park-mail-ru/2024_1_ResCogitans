@@ -7,7 +7,9 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
+
+	// "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
+	sight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
