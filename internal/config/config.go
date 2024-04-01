@@ -23,6 +23,22 @@ type HTTPServer struct {
 	Password    string        `yaml:"password" env-requiered:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
+type dsn struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBname   string
+}
+
+var DSN = dsn{
+	Host:     "localhost",
+	Port:     5432,
+	User:     "mrdzhofik",
+	Password: "246858",
+	DBname:   "jantugan",
+}
+
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, errors.Wrap(err, "error loading .env file")

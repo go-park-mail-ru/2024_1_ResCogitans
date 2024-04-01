@@ -1,3 +1,74 @@
+-- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
+-- +goose StatementEnd
+
+CREATE TABLE city(
+    id integer PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE country(
+    id integer PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE "user" (
+    id integer PRIMARY KEY,
+    email text NOT NULL,
+    passwrd text NOT NULL
+);
+
+CREATE TABLE sight(
+    id integer PRIMARY KEY,
+    rating float NOT NULL,
+    name text NOT NULL,
+    description text,
+    city_id integer REFERENCES city (id),
+    country_id integer REFERENCES country (id)
+);
+
+CREATE TABLE image(
+    id integer PRIMARY KEY,
+    "path" text NOT NULL,
+    sight_id integer REFERENCES sight(id)
+);
+
+CREATE TABLE journey(
+    id integer PRIMARY KEY,
+    client_id integer REFERENCES "user"(id),
+    description text
+);
+
+CREATE TABLE journey_sight(
+    id integer PRIMARY KEY,
+    journey_id integer REFERENCES journey(id),
+    sight_id integer REFERENCES sight(id),
+    priority integer NOT NULL,
+    note text
+);
+
+INSERT INTO city (id, name) VALUES 
+(1, 'Москва'),
+(2, 'Вольск'),
+(3, 'Тамбов'),
+(4, 'Бахчисарай'),
+(5, 'Евпатория'),
+(6, 'Балаклава'),
+(7, 'Казань'),
+(8, 'Салта'),
+(9, 'Мир'),
+(10, 'Гудаута');
+
+INSERT INTO country(id, name) VALUES
+(1, 'Россия'),
+(2, 'Беларусь'),
+(3, 'Татарстан'),
+(4, 'Крым'),
+(5, 'Дагестан'),
+(6, 'Абхазия');
+
+
 INSERT INTO sight(id, rating, name, description, city_id, country_id) VALUES 
     (
         1, 
@@ -95,3 +166,26 @@ INSERT INTO sight(id, rating, name, description, city_id, country_id) VALUES
 		8,
         5
 	);
+
+
+INSERT INTO image(id, path, sight_id) VALUES 
+(1, 'public/1.jpg', 1),
+(2, 'public/2.jpg', 2),
+(3, 'public/3.jpg', 3),
+(4, 'public/4.jpg', 4),
+(5, 'public/5.jpg', 5),
+(6, 'public/6.jpg', 6),
+(7, 'public/7.jpg', 7),
+(8, 'public/8.jpg', 8),
+(9, 'public/9.jpg', 9),
+(10, 'public/10.jpg', 10),
+(11, 'public/11.jpg', 11),
+(12, 'public/12.jpg', 12);
+
+
+
+
+-- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
+-- +goose StatementEnd

@@ -26,8 +26,8 @@ func TestGetSights(t *testing.T) {
 		Rating:      2.1,
 		Name:        "У дяди Вани",
 		Description: "Ресторан с видом на Сталинскую высотку.",
-		City_id:     "1",
-		Country_id:  "1",
+		CityID:      "1",
+		CountryID:   "1",
 		Url:         "public/1.jpg",
 	}
 	assert.Equal(t, expectedFirstSight, resp.Sight[0])

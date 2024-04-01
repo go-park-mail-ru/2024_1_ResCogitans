@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server/db"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 
 	sightRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
 )
@@ -20,6 +21,8 @@ import (
 
 type SightsHandler struct{}
 
+type Empty struct{}
+
 type Sights struct {
 	Sight []entities.Sight `json:"sights"`
 }
@@ -33,16 +36,15 @@ type Sights struct {
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
 func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, error) {
-	sightsRepo := sightRep.NewSightRepo(db.GetPostgres())
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+	sightsRepo := sightRep.NewSightRepo(db)
 	sights, err := sightsRepo.GetSightsList()
 	if err != nil {
 		return Sights{}, err
 	}
 
-	var sightList []entities.Sight
-	for _, s := range sights {
-		sightList = append(sightList, *s)
-	}
-
-	return Sights{Sight: sightList}, nil
+	return Sights{Sight: sights}, nil
 }

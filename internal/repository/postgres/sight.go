@@ -1,50 +1,40 @@
 package repository
 
 import (
-	"database/sql"
+	"context"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/georgysavva/scany/v2/pgxscan"
 )
 
 // SightRepo struct
 type SightRepo struct {
-	DB *sql.DB
+	db *pgxpool.Pool
 }
 
-// NewSighttRepo creates product repo
-func NewSightRepo(db *sql.DB, err error) *SightRepo {
+// NewSightRepo creates sight repo
+func NewSightRepo(db *pgxpool.Pool) *SightRepo {
 	return &SightRepo{
-		DB: db,
+		db: db,
 	}
 }
 
-func (repo *SightRepo) GetSightsList() ([]*entities.Sight, error) {
-	rows, err := repo.DB.Query(`SELECT sight.id, rating, name, description, city_id, country_id, image.path FROM sight INNER JOIN image ON sight.id = image.sight_id`)
+func (repo *SightRepo) GetSightsList() ([]entities.Sight, error) {
+	var sights []*entities.Sight
+	ctx := context.Background()
 
+	err := pgxscan.Select(ctx, repo.db, &sights, `SELECT sight.id, rating, name, description, city_id, country_id, image.path FROM sight INNER JOIN image ON sight.id = image.sight_id`)
 	if err != nil {
+		logger.Logger().Error(err.Error())
 		return nil, err
 	}
-	defer rows.Close()
-	var Sights = []*entities.Sight{}
-	for rows.Next() {
-		sight := &entities.Sight{}
-		err = rows.Scan(
-			&sight.ID,
-			&sight.Rating,
-			&sight.Name,
-			&sight.Description,
-			&sight.City_id,
-			&sight.Country_id,
-			&sight.Url,
-		)
-		if err != nil {
-			return nil, err
-		}
-		Sights = append(Sights, sight)
+
+	var sightList []entities.Sight
+	for _, s := range sights {
+		sightList = append(sightList, *s)
 	}
-	err = rows.Err()
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-	return Sights, nil
+	return sightList, nil
 }
