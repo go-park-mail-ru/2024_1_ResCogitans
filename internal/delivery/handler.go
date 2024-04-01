@@ -9,6 +9,21 @@ import (
 	sightRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
 )
 
+// type SightUsecase struct {
+// 	sightRepo sightRep.SightRepo
+// }
+
+// func (su SightUsecase) GetSights() []entities.Sight {
+// 	sights := su.GetSights()
+// 	return sights
+// }
+
+type SightsHandler struct{}
+
+type Sights struct {
+	Sight []entities.Sight `json:"sights"`
+}
+
 // GetSights godoc
 // @Summary Get all sights
 // @Description get all sights
@@ -17,21 +32,6 @@ import (
 // @Produce json
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
-type SightUsecase struct {
-	sightRepo sightRep.SightRepo
-}
-
-func (su SightUsecase) GetSights() []entities.Sight {
-	sights := su.GetSights()
-	return sights
-}
-
-type SightsHandler struct{}
-
-type Sights struct {
-	Sight []entities.Sight `json:"sights"`
-}
-
 func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, error) {
 	sightsRepo := sightRep.NewSightRepo(db.GetPostgres())
 	sights, err := sightsRepo.GetSightsList()
