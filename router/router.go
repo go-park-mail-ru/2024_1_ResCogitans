@@ -8,7 +8,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 
-	// "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/sight"
 	sight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
@@ -30,6 +29,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
+	router.Mount("/sight/{id}", SightByIDRoutes())
 
 	return router
 }
@@ -69,6 +69,17 @@ func AuthRoutes() chi.Router {
 	authHandler := authorization.AuthorizationHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.UserResponse]{ServeHTTP: authHandler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func SightByIDRoutes() chi.Router {
+	router := chi.NewRouter()
+	SightByIDHandler := sight.SightsHandler{}
+
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.SightComments]{ServeHTTP: SightByIDHandler.GetSightByID}
+
+	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

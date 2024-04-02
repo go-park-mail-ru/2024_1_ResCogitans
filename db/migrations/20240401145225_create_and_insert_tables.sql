@@ -48,6 +48,15 @@ CREATE TABLE journey_sight(
     note text
 );
 
+CREATE TABLE feedback(
+    id integer PRIMARY KEY,
+    user_id integer REFERENCES "user"(id),
+    sight_id integer REFERENCES sight(id),
+    rating integer NOT NULL,
+    feedback text
+);
+
+
 INSERT INTO city (id, name) VALUES 
 (1, 'Москва'),
 (2, 'Вольск'),
@@ -183,6 +192,8 @@ INSERT INTO image(id, path, sight_id) VALUES
 (12, 'public/12.jpg', 12);
 
 
+ALTER TABLE city RENAME COLUMN name TO city;
+ALTER TABLE country RENAME COLUMN name TO country;
 
 
 -- +goose Down

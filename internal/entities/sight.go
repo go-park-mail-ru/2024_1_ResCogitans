@@ -7,8 +7,8 @@ type Sight struct {
 	Description string  `json:"description"`
 	CityID      int     `json:"cityID"`
 	CountryID   int     `json:"countryID"`
-	City        string  `json:"cityID"`
-	Country     string  `json:"countryID"`
+	City        string  `json:"city"`
+	Country     string  `json:"country"`
 	Path        string  `json:"url"`
 }
 
