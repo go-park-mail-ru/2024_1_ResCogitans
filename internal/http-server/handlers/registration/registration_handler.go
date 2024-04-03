@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
@@ -11,12 +12,14 @@ import (
 )
 
 type RegistrationHandler struct {
-	useCase usecase.AuthInterface
+	sessionUseCase usecase.AuthInterface
+	userUseCase    usecase.UserInterface
 }
 
-func NewRegistrationHandler(useCase usecase.AuthInterface) *RegistrationHandler {
+func NewRegistrationHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *RegistrationHandler {
 	return &RegistrationHandler{
-		useCase: useCase,
+		sessionUseCase: sessionUseCase,
+		userUseCase:    userUseCase,
 	}
 }
 
@@ -24,37 +27,37 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 	username := requestData.Username
 	password := requestData.Password
 
-	if _, err := entities.GetUserByUsername(username); err == nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = errors.New("User with this username is already exists")
-		return entities.UserResponse{}, errBadRequest
-	}
-
-	if err := entities.UserDataVerification(username, password); err != nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = err
-		return entities.UserResponse{}, errBadRequest
-	}
-
-	user, err := entities.CreateUser(username, password)
+	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
+	}
+
+	sessionID, _ := h.sessionUseCase.GetSession(request)
+	if sessionID != 0 {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, errors.New("User is already authorized"))
+	}
+
+	if h.userUseCase.IsUsernameTaken(username) {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, errors.New("Username is taken"))
+	}
+
+	if err := h.userUseCase.UserDataVerification(username, password); err != nil {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, err)
+	}
+
+	user, err := h.userUseCase.CreateUser(username, password)
+	if err != nil {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
 	responseWriter, err := httputils.GetResponseWriterFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	err = h.useCase.SetSession(responseWriter, user.ID)
+	err = h.sessionUseCase.CreateSession(responseWriter, user.ID)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
-	return entities.UserResponse{ID: user.ID, Username: user.Username}, httperrors.HttpError{}
+	return entities.UserResponse{Username: user.Username}, httperrors.HttpError{}
 }

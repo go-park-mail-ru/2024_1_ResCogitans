@@ -1,4 +1,4 @@
-package storage
+package session
 
 import (
 	"errors"
@@ -19,6 +19,7 @@ type SessionStorage struct {
 func NewSessionStorage() StorageInterface {
 	return &SessionStorage{
 		Store: make(map[string]int),
+		mu:    sync.Mutex{},
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 )
@@ -16,22 +16,22 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32))
 
 type AuthInterface interface {
-	SetSession(w http.ResponseWriter, userID int) error
+	CreateSession(w http.ResponseWriter, userID int) error
 	GetSession(r *http.Request) (int, error)
 	ClearSession(w http.ResponseWriter, r *http.Request) error
 }
 
 type AuthUseCase struct {
-	SessionStorage storage.StorageInterface
+	SessionStorage session.StorageInterface
 }
 
-func NewAuthUseCase(storage storage.StorageInterface) AuthInterface {
+func NewAuthUseCase(storage session.StorageInterface) AuthInterface {
 	return &AuthUseCase{
 		SessionStorage: storage,
 	}
 }
 
-func (a *AuthUseCase) SetSession(w http.ResponseWriter, userID int) error {
+func (a *AuthUseCase) CreateSession(w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
 	a.SessionStorage.SaveSession(sessionID, userID)
 	encoded, err := CookieHandler.Encode(sessionId, sessionID)

@@ -2,6 +2,7 @@ package updateUserData
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
@@ -10,12 +11,14 @@ import (
 )
 
 type UpdateDataHandler struct {
-	useCase usecase.AuthInterface
+	sessionUseCase usecase.AuthInterface
+	userUseCase    usecase.UserInterface
 }
 
-func NewUpdateDataHandler(useCase usecase.AuthInterface) *UpdateDataHandler {
+func NewUpdateDataHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *UpdateDataHandler {
 	return &UpdateDataHandler{
-		useCase: useCase,
+		sessionUseCase: sessionUseCase,
+		userUseCase:    userUseCase,
 	}
 }
 
@@ -25,24 +28,23 @@ func (h *UpdateDataHandler) Update(ctx context.Context, requestData entities.Use
 
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	userID, err := h.useCase.GetSession(request)
+	userID, err := h.sessionUseCase.GetSession(request)
 	if err != nil {
-		errUnauthorized := httperrors.ErrUnauthorized
-		errUnauthorized.Message = err
-		return entities.UserResponse{}, errUnauthorized
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusForbidden, err)
 	}
 
-	user, err := entities.ChangeData(userID, username, password)
+	err = h.userUseCase.UserDataVerification(username, password)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	return entities.UserResponse{ID: user.ID, Username: user.Username}, httperrors.HttpError{}
+	user, err := h.userUseCase.ChangeData(userID, username, password)
+	if err != nil {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
+	}
+
+	return entities.UserResponse{Username: user.Username}, httperrors.HttpError{}
 }

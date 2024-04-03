@@ -33,7 +33,7 @@ func SetupRouter(app *app.App) *chi.Mux {
 	router.Mount("/login", AuthRoute(app.AuthHandler))
 	router.Mount("/logout", LogOutRoute(app.AuthHandler))
 	router.Mount("/updatedata", UpdateDateRoute(app.UpdateUserDataHandler))
-	router.Mount("/deleteuser", DeleteUserRoute(app.DeactivationHandler))
+	router.Mount("/deactivate", DeleteUserRoute(app.DeactivationHandler))
 
 	return router
 }

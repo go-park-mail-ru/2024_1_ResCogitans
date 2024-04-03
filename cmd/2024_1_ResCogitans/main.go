@@ -7,7 +7,8 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/updateUserData"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/user"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/app"
@@ -23,14 +24,17 @@ func main() {
 		return
 	}
 
-	sessionStorage := storage.NewSessionStorage()
-	useCase := usecase.NewAuthUseCase(sessionStorage)
+	sessionStorage := session.NewSessionStorage()
+	sessionUseCase := usecase.NewAuthUseCase(sessionStorage)
 
-	authHandler := authorization.NewAuthorizationHandler(useCase)
-	regHandler := registration.NewRegistrationHandler(useCase)
-	updateHandler := updateUserData.NewUpdateDataHandler(useCase)
-	deactivationHandler := deactivation.NewDeactivationHandler(useCase)
-	authMiddleware := middle.NewAuthMiddleware(useCase)
+	userStorage := user.NewUserStorage()
+	userUseCase := usecase.NewUserUseCase(userStorage)
+
+	authHandler := authorization.NewAuthorizationHandler(sessionUseCase, userUseCase)
+	regHandler := registration.NewRegistrationHandler(sessionUseCase, userUseCase)
+	updateHandler := updateUserData.NewUpdateDataHandler(sessionUseCase, userUseCase)
+	deactivationHandler := deactivation.NewDeactivationHandler(sessionUseCase, userUseCase)
+	authMiddleware := middle.NewAuthMiddleware(sessionUseCase)
 
 	app := app.NewApp(authHandler, regHandler, updateHandler, deactivationHandler, authMiddleware)
 

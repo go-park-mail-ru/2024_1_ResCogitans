@@ -17,6 +17,13 @@ type HttpResponse struct {
 	Message string `json:"error"`
 }
 
+func NewHttpError(code int, message error) HttpError {
+	return HttpError{
+		Code:    code,
+		Message: message,
+	}
+}
+
 var errInternalBytes = []byte(`{"error": "internal error"}`)
 
 func (e HttpError) Error() error {

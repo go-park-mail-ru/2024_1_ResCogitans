@@ -2,6 +2,7 @@ package authorization
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
@@ -11,12 +12,14 @@ import (
 )
 
 type AuthorizationHandler struct {
-	useCase usecase.AuthInterface
+	sessionUseCase usecase.AuthInterface
+	userUseCase    usecase.UserInterface
 }
 
-func NewAuthorizationHandler(useCase usecase.AuthInterface) *AuthorizationHandler {
+func NewAuthorizationHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *AuthorizationHandler {
 	return &AuthorizationHandler{
-		useCase: useCase,
+		sessionUseCase: sessionUseCase,
+		userUseCase:    userUseCase,
 	}
 }
 
@@ -26,53 +29,39 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	session, _ := h.useCase.GetSession(request)
-	if session != 0 {
-		errForbidden := httperrors.ErrForbidden
-		errForbidden.Message = errors.New("User is already authorized")
-		return entities.UserResponse{}, errForbidden
+	sessionID, _ := h.sessionUseCase.GetSession(request)
+	if sessionID != 0 {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, errors.New("User is already authorized"))
 	}
 
 	responseWriter, err := httputils.GetResponseWriterFromCtx(ctx)
 	if err != nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = err
-		return entities.UserResponse{}, errBadRequest
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	if err := entities.UserDataVerification(username, password); err != nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = err
-		return entities.UserResponse{}, errBadRequest
+	if err := h.userUseCase.UserDataVerification(username, password); err != nil {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	if err := entities.UserExists(username, password); err != nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = err
-		return entities.UserResponse{}, errBadRequest
-	}
-
-	user, err := entities.GetUserByUsername(username)
+	err = h.userUseCase.UserExists(username, password)
 	if err != nil {
-		errBadRequest := httperrors.ErrBadRequest
-		errBadRequest.Message = err
-		return entities.UserResponse{}, errBadRequest
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	err = h.useCase.SetSession(responseWriter, user.ID)
+	user, err := h.userUseCase.GetUserByUsername(username)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
+	}
+
+	err = h.sessionUseCase.CreateSession(responseWriter, user.ID)
+	if err != nil {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
 	userResponse := entities.UserResponse{
-		ID:       user.ID,
 		Username: user.Username,
 	}
 
@@ -82,36 +71,22 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (entities.UserResponse, httperrors.HttpError) {
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	userID, err := h.useCase.GetSession(request)
+	_, err = h.sessionUseCase.GetSession(request)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
-	}
-
-	if userID == 0 {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = errors.New("Session not found")
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusForbidden, err)
 	}
 
 	responseWriter, err := httputils.GetResponseWriterFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	err = h.useCase.ClearSession(responseWriter, request)
+	err = h.sessionUseCase.ClearSession(responseWriter, request)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
 	return entities.UserResponse{}, httperrors.HttpError{}

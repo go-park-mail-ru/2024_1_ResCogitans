@@ -2,6 +2,7 @@ package deactivation
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
@@ -10,49 +11,41 @@ import (
 )
 
 type DeactivationHandler struct {
-	useCase usecase.AuthInterface
+	sessionUseCase usecase.AuthInterface
+	userUseCase    usecase.UserInterface
 }
 
-func NewDeactivationHandler(useCase usecase.AuthInterface) *DeactivationHandler {
+func NewDeactivationHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *DeactivationHandler {
 	return &DeactivationHandler{
-		useCase: useCase,
+		sessionUseCase: sessionUseCase,
+		userUseCase:    userUseCase,
 	}
 }
 
 func (h *DeactivationHandler) Deactivate(ctx context.Context, _ entities.User) (entities.UserResponse, httperrors.HttpError) {
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	session, err := h.useCase.GetSession(request)
+	session, err := h.sessionUseCase.GetSession(request)
 	if err != nil {
-		errForbidden := httperrors.ErrForbidden
-		errForbidden.Message = err
-		return entities.UserResponse{}, errForbidden
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusForbidden, err)
 	}
 
-	err = entities.DeleteUser(session)
+	err = h.userUseCase.DeleteUser(session)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
 	responseWriter, err := httputils.GetResponseWriterFromCtx(ctx)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
-	err = h.useCase.ClearSession(responseWriter, request)
+	err = h.sessionUseCase.ClearSession(responseWriter, request)
 	if err != nil {
-		errInternal := httperrors.ErrInternal
-		errInternal.Message = err
-		return entities.UserResponse{}, errInternal
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
 	}
 
 	return entities.UserResponse{}, httperrors.HttpError{}

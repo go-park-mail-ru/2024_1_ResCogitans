@@ -1,4 +1,4 @@
-package registration
+package updateUserData
 
 import (
 	"bytes"
@@ -15,14 +15,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSignUp(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	sessionStorage := session.NewSessionStorage()
 	sessionUseCase := usecase.NewAuthUseCase(sessionStorage)
 
 	userStorage := user.NewUserStorage()
 	userUseCase := usecase.NewUserUseCase(userStorage)
 
-	signUpHandler := NewRegistrationHandler(sessionUseCase, userUseCase)
+	updateHandler := NewUpdateDataHandler(sessionUseCase, userUseCase)
+
+	user, err := userUseCase.CreateUser("san", "A123B123abc")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
 
 	testCases := []struct {
 		name            string
@@ -31,54 +36,48 @@ func TestSignUp(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			name:            "Successful registration",
-			inputJSON:       `{"username": "san", "password": "A123B123abc"}`,
+			name:            "Successful data update",
+			inputJSON:       `{"username": "sanBoy", "password": "A123B1234abc"}`,
 			expectedStatus:  http.StatusOK,
-			expectedMessage: "san",
-		},
-		{
-			name:            "Username taken",
-			inputJSON:       `{"username": "san", "password": "A123B123abc123"}`,
-			expectedStatus:  http.StatusBadRequest,
-			expectedMessage: "Username is taken",
-		},
-		{
-			name:            "Simple username",
-			inputJSON:       `{"username": "US", "password": "A123B123abc123"}`,
-			expectedStatus:  http.StatusBadRequest,
-			expectedMessage: "Username doesn't meet requirements",
-		},
-		{
-			name:            "Simple password",
-			inputJSON:       `{"username": "sanBoy", "password": "1234"}`,
-			expectedStatus:  http.StatusBadRequest,
-			expectedMessage: "Password doesn't meet requirements",
-		},
-		{
-			name:            "Context without response writer",
-			inputJSON:       `{"username": "sanBoy", "password": "A123B123abc123"}`,
-			expectedStatus:  http.StatusInternalServerError,
-			expectedMessage: "Failed getting response writer",
+			expectedMessage: "sanBoy",
 		},
 		{
 			name:            "Context without request",
-			inputJSON:       `{"username": "sanBoy", "password": "A123B123abc123"}`,
+			inputJSON:       `{"username": "san", "password": "A123B123"}`,
 			expectedStatus:  http.StatusInternalServerError,
 			expectedMessage: "Failed getting request",
 		},
 		{
-			name:            "Request with cookie",
-			inputJSON:       `{"username": "sanBoy", "password": "A123B123abc123"}`,
+			name:            "Request without session",
+			inputJSON:       `{"username": "san", "password": "A123B123"}`,
+			expectedStatus:  http.StatusForbidden,
+			expectedMessage: "http: named cookie not present",
+		},
+		{
+			name:            "Request with wrong session",
+			inputJSON:       `{"username": "san", "password": "A123B123"}`,
+			expectedStatus:  http.StatusForbidden,
+			expectedMessage: "Session not found",
+		},
+		{
+			name:            "Simple password",
+			inputJSON:       `{"username": "san", "password": "A123"}`,
 			expectedStatus:  http.StatusBadRequest,
-			expectedMessage: "User is already authorized",
+			expectedMessage: "Password doesn't meet requirements",
+		},
+		{
+			name:            "Simple username",
+			inputJSON:       `{"username": "US", "password": "A123B123"}`,
+			expectedStatus:  http.StatusBadRequest,
+			expectedMessage: "Username doesn't meet requirements",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Создаем запрос
-			sessionStorage.SaveSession("session", 2)
-			req, err := http.NewRequest("POST", "/signup", bytes.NewBufferString(tc.inputJSON))
+			sessionStorage.SaveSession("session", user.ID)
+			req, err := http.NewRequest("POST", "/updatedata", bytes.NewBufferString(tc.inputJSON))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -89,13 +88,19 @@ func TestSignUp(t *testing.T) {
 			if tc.name != "Context without request" {
 				ctx = httputils.SetRequestToCtx(ctx, req)
 			}
-			if tc.name != "Context without response writer" {
-				ctx = httputils.SetResponseWriterToCtx(ctx, httptest.NewRecorder())
-			}
-			if tc.name == "Request with cookie" {
-				encoded, err := usecase.CookieHandler.Encode("session_id", "session")
-				if err != nil {
-					t.Fatal(err)
+			ctx = httputils.SetResponseWriterToCtx(ctx, httptest.NewRecorder())
+			if tc.name != "Request without session" {
+				var encoded string
+				if tc.name == "Request with wrong session" {
+					encoded, err = usecase.CookieHandler.Encode("session_id", "session1")
+					if err != nil {
+						t.Fatal(err)
+					}
+				} else {
+					encoded, err = usecase.CookieHandler.Encode("session_id", "session")
+					if err != nil {
+						t.Fatal(err)
+					}
 				}
 				req.AddCookie(&http.Cookie{
 					Name:  "session_id",
@@ -111,7 +116,7 @@ func TestSignUp(t *testing.T) {
 			}
 
 			// Вызываем ручку с контекстом
-			response, httpErr := signUpHandler.SignUp(ctx, user)
+			response, httpErr := updateHandler.Update(ctx, user)
 
 			// Проверяем ответ
 
