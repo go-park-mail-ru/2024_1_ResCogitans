@@ -69,3 +69,8 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 
 	return commentsList, nil
 }
+
+func (repo *SightRepo) CreateCommentBySightID(id int, data map[string]string) (entities.Sight, error) {
+
+	return entities.Sight{}, nil
+}

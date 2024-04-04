@@ -192,6 +192,13 @@ INSERT INTO image(id, path, sight_id) VALUES
 (12, 'public/12.jpg', 12);
 
 
+INSERT INTO "user"(id, email, passwrd) VALUES
+(1, 'djafarovemil04@mail.ru', 246858);
+
+INSERT INTO feedback(id, user_id, sight_id, rating, feedback) VALUES 
+(1, 1, 1, 4, 'Все понравилось');
+
+
 ALTER TABLE city RENAME COLUMN name TO city;
 ALTER TABLE country RENAME COLUMN name TO country;
 

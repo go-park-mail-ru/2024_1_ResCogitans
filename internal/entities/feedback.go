@@ -1,5 +1,7 @@
 package entities
 
+import "sync"
+
 type Comment struct {
 	ID       int    `json:"id"`
 	UserID   int    `json:"userID"`
@@ -9,6 +11,14 @@ type Comment struct {
 	Feedback string `json:"feedback"`
 }
 
+var (
+	mut sync.Mutex
+)
+
 func (h Comment) Validate() error {
 	return nil
+}
+
+func CreateComment(data map[string]string) {
+
 }

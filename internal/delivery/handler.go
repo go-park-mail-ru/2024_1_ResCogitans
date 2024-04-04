@@ -81,16 +81,14 @@ func (h *SightsHandler) GetSightByID(ctx context.Context, _ entities.Sight) (Sig
 	pathParams := wrapper.GetPathParamsFromCtx(ctx)
 	id, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		logger.Logger().Error("Cannot convert string to integer")
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return SightComments{}, err
 	}
 
 	sightsRepo := sightRep.NewSightRepo(db)
 	sight, _ := sightsRepo.GetSightByID(id)
 
 	comments, err := sightsRepo.GetCommentsBySightID(id)
-	if err != nil {
-		return SightComments{}, err
-	}
 
 	return SightComments{Sight: sight, Comms: comments}, err
 }
