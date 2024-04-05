@@ -1,4 +1,4 @@
-package sight_test
+package delivery_test
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func TestGetSights(t *testing.T) {
 }
 
 func TestGetSightsByID(t *testing.T) {
-	comm := sight.Comments{}
+	comm := entities.Comments{}
 	handler := &sight.SightsHandler{}
 
 	comm.Validate()

@@ -30,6 +30,9 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
 	router.Mount("/sight/{id}", SightByIDRoutes())
+	router.Mount("/sight/{id}/create", CreateCommentRoutes())
+	router.Mount("/sight/{sid}/edit/{cid}", EditCommentRoutes())
+	router.Mount("/sight/{sid}/delete/{cid}", DeleteCommentRoutes())
 
 	return router
 }
@@ -37,7 +40,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 func SightRoutes() chi.Router {
 	router := chi.NewRouter()
 	sightsHandler := sight.SightsHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.Sights]{ServeHTTP: sightsHandler.GetSights}
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: sightsHandler.GetSights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
@@ -80,6 +83,36 @@ func SightByIDRoutes() chi.Router {
 	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.SightComments]{ServeHTTP: SightByIDHandler.GetSightByID}
 
 	router.Get("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func CreateCommentRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	commHandler := sight.CommentHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.CreateComment}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func EditCommentRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	commHandler := sight.CommentHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.EditComment}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func DeleteCommentRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	commHandler := sight.CommentHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.DeleteComment}
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

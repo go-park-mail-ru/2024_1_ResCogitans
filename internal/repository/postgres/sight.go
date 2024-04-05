@@ -70,7 +70,41 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 	return commentsList, nil
 }
 
-func (repo *SightRepo) CreateCommentBySightID(id int, data map[string]string) (entities.Sight, error) {
+func (repo *SightRepo) CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error {
+	var comments []*entities.Comment
+	ctx := context.Background()
 
-	return entities.Sight{}, nil
+	err := pgxscan.Select(ctx, repo.db, &comments, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, dataInt["userID"], dataInt["sightID"], dataInt["rating"], dataStr["feedback"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) EditCommentByCommentID(dataStr map[string]string, dataInt map[string]int) error {
+	var comments []*entities.Comment
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &comments, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, dataInt["rating"], dataStr["feedback"], dataInt["id"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) DeleteCommentByCommentID(dataInt map[string]int) error {
+	var comments []*entities.Comment
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &comments, `DELETE FROM feedback WHERE id = $1`, dataInt["id"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
 }

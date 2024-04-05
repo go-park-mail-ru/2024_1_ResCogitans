@@ -1,4 +1,4 @@
-package sight
+package delivery
 
 import (
 	"context"
@@ -12,34 +12,11 @@ import (
 	sightRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
 )
 
-// type SightUsecase struct {
-// 	sightRepo sightRep.SightRepo
-// }
-
-// func (su SightUsecase) GetSights() []entities.Sight {
-// 	sights := su.GetSights()
-// 	return sights
-// }
-
 type SightsHandler struct{}
-
-type Empty struct{}
-
-type Sights struct {
-	Sight []entities.Sight `json:"sights"`
-}
-
-type Comments struct {
-	Comment []entities.Comment `json:"comments"`
-}
 
 type SightComments struct {
 	Sight entities.Sight     `json:"sight"`
 	Comms []entities.Comment `json:"comments"`
-}
-
-func (h Comments) Validate() error {
-	return nil
 }
 
 // GetSights godoc
@@ -50,7 +27,7 @@ func (h Comments) Validate() error {
 // @Produce json
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
-func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights, error) {
+func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (entities.Sights, error) {
 	db, err := db.GetPostgres()
 
 	if err != nil {
@@ -59,10 +36,10 @@ func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights
 	sightsRepo := sightRep.NewSightRepo(db)
 	sights, err := sightsRepo.GetSightsList()
 	if err != nil {
-		return Sights{}, err
+		return entities.Sights{}, err
 	}
 
-	return Sights{Sight: sights}, nil
+	return entities.Sights{Sight: sights}, nil
 }
 
 // GetSights godoc
@@ -71,6 +48,7 @@ func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (Sights
 // @Accept json
 // @Produce json
 // @Success 200 SightComments
+// @Failure 404 "Not found"
 // @Router /sight/{id} [get]
 func (h *SightsHandler) GetSightByID(ctx context.Context, _ entities.Sight) (SightComments, error) {
 	db, err := db.GetPostgres()

@@ -15,3 +15,7 @@ type Sight struct {
 func (h Sight) Validate() error {
 	return nil
 }
+
+type Sights struct {
+	Sight []Sight `json:"sights"`
+}
