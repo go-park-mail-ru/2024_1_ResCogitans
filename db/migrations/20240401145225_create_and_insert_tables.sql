@@ -10,13 +10,20 @@ CREATE TABLE city(
 
 CREATE TABLE country(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    country text NOT NULL
+    country text NOT NULL UNIQUE
 );
 
 CREATE TABLE "user" (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    email text NOT NULL,
+    email text NOT NULL UNIQUE,
     passwrd text NOT NULL
+);
+
+CREATE TABLE "profile" (
+    user_id integer REFERENCES user(id),
+    nickname text UNIQUE,
+    avatar text,
+	bio text
 );
 
 CREATE TABLE sight(
@@ -36,7 +43,8 @@ CREATE TABLE image(
 
 CREATE TABLE journey(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    client_id integer REFERENCES "user"(id),
+	name text NOT NULL
+    user_id integer REFERENCES "user"(id),
     description text
 );
 
@@ -45,7 +53,6 @@ CREATE TABLE journey_sight(
     journey_id integer REFERENCES journey(id),
     sight_id integer REFERENCES sight(id),
     priority integer NOT NULL,
-    note text
 );
 
 CREATE TABLE feedback(
@@ -53,7 +60,7 @@ CREATE TABLE feedback(
     user_id integer REFERENCES "user"(id),
     sight_id integer REFERENCES sight(id),
     rating integer NOT NULL,
-    feedback text
+    feedback text NOT NULL
 );
 
 
@@ -180,13 +187,6 @@ INSERT INTO image(path, sight_id) VALUES
 ('public/12.jpg', 12);
 
 
-INSERT INTO "user"(email, passwrd) VALUES
-('djafarovemil04@mail.ru', 246858);
-
-INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES 
-(1, 1, 4, 'Все понравилось');
-
-
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
@@ -195,7 +195,3 @@ SELECT 'down SQL query';
 DROP TABLE IF EXISTS user CASCADE;
 DROP TABLE IF EXISTS city CASCADE;
 DROP TABLE IF EXISTS country CASCADE;
-DROP TABLE IF EXISTS sight CASCADE;
-DROP TABLE IF EXISTS feedback CASCADE;
-DROP TABLE IF EXISTS journey CASCADE;
-DROP TABLE IF EXISTS journey_sight CASCADE;
