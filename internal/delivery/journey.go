@@ -77,3 +77,78 @@ func (h *JourneyHandler) GetJourneys(ctx context.Context, requestData entities.J
 
 	return entities.Journeys{Journey: journeys}, err
 }
+
+func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	journeyID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return entities.JourneySight{}, err
+	}
+
+	dataInt := make(map[string]int)
+	dataInt["journeyID"] = journeyID
+
+	dataInt["sightID"] = requestData.SightID
+
+	sightsRepo := sightRep.NewSightRepo(db)
+	err = sightsRepo.AddJourneySight(dataInt)
+
+	if err != nil {
+		return entities.JourneySight{}, errors.New("cannot add sight to journey")
+	}
+
+	return entities.JourneySight{}, nil
+}
+
+func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	journeyID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return entities.JourneySight{}, err
+	}
+
+	dataInt := make(map[string]int)
+	dataInt["journeyID"] = journeyID
+	dataInt["sightID"] = requestData.SightID
+
+	sightsRepo := sightRep.NewSightRepo(db)
+	err = sightsRepo.DeleteJourneySight(dataInt)
+
+	if err != nil {
+		return entities.JourneySight{}, errors.New("cannot delete sight to journey")
+	}
+
+	return entities.JourneySight{}, nil
+}
+
+func (h *JourneyHandler) GetJourneySights(ctx context.Context, requestData entities.JourneySight) (entities.Sights, error) {
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	journeyID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return entities.Sights{}, err
+	}
+
+	sightsRepo := sightRep.NewSightRepo(db)
+	sights, err := sightsRepo.GetJourneySights(journeyID)
+
+	if err != nil {
+		return entities.Sights{}, errors.New("cannot delete sight to journey")
+	}
+
+	return entities.Sights{Sight: sights}, nil
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
@@ -150,4 +151,61 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 		journeyList = append(journeyList, *j)
 	}
 	return journeyList, nil
+}
+
+func (repo *SightRepo) AddJourneySight(dataInt map[string]int) error {
+	ctx := context.Background()
+	var priority []*int
+	var precedence int
+
+	_ = pgxscan.Select(ctx, repo.db, &priority, `SELECT priority FROM journey_sight AS js WHERE js.journey_id = $1 ORDER BY priority DESC LIMIT 1;`, dataInt["journeyID"])
+	if priority == nil {
+		fmt.Println("Oops")
+		precedence = 0
+	} else {
+		precedence = *priority[0]
+	}
+
+	_, err := repo.db.Exec(ctx, `INSERT INTO journey_sight(journey_id, sight_id, priority) VALUES($1, $2, $3) `, dataInt["journeyID"], dataInt["sightID"], precedence+1)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) DeleteJourneySight(dataInt map[string]int) error {
+	ctx := context.Background()
+
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, dataInt["journeyID"], dataInt["sightID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) GetJourneySights(journeyID int) ([]entities.Sight, error) {
+	var sights []entities.Sight
+	var idList []*int
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &idList, `SELECT js.sight_id FROM journey_sight AS js WHERE js.journey_id = $1`, journeyID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	for _, id := range idList {
+		sight, err := repo.GetSightByID(*id)
+		if err != nil {
+			logger.Logger().Error(err.Error())
+			continue
+		}
+		sights = append(sights, sight)
+	}
+
+	return sights, nil
 }
