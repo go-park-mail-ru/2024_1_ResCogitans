@@ -29,10 +29,21 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
+
+	// comments
 	router.Mount("/sight/{id}", SightByIDRoutes())
 	router.Mount("/sight/{id}/create", CreateCommentRoutes())
 	router.Mount("/sight/{sid}/edit/{cid}", EditCommentRoutes())
 	router.Mount("/sight/{sid}/delete/{cid}", DeleteCommentRoutes())
+
+	//journeys
+	router.Mount("/trip/{id}/delete", DeleteJourneyRoutes())
+	router.Mount("/trip/create", CreateJourneyRoutes())
+	// router.Mount("/trip/{id}/edit", EditJourneyRoutes())
+	router.Mount("/trips", JourneyRoutes())
+
+	// router.Mount("/trip/{id}/sight/add", AddJourneySightRoutes())
+	// router.Mount("/trip/{id}/sight/delete", DeleteJourneySightRoutes())
 
 	return router
 }
@@ -113,6 +124,36 @@ func DeleteCommentRoutes() chi.Router {
 	commHandler := sight.CommentHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.DeleteComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func CreateJourneyRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	journeyHandler := sight.JourneyHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: journeyHandler.CreateJourney}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func DeleteJourneyRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	journeyHandler := sight.JourneyHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: journeyHandler.DeleteJourney}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func JourneyRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	journeyHandler := sight.JourneyHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journeys]{ServeHTTP: journeyHandler.GetJourneys}
+	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

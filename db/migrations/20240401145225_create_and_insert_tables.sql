@@ -20,8 +20,8 @@ CREATE TABLE "user" (
 );
 
 CREATE TABLE "profile" (
-    user_id integer REFERENCES user(id),
-    nickname text UNIQUE,
+    user_id integer REFERENCES "user"(id),
+    username text UNIQUE,
     avatar text,
 	bio text
 );
@@ -43,7 +43,7 @@ CREATE TABLE image(
 
 CREATE TABLE journey(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-	name text NOT NULL
+	name text NOT NULL,
     user_id integer REFERENCES "user"(id),
     description text
 );
@@ -52,7 +52,7 @@ CREATE TABLE journey_sight(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     journey_id integer REFERENCES journey(id),
     sight_id integer REFERENCES sight(id),
-    priority integer NOT NULL,
+    priority integer NOT NULL
 );
 
 CREATE TABLE feedback(
@@ -192,6 +192,12 @@ INSERT INTO image(path, sight_id) VALUES
 SELECT 'down SQL query';
 -- +goose StatementEnd
 
-DROP TABLE IF EXISTS user CASCADE;
+DROP TABLE IF EXISTS "user" CASCADE;
 DROP TABLE IF EXISTS city CASCADE;
 DROP TABLE IF EXISTS country CASCADE;
+DROP TABLE IF EXISTS sight CASCADE;
+DROP TABLE IF EXISTS journey CASCADE;
+DROP TABLE IF EXISTS journey_sight CASCADE;
+DROP TABLE IF EXISTS "image" CASCADE;
+DROP TABLE IF EXISTS feedback CASCADE;
+DROP TABLE IF EXISTS "profile" CASCADE;

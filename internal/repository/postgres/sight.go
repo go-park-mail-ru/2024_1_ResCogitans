@@ -108,3 +108,46 @@ func (repo *SightRepo) DeleteCommentByCommentID(dataInt map[string]int) error {
 
 	return nil
 }
+
+func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]string) error {
+	var journey []*entities.Journey
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &journey, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3)`, dataStr["name"], dataInt["userID"], dataStr["description"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) DeleteJourneyByID(dataInt map[string]int) error {
+	var journey []*entities.Journey
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &journey, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
+	var journey []*entities.Journey
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.name, j.description, u.email FROM journey AS j INNER JOIN "user" AS u ON u.id = $1`, userID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	var journeyList []entities.Journey
+	for _, j := range journey {
+		journeyList = append(journeyList, *j)
+	}
+	return journeyList, nil
+}
