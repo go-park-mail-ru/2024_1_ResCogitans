@@ -2,17 +2,54 @@ package delivery
 
 import (
 	"context"
-	"errors"
+	"net/http"
 	"strconv"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server/db"
 	sightRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
 type JourneyHandler struct{}
+
+type JourneyResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+}
+
+var (
+	errCreateJourney = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed creating new journey",
+	}
+	errEditJourney = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed editing journey",
+	}
+	errDeleteJourney = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed deleting journey",
+	}
+	errAddJourneySight = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed adding journey sight",
+	}
+	errDeleteJourneySight = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed deleting journey sight",
+	}
+	errGetJourneySights = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed getting journey sight",
+	}
+	errInternal = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "internal Error",
+	}
+)
 
 func (h JourneyHandler) CreateJourney(ctx context.Context, requestData entities.Journey) (entities.Journey, error) {
 	db, err := db.GetPostgres()
@@ -32,7 +69,7 @@ func (h JourneyHandler) CreateJourney(ctx context.Context, requestData entities.
 	err = sightsRepo.CreateJourney(dataInt, dataStr)
 
 	if err != nil {
-		return entities.Journey{}, errors.New("cannot create journey")
+		return entities.Journey{}, errCreateJourney
 	}
 
 	return entities.Journey{}, nil
@@ -49,7 +86,7 @@ func (h JourneyHandler) DeleteJourney(ctx context.Context, requestData entities.
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Journey{}, err
+		return entities.Journey{}, errParsing
 	}
 
 	dataInt := make(map[string]int)
@@ -60,7 +97,7 @@ func (h JourneyHandler) DeleteJourney(ctx context.Context, requestData entities.
 	err = sightsRepo.DeleteJourneyByID(dataInt)
 
 	if err != nil {
-		return entities.Journey{}, errors.New("cannot delete journey")
+		return entities.Journey{}, errDeleteJourney
 	}
 
 	return entities.Journey{}, nil
@@ -87,19 +124,18 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.JourneySight{}, err
+		return entities.JourneySight{}, errParsing
 	}
 
 	dataInt := make(map[string]int)
 	dataInt["journeyID"] = journeyID
-
 	dataInt["sightID"] = requestData.SightID
 
 	sightsRepo := sightRep.NewSightRepo(db)
 	err = sightsRepo.AddJourneySight(dataInt)
 
 	if err != nil {
-		return entities.JourneySight{}, errors.New("cannot add sight to journey")
+		return entities.JourneySight{}, errAddJourneySight
 	}
 
 	return entities.JourneySight{}, nil
@@ -114,7 +150,7 @@ func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData ent
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.JourneySight{}, err
+		return entities.JourneySight{}, errParsing
 	}
 
 	dataInt := make(map[string]int)
@@ -125,7 +161,7 @@ func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData ent
 	err = sightsRepo.DeleteJourneySight(dataInt)
 
 	if err != nil {
-		return entities.JourneySight{}, errors.New("cannot delete sight to journey")
+		return entities.JourneySight{}, errDeleteJourneySight
 	}
 
 	return entities.JourneySight{}, nil
@@ -140,14 +176,14 @@ func (h *JourneyHandler) GetJourneySights(ctx context.Context, requestData entit
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Sights{}, err
+		return entities.Sights{}, errParsing
 	}
 
 	sightsRepo := sightRep.NewSightRepo(db)
 	sights, err := sightsRepo.GetJourneySights(journeyID)
 
 	if err != nil {
-		return entities.Sights{}, errors.New("cannot delete sight to journey")
+		return entities.Sights{}, errGetJourneySights
 	}
 
 	return entities.Sights{Sight: sights}, nil

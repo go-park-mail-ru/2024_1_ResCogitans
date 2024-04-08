@@ -28,7 +28,7 @@ CREATE TABLE "profile" (
 
 CREATE TABLE sight(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    rating float NOT NULL,
+    rating float NOT NULL CHECk (rating > 0 AND rating <= 5),
     name text NOT NULL,
     description text,
     city_id integer REFERENCES city (id),
@@ -59,7 +59,7 @@ CREATE TABLE feedback(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     user_id integer REFERENCES "user"(id),
     sight_id integer REFERENCES sight(id),
-    rating integer NOT NULL,
+    rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
     feedback text NOT NULL
 );
 

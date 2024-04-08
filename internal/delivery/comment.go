@@ -2,17 +2,37 @@ package delivery
 
 import (
 	"context"
-	"errors"
+	"net/http"
 	"strconv"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server/db"
 	sightRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
 type CommentHandler struct{}
+
+var (
+	errCreateComment = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed creating new comment",
+	}
+	errEditComment = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed editing comment",
+	}
+	errDeleteComment = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed deleting comment",
+	}
+	errParsing = errors.HttpError{
+		Code:    http.StatusBadRequest,
+		Message: "cannot parsing not integer",
+	}
+)
 
 func (h *CommentHandler) CreateComment(ctx context.Context, requestData entities.Comment) (entities.Comment, error) {
 	db, err := db.GetPostgres()
@@ -25,7 +45,7 @@ func (h *CommentHandler) CreateComment(ctx context.Context, requestData entities
 	sightID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Comment{}, err
+		return entities.Comment{}, errParsing
 	}
 
 	dataStr := make(map[string]string)
@@ -41,7 +61,7 @@ func (h *CommentHandler) CreateComment(ctx context.Context, requestData entities
 	err = sightsRepo.CreateCommentBySightID(dataStr, dataInt)
 
 	if err != nil {
-		return entities.Comment{}, errors.New("cannot create comment")
+		return entities.Comment{}, errCreateComment
 	}
 
 	return entities.Comment{}, nil
@@ -58,7 +78,7 @@ func (h *CommentHandler) EditComment(ctx context.Context, requestData entities.C
 	commentID, err := strconv.Atoi(pathParams["cid"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Comment{}, err
+		return entities.Comment{}, errParsing
 	}
 
 	dataStr := make(map[string]string)
@@ -72,7 +92,7 @@ func (h *CommentHandler) EditComment(ctx context.Context, requestData entities.C
 	err = sightsRepo.EditCommentByCommentID(dataStr, dataInt)
 
 	if err != nil {
-		return entities.Comment{}, errors.New("cannot edit comment")
+		return entities.Comment{}, errEditComment
 	}
 
 	return entities.Comment{}, nil
@@ -89,7 +109,7 @@ func (h *CommentHandler) DeleteComment(ctx context.Context, requestData entities
 	commentID, err := strconv.Atoi(pathParams["cid"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Comment{}, err
+		return entities.Comment{}, errParsing
 	}
 
 	dataInt := make(map[string]int)
@@ -99,7 +119,7 @@ func (h *CommentHandler) DeleteComment(ctx context.Context, requestData entities
 	err = sightsRepo.DeleteCommentByCommentID(dataInt)
 
 	if err != nil {
-		return entities.Comment{}, errors.New("cannot edit comment")
+		return entities.Comment{}, errDeleteComment
 	}
 
 	return entities.Comment{}, nil

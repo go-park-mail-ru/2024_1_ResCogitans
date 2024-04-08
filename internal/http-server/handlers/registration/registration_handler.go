@@ -56,3 +56,46 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 	}
 	return UserResponse{ID: user.ID, Username: user.Username}, nil
 }
+
+// func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (UserResponse, error) {
+// 	db, err := db.GetPostgres()
+// 	if err != nil {
+// 		logger.Logger().Error(err.Error())
+// 	}
+
+// 	username := requestData.Username
+// 	password := requestData.Password
+
+// 	if err := entities.UserDataVerification(username, password); err != nil {
+// 		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
+// 	}
+
+// 	user, err := entities.CreateUser(username, password)
+// 	if err != nil {
+// 		return UserResponse{}, errCreateUser
+// 	}
+
+// 	responseWriter, ok := httputils.ContextWriter(ctx)
+// 	if !ok {
+// 		return UserResponse{}, errInternal
+// 	}
+
+// 	err = usecase.SetSession(responseWriter, user.ID)
+// 	if err != nil {
+// 		return UserResponse{}, errSetSession
+// 	}
+
+// 	dataStr := make(map[string]string)
+
+// 	dataStr["email"] = user.Username
+// 	dataStr["passwrd"] = user.Password
+
+// 	UserRepo := userRep.NewUserRepo(db)
+// 	_, err = UserRepo.CreateUser(dataStr)
+
+// 	if err != nil {
+// 		return UserResponse{}, errCreateUser
+// 	}
+
+// 	return UserResponse{ID: user.ID, Username: user.Username}, nil
+// }

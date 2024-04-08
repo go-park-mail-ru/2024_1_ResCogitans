@@ -72,10 +72,9 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 }
 
 func (repo *SightRepo) CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error {
-	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, dataInt["userID"], dataInt["sightID"], dataInt["rating"], dataStr["feedback"])
+	_, err := repo.db.Exec(ctx, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, dataInt["userID"], dataInt["sightID"], dataInt["rating"], dataStr["feedback"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -85,10 +84,9 @@ func (repo *SightRepo) CreateCommentBySightID(dataStr map[string]string, dataInt
 }
 
 func (repo *SightRepo) EditCommentByCommentID(dataStr map[string]string, dataInt map[string]int) error {
-	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, dataInt["rating"], dataStr["feedback"], dataInt["id"])
+	_, err := repo.db.Exec(ctx, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, dataInt["rating"], dataStr["feedback"], dataInt["id"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -98,10 +96,9 @@ func (repo *SightRepo) EditCommentByCommentID(dataStr map[string]string, dataInt
 }
 
 func (repo *SightRepo) DeleteCommentByCommentID(dataInt map[string]int) error {
-	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `DELETE FROM feedback WHERE id = $1`, dataInt["id"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM feedback WHERE id = $1`, dataInt["id"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -111,10 +108,9 @@ func (repo *SightRepo) DeleteCommentByCommentID(dataInt map[string]int) error {
 }
 
 func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]string) error {
-	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3)`, dataStr["name"], dataInt["userID"], dataStr["description"])
+	_, err := repo.db.Exec(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3)`, dataStr["name"], dataInt["userID"], dataStr["description"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -124,10 +120,9 @@ func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]
 }
 
 func (repo *SightRepo) DeleteJourneyByID(dataInt map[string]int) error {
-	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
