@@ -57,7 +57,7 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT id, user_id, sight_id, rating, feedback FROM feedback WHERE sight_id = $1`, id)
+	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT feedback.id, u.email, sight_id, rating, feedback FROM feedback INNER JOIN "user" AS u ON user_id = u.id WHERE sight_id = $1 `, id)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err

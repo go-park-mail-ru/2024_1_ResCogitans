@@ -50,7 +50,7 @@ func (h *SightsHandler) GetSights(ctx context.Context, _ entities.Sight) (entiti
 // @Success 200 SightComments
 // @Failure 404 "Not found"
 // @Router /sight/{id} [get]
-func (h *SightsHandler) GetSightByID(ctx context.Context, _ entities.Sight) (SightComments, error) {
+func (h *SightsHandler) GetSightByID(ctx context.Context, requestData entities.Sight) (SightComments, error) {
 	db, err := db.GetPostgres()
 	if err != nil {
 		logger.Logger().Error(err.Error())
