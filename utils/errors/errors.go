@@ -5,47 +5,57 @@ import (
 	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/pkg/errors"
 )
 
 type HttpError struct {
-	Code    int
-	Message error
-}
-
-type HttpResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"error"`
 }
 
-func NewHttpError(code int, message error) HttpError {
+func (e HttpError) Error() string {
+	return e.Message
+}
+
+func NewHttpError(code int, message string) HttpError {
 	return HttpError{
 		Code:    code,
 		Message: message,
 	}
 }
 
-var errInternalBytes = []byte(`{"error": "internal error"}`)
-
-func (e HttpError) Error() error {
-	return e.Message
+func UnwrapHttpError(err error) HttpError {
+	var httpError HttpError
+	if errors.As(err, &httpError) {
+		return NewHttpError(httpError.Code, httpError.Message)
+	}
+	return NewHttpError(http.StatusInternalServerError, err.Error())
 }
 
-func WriteHttpError(errIn HttpError, w http.ResponseWriter) {
-	var response HttpResponse
-	response.Code = errIn.Code
-	response.Message = errIn.Message.Error()
+func IsHttpError(err error) bool {
+	var httpError HttpError
+	if errors.As(err, &httpError) {
+		return true
+	}
+	return false
+}
+
+var errInternalBytes = []byte(`{"error": "internal error"}`)
+
+func WriteHttpError(errIn error, w http.ResponseWriter) {
+	httpError := UnwrapHttpError(errIn)
 	w.Header().Add("Content-Type", "application/json")
-	bytes, err := json.Marshal(response)
+	bytes, err := json.Marshal(httpError)
 	if err != nil {
-		logger.Logger().Error("error marshal err", "error", response.Message)
+		logger.Logger().Error("error marshal err", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, writeErr := w.Write(errInternalBytes); writeErr != nil {
-			logger.Logger().Error("error writing fallback error", "error", writeErr)
+			logger.Logger().Error("error writing fallback error", "error", writeErr.Error())
 		}
 		return
 	}
 
-	w.WriteHeader(response.Code)
+	w.WriteHeader(httpError.Code)
 	if _, writeErr := w.Write(bytes); writeErr != nil {
 		logger.Logger().Error("error writing http error", "error", writeErr)
 		return

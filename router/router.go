@@ -13,7 +13,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/updateUserData"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/app"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
-	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -54,7 +53,7 @@ func CreateRoute[T wrapper.Validator, Resp any](f wrapper.ServeHTTPFunc[T, Resp]
 	return router
 }
 
-func CreateServeHTTPFunc[T wrapper.Validator, R any](f func(ctx context.Context, request T) (R, httperrors.HttpError)) wrapper.ServeHTTPFunc[T, R] {
+func CreateServeHTTPFunc[T wrapper.Validator, R any](f func(ctx context.Context, request T) (R, error)) wrapper.ServeHTTPFunc[T, R] {
 	return f
 }
 

@@ -12,7 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
-type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, httperrors.HttpError)
+type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
 
 type Wrapper[T Validator, Resp any] struct {
 	ServeHTTP ServeHTTPFunc[T, Resp]
@@ -39,29 +39,29 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 		if err != nil {
 			errText := "Error decoding request body"
 			logger.Error(errText, "error", err)
-			httperrors.WriteHttpError(httperrors.NewHttpError(http.StatusInternalServerError, err), resWriter)
+			httperrors.WriteHttpError(err, resWriter)
 			return
 		}
 
 		if err = requestData.Validate(); err != nil {
 			errorText := "Validation error"
 			logger.Error(errorText, "error", err)
-			httperrors.WriteHttpError(httperrors.NewHttpError(http.StatusInternalServerError, err), resWriter)
+			httperrors.WriteHttpError(err, resWriter)
 			return
 		}
 	}
 
-	response, httpErr := w.ServeHTTP(ctx, requestData)
-	if httpErr != (httperrors.HttpError{}) {
-		logger.Error("Handler error", "error", httpErr.Message)
-		httperrors.WriteHttpError(httpErr, resWriter)
+	response, err := w.ServeHTTP(ctx, requestData)
+	if err != nil {
+		logger.Error("Handler error", "error", err.Error())
+		httperrors.WriteHttpError(err, resWriter)
 		return
 	}
 
 	rawJSON, err := json.Marshal(response)
 	if err != nil {
 		logger.Error("Error encoding response", "error", err)
-		httperrors.WriteHttpError(httperrors.NewHttpError(http.StatusInternalServerError, err), resWriter)
+		httperrors.WriteHttpError(err, resWriter)
 		return
 	}
 

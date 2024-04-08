@@ -22,29 +22,33 @@ func NewUpdateDataHandler(sessionUseCase usecase.AuthInterface, userUseCase usec
 	}
 }
 
-func (h *UpdateDataHandler) Update(ctx context.Context, requestData entities.User) (entities.UserResponse, httperrors.HttpError) {
+func (h *UpdateDataHandler) Update(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
+		return entities.UserResponse{}, err
 	}
 
 	userID, err := h.sessionUseCase.GetSession(request)
 	if err != nil {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusForbidden, err)
+		return entities.UserResponse{}, err
+	}
+
+	if h.userUseCase.IsUsernameTaken(username) {
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "Username is taken")
 	}
 
 	err = h.userUseCase.UserDataVerification(username, password)
 	if err != nil {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, err)
+		return entities.UserResponse{}, err
 	}
 
 	user, err := h.userUseCase.ChangeData(userID, username, password)
 	if err != nil {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusInternalServerError, err)
+		return entities.UserResponse{}, err
 	}
 
-	return entities.UserResponse{Username: user.Username}, httperrors.HttpError{}
+	return entities.UserResponse{Username: user.Username}, nil
 }

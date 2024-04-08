@@ -1,10 +1,12 @@
 package usecase
 
 import (
+	"net/http"
 	"regexp"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/user"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -56,10 +58,10 @@ func (u *UserUseCase) DeleteUser(userID int) error {
 
 func (u *UserUseCase) UserDataVerification(username, password string) error {
 	if !ValidateUsername(username) {
-		return errors.New("Username doesn't meet requirements")
+		return httperrors.NewHttpError(http.StatusBadRequest, "Username doesn't meet requirements")
 	}
 	if !ValidatePassword(password) {
-		return errors.New("Password doesn't meet requirements")
+		return httperrors.NewHttpError(http.StatusBadRequest, "Password doesn't meet requirements")
 	}
 
 	return nil
@@ -97,7 +99,7 @@ func (u *UserUseCase) ChangeData(userID int, username, password string) (entitie
 	saltedPassword := password + salt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return entities.User{}, errors.Wrap(err, "Failed creating hash password")
+		return entities.User{}, errors.Wrap(err, "failed creating hash password")
 	}
 	err = u.UserStorage.ChangePassword(userID, string(hashedPassword), salt)
 	if err != nil {
@@ -117,7 +119,7 @@ func (u *UserUseCase) UserExists(username, password string) error {
 	saltedPassword := password + user.Salt
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(saltedPassword))
 	if err != nil {
-		return errors.Wrap(err, "Password is incorrect")
+		return errors.Wrap(err, "password is incorrect")
 	}
 
 	return nil

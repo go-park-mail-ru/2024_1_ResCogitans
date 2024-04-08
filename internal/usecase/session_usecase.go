@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 )
@@ -58,7 +59,7 @@ func (a *AuthUseCase) GetSession(r *http.Request) (int, error) {
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
 		return a.SessionStorage.GetSession(sessionID)
 	}
-	return 0, err
+	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
 }
 
 func (a *AuthUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {

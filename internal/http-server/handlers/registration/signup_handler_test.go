@@ -11,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/user"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/stretchr/testify/assert"
 )
@@ -68,7 +69,7 @@ func TestSignUp(t *testing.T) {
 		},
 		{
 			name:            "Request with cookie",
-			inputJSON:       `{"username": "sanBoy", "password": "A123B123abc123"}`,
+			inputJSON:       `{"username": "sancho", "password": "A123B123abc123"}`,
 			expectedStatus:  http.StatusBadRequest,
 			expectedMessage: "User is already authorized",
 		},
@@ -101,6 +102,11 @@ func TestSignUp(t *testing.T) {
 					Name:  "session_id",
 					Value: encoded,
 				})
+			} else {
+				req.AddCookie(&http.Cookie{
+					Name:  "session_id",
+					Value: "",
+				})
 			}
 
 			// Создаем пользователя и декодируем JSON
@@ -111,7 +117,11 @@ func TestSignUp(t *testing.T) {
 			}
 
 			// Вызываем ручку с контекстом
-			response, httpErr := signUpHandler.SignUp(ctx, user)
+			response, err := signUpHandler.SignUp(ctx, user)
+			var httpErr httperrors.HttpError
+			if err != nil {
+				httpErr = httperrors.UnwrapHttpError(err)
+			}
 
 			// Проверяем ответ
 
@@ -119,7 +129,7 @@ func TestSignUp(t *testing.T) {
 				assert.Equal(t, tc.expectedMessage, response.Username, "handler returned wrong username")
 			} else {
 				assert.Equal(t, tc.expectedStatus, httpErr.Code, "handler returned wrong status code")
-				assert.EqualError(t, httpErr.Message, tc.expectedMessage, "handler returned wrong error message")
+				assert.Equal(t, tc.expectedMessage, httpErr.Message, "handler returned wrong error message")
 			}
 		})
 	}

@@ -1,9 +1,11 @@
 package user
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/pkg/errors"
 )
 
@@ -55,7 +57,7 @@ func (us *UserStorage) ChangeUsername(userID int, newUsername string) error {
 
 	user, exists := us.Users[userID]
 	if !exists {
-		return errors.New("User not found")
+		return httperrors.NewHttpError(http.StatusBadRequest, "User not found")
 	}
 	user.Username = newUsername
 	us.Users[userID] = user
@@ -68,7 +70,7 @@ func (us *UserStorage) ChangePassword(userID int, newPassword, salt string) erro
 
 	user, exists := us.Users[userID]
 	if !exists {
-		return errors.New("User not found")
+		return httperrors.NewHttpError(http.StatusBadRequest, "User not found")
 	}
 	user.Password = newPassword
 	user.Salt = salt
@@ -82,7 +84,7 @@ func (us *UserStorage) GetUserByID(userID int) (entities.User, error) {
 
 	user, exists := us.Users[userID]
 	if !exists {
-		return entities.User{}, errors.New("User not found")
+		return entities.User{}, httperrors.NewHttpError(http.StatusBadRequest, "User not found")
 	}
 	return user, nil
 }
@@ -96,7 +98,7 @@ func (us *UserStorage) GetUserByUsername(username string) (entities.User, error)
 			return user, nil
 		}
 	}
-	return entities.User{}, errors.New("User not found")
+	return entities.User{}, httperrors.NewHttpError(http.StatusBadRequest, "User not found")
 }
 
 func (us *UserStorage) DeleteUser(userID int) error {

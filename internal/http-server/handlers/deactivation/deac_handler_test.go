@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/user"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ func TestDeactivate(t *testing.T) {
 	}{
 		{
 			name:            "Successful deactivation",
-			expectedStatus:  0,
+			expectedStatus:  http.StatusOK,
 			expectedMessage: "",
 		},
 		{
@@ -44,12 +45,12 @@ func TestDeactivate(t *testing.T) {
 		},
 		{
 			name:            "Context without cookie",
-			expectedStatus:  http.StatusForbidden,
+			expectedStatus:  http.StatusInternalServerError,
 			expectedMessage: "http: named cookie not present",
 		},
 		{
 			name:            "Context with wrong cookie",
-			expectedStatus:  http.StatusForbidden,
+			expectedStatus:  http.StatusBadRequest,
 			expectedMessage: "Session not found",
 		},
 	}
@@ -95,15 +96,20 @@ func TestDeactivate(t *testing.T) {
 			}
 
 			// Вызываем ручку с контекстом
-			response, httpErr := deactivateHandler.Deactivate(ctx, entities.User{})
+			response, err := deactivateHandler.Deactivate(ctx, entities.User{})
+
+			var httpErr httperrors.HttpError
+			if err != nil {
+				httpErr = httperrors.UnwrapHttpError(err)
+			}
 
 			// Проверяем ответ
 
-			if tc.expectedStatus == 0 {
+			if tc.expectedStatus == http.StatusOK {
 				assert.Equal(t, tc.expectedMessage, response.Username, "handler returned wrong username")
 			} else {
 				assert.Equal(t, tc.expectedStatus, httpErr.Code, "handler returned wrong status code")
-				assert.EqualError(t, httpErr.Message, tc.expectedMessage, "handler returned wrong error message")
+				assert.Equal(t, tc.expectedMessage, httpErr.Message, "handler returned wrong error message")
 			}
 		})
 	}

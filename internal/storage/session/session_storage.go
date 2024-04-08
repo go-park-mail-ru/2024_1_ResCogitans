@@ -1,8 +1,10 @@
 package session
 
 import (
-	"errors"
+	"net/http"
 	"sync"
+
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 )
 
 type StorageInterface interface {
@@ -34,7 +36,7 @@ func (ss *SessionStorage) GetSession(sessionID string) (int, error) {
 	defer ss.mu.Unlock()
 	userID, ok := ss.Store[sessionID]
 	if !ok {
-		return 0, errors.New("Session not found")
+		return 0, httperrors.NewHttpError(http.StatusBadRequest, "Session not found")
 	}
 	return userID, nil
 }

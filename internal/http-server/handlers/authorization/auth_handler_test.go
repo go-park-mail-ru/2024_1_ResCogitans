@@ -11,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/session"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/user"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +39,7 @@ func TestAuthorize(t *testing.T) {
 		{
 			name:            "Successful authorization",
 			inputJSON:       `{"username": "san", "password": "A123B123abc"}`,
-			expectedStatus:  0,
+			expectedStatus:  http.StatusOK,
 			expectedMessage: "san",
 		},
 		{
@@ -97,10 +98,14 @@ func TestAuthorize(t *testing.T) {
 				ctx = httputils.SetResponseWriterToCtx(ctx, httptest.NewRecorder())
 			}
 			if tc.name == "Context request with cookie" {
-				sessionID := "test_session_id"
 				req.AddCookie(&http.Cookie{
 					Name:  "session_id",
-					Value: sessionID,
+					Value: "test_session_id",
+				})
+			} else {
+				req.AddCookie(&http.Cookie{
+					Name:  "session_id",
+					Value: "",
 				})
 			}
 
@@ -112,15 +117,19 @@ func TestAuthorize(t *testing.T) {
 			}
 
 			// Вызываем ручку с контекстом
-			response, httpErr := authHandler.Authorize(ctx, user)
+			response, err := authHandler.Authorize(ctx, user)
 
 			// Проверяем ответ
+			var httpErr httperrors.HttpError
+			if err != nil {
+				httpErr = httperrors.UnwrapHttpError(err)
+			}
 
-			if tc.expectedStatus == 0 {
+			if tc.expectedStatus == http.StatusOK {
 				assert.Equal(t, tc.expectedMessage, response.Username, "handler returned wrong username")
 			} else {
+				assert.Equal(t, tc.expectedMessage, httpErr.Message, "handler returned wrong error message")
 				assert.Equal(t, tc.expectedStatus, httpErr.Code, "handler returned wrong status code")
-				assert.EqualError(t, httpErr.Message, tc.expectedMessage, "handler returned wrong error message")
 			}
 		})
 	}
@@ -201,8 +210,7 @@ func TestAuthorize(t *testing.T) {
 			if tc.expectedStatus == 0 {
 				assert.Equal(t, tc.expectedMessage, response.Username, "handler returned wrong username")
 			} else {
-				assert.Equal(t, tc.expectedStatus, httpErr.Code, "handler returned wrong status code")
-				assert.EqualError(t, httpErr.Message, tc.expectedMessage, "handler returned wrong error message")
+				assert.Equal(t, httpErr.Error(), tc.expectedMessage, "handler returned wrong error message")
 			}
 		})
 	}
