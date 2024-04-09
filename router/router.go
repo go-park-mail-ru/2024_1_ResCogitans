@@ -39,7 +39,6 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	//journeys
 	router.Mount("/trip/{id}/delete", DeleteJourneyRoutes())
 	router.Mount("/trip/create", CreateJourneyRoutes())
-	// router.Mount("/trip/{id}/edit", EditJourneyRoutes())
 	router.Mount("/trips", JourneyRoutes())
 
 	// journey_sights
