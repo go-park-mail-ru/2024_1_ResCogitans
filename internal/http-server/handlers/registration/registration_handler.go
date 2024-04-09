@@ -66,8 +66,8 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		logger.Logger().Error(err.Error())
 	}
 
-	username := requestData.Username
-	password := requestData.Password
+	username := requestData.Email
+	password := requestData.Passwrd
 
 	if err := entities.UserDataVerification(username, password); err != nil {
 		return UserResponse{}, errors.HttpError{Code: http.StatusBadRequest, Message: err.Error()}
@@ -90,8 +90,8 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 
 	dataStr := make(map[string]string)
 
-	dataStr["email"] = user.Username
-	dataStr["passwrd"] = user.Password
+	dataStr["email"] = user.Email
+	dataStr["passwrd"] = user.Passwrd
 
 	UserRepo := userRep.NewUserRepo(db)
 	_, err = UserRepo.CreateUser(dataStr)
@@ -100,5 +100,5 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return UserResponse{}, errCreateUser
 	}
 
-	return UserResponse{ID: user.ID, Username: user.Username}, nil
+	return UserResponse{ID: user.ID, Username: user.Email}, nil
 }

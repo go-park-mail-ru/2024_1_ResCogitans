@@ -2,12 +2,16 @@ package authorization
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/server/db"
+	userRep "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/repository/postgres"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
 type AuthorizationHandler struct{}
@@ -41,31 +45,49 @@ var (
 )
 
 func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
-	username := requestData.Username
-	password := requestData.Password
+	username := requestData.Email
+	password := requestData.Passwrd
+
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+
+	dataStr := make(map[string]string)
+
+	dataStr["email"] = username
+	dataStr["passwrd"] = password
+
+	UserRepo := userRep.NewUserRepo(db)
+	user, err := UserRepo.AuthorizeUser(dataStr)
+	if err != nil {
+		return UserResponse{}, errLoginUser
+	}
 
 	responseWriter, ok := httputils.ContextWriter(ctx)
 	if !ok {
 		return UserResponse{}, errInternal
 	}
 
-	user, err := entities.GetUserByUsername(username)
-	if err != nil {
-		return UserResponse{}, errLoginUser
-	}
+	// user, err := entities.GetUserByUsername(username)
+	// if err != nil {
+	// 	return UserResponse{}, errLoginUser
+	// }
 
-	if ok = entities.IsAuthenticated(username, password); !ok {
-		return UserResponse{}, errLoginUser
-	}
+	// if ok = entities.IsAuthenticated(username, password); !ok {
+	// 	return UserResponse{}, errLoginUser
+	// }
 
 	err = usecase.SetSession(responseWriter, user.ID)
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}
 
+	fmt.Println(usecase.SessionStore)
+
 	userResponse := UserResponse{
 		ID:       user.ID,
-		Username: user.Username,
+		Username: user.Email,
 	}
 
 	return userResponse, nil

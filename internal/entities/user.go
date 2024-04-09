@@ -9,9 +9,9 @@ import (
 )
 
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	ID      int    `json:"id"`
+	Email   string `json:"username"`
+	Passwrd string `json:"password"`
 }
 
 var (
@@ -25,38 +25,38 @@ func (h User) Validate() error {
 
 func init() {
 	testUser := User{
-		ID:       1,
-		Username: "testuser",
-		Password: "testpassword",
+		ID:      1,
+		Email:   "testuser",
+		Passwrd: "testpassword",
 	}
 
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Password), bcrypt.DefaultCost)
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Passwrd), bcrypt.DefaultCost)
 	if err != nil {
 		panic("Failed creating hash password for test user")
 	}
 
-	testUser.Password = string(hashPassword)
+	testUser.Passwrd = string(hashPassword)
 	users = append(users, testUser)
 }
 
-func GetUserByUsername(username string) (*User, error) {
-	for _, user := range users {
-		if user.Username == username {
-			return &user, nil
-		}
-	}
-	return nil, errors.New("User not found")
-}
+// func GetUserByUsername(username string) (*User, error) {
+// 	for _, user := range users {
+// 		if user.Username == username {
+// 			return &user, nil
+// 		}
+// 	}
+// 	return nil, errors.New("User not found")
+// }
 
-func IsAuthenticated(username, password string) bool {
-	user, err := GetUserByUsername(username)
-	if err != nil {
-		return false
-	}
+// func IsAuthenticated(username, password string) bool {
+// 	user, err := GetUserByUsername(username)
+// 	if err != nil {
+// 		return false
+// 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	return err == nil
-}
+// 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+// 	return err == nil
+// }
 
 func CreateUser(username, password string) (User, error) {
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -88,11 +88,11 @@ func UserDataVerification(username, password string) error {
 		return errors.New("username and password must not be empty")
 	}
 
-	for _, user := range users {
-		if user.Username == username {
-			return errors.New("username already exists")
-		}
-	}
+	// for _, user := range users {
+	// 	if user.Username == username {
+	// 		return errors.New("username already exists")
+	// 	}
+	// }
 
 	if !ValidatePassword(password) {
 		return errors.New("password is not complex")
