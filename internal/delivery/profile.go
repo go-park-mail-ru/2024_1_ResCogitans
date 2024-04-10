@@ -99,7 +99,7 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	dataStr := make(map[string]string)
 
 	dataInt["userID"] = userID
-	dataStr["name"] = requestData.Username
+	dataStr["username"] = requestData.Username
 	dataStr["bio"] = requestData.Bio
 	dataStr["avatar"] = requestData.Avatar
 

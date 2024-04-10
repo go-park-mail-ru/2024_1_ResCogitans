@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
@@ -97,36 +98,39 @@ func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
 }
 
 func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string]string) (entities.UserProfile, error) {
-	var profile entities.UserProfile
 	ctx := context.Background()
 
-	query := "UPDATE journey SET "
+	query := "UPDATE profile SET "
 	var queryParams []interface{}
+	var setClauses []string
 
-	// Добавляем поля для обновления в запрос
-	if dataStr["name"] != "" {
-		query += "name = $1, "
-		queryParams = append(queryParams, dataStr["name"])
+	if name, ok := dataStr["username"]; ok {
+		setClauses = append(setClauses, "username = $1")
+		queryParams = append(queryParams, name)
 	}
-	if dataStr["bio"] != "" {
-		query += "bio = $2, "
-		queryParams = append(queryParams, dataStr["bio"])
+	if bio, ok := dataStr["bio"]; ok {
+		setClauses = append(setClauses, "bio = $2")
+		queryParams = append(queryParams, bio)
 	}
-	if dataStr["avatar"] != "" {
-		query += "avatar = $3"
-		queryParams = append(queryParams, dataStr["avatar"])
+	if avatar, ok := dataStr["avatar"]; ok {
+		setClauses = append(setClauses, "avatar = $3")
+		queryParams = append(queryParams, avatar)
 	}
 
-	// Убираем последнюю запятую и добавляем условие WHERE
-	query = query + " WHERE id = $4 RETURNING id, name, user_id, description"
+	query += strings.Join(setClauses, ", ") + " WHERE user_id = $4"
 	queryParams = append(queryParams, dataInt["userID"])
 
-	row := repo.db.QueryRow(ctx, query, queryParams...)
-	err := row.Scan(&profile.UserID, &profile.Username, &profile.Bio, &profile.Avatar)
+	_, err := repo.db.Exec(ctx, query, queryParams...)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.UserProfile{}, err
 	}
 
-	return profile, nil
+	updatedProfile, err := repo.GetUserProfile(dataInt)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.UserProfile{}, err
+	}
+
+	return updatedProfile, nil
 }
