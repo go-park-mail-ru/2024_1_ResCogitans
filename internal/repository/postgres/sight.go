@@ -135,7 +135,7 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.name, j.description, u.email FROM journey AS j INNER JOIN "user" AS u ON u.id = $1`, userID)
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, u.email FROM journey AS j INNER JOIN "user" AS u ON u.id = $1`, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err

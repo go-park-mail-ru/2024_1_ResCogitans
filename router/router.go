@@ -33,8 +33,8 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 
 	// user profile
 	router.Mount("/profile/{id}", GetProfileRoutes())
-	// router.Mount("/profile/edit", ProfileEditRoutes())
-	// router.Mount("/profile/delete", ProfileDeleteRoutes())
+	// router.Mount("/profile/{id}/edit", ProfileEditRoutes())
+	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
 
 	// comments
 	router.Mount("/sight/{id}", SightByIDRoutes())
@@ -200,6 +200,15 @@ func GetProfileRoutes() chi.Router {
 	router := chi.NewRouter()
 	profileHandler := user.ProfileHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.GetUserProfile}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func DeleteProfileRoutes() chi.Router {
+	router := chi.NewRouter()
+	profileHandler := user.ProfileHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.DeleteUser}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router

@@ -30,6 +30,10 @@ func (h User) Validate() error {
 	return nil
 }
 
+func (h UserProfile) Validate() error {
+	return nil
+}
+
 func init() {
 	testUser := User{
 		ID:      1,

@@ -60,11 +60,11 @@ func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, e
 	return *user[0], nil
 }
 
-func (repo *UserRepo) GetUserProfile(dataStr map[string]int) (entities.UserProfile, error) {
+func (repo *UserRepo) GetUserProfile(dataInt map[string]int) (entities.UserProfile, error) {
 	var user []entities.UserProfile
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM "profile" WHERE user_id = $1`, dataStr["userID"])
+	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM "profile" WHERE user_id = $1`, dataInt["userID"])
 
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -77,4 +77,21 @@ func (repo *UserRepo) GetUserProfile(dataStr map[string]int) (entities.UserProfi
 	}
 
 	return user[0], nil
+}
+
+func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
+	ctx := context.Background()
+
+	_, err := repo.db.Exec(ctx, `DELETE FROM "profile" WHERE user_id = $1`, dataInt["userID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+	_, err = repo.db.Exec(ctx, `DELETE FROM "user" WHERE id = $1`, dataInt["userID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
 }

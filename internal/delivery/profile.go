@@ -52,3 +52,31 @@ func (h *ProfileHandler) GetUserProfile(ctx context.Context, requestData entitie
 
 	return profileResponse, nil
 }
+
+func (h *ProfileHandler) DeleteUser(ctx context.Context, requestData entities.User) (ProfileResponse, error) {
+	db, err := db.GetPostgres()
+
+	if err != nil {
+		logger.Logger().Error(err.Error())
+	}
+
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	userID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return ProfileResponse{}, errParsing
+	}
+
+	dataInt := make(map[string]int)
+
+	dataInt["userID"] = userID
+
+	userRepo := userRep.NewUserRepo(db)
+	err = userRepo.DeleteUserProfile(dataInt)
+
+	if err != nil {
+		return ProfileResponse{}, errDeleteJourney
+	}
+
+	return ProfileResponse{}, nil
+}
