@@ -105,8 +105,15 @@ func (h *JourneyHandler) GetJourneys(ctx context.Context, requestData entities.J
 		logger.Logger().Error(err.Error())
 	}
 
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	userID, err := strconv.Atoi(pathParams["userID"])
+	if err != nil {
+		logger.Logger().Error("Cannot convert string to integer to get sight")
+		return entities.Journeys{}, errParsing
+	}
+
 	sightsRepo := sightRep.NewSightRepo(db)
-	journeys, _ := sightsRepo.GetJourneys(requestData.UserID)
+	journeys, _ := sightsRepo.GetJourneys(userID)
 
 	return entities.Journeys{Journey: journeys}, err
 }
@@ -163,7 +170,7 @@ func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData ent
 	return entities.JourneySight{}, nil
 }
 
-func (h *JourneyHandler) GetJourneySights(ctx context.Context, requestData entities.JourneySight) (entities.Sights, error) {
+func (h *JourneyHandler) GetJourneySights(ctx context.Context, requestData entities.JourneySight) (entities.JourneySights, error) {
 	db, err := db.GetPostgres()
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -172,15 +179,20 @@ func (h *JourneyHandler) GetJourneySights(ctx context.Context, requestData entit
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		logger.Logger().Error("Cannot convert string to integer to get sight")
-		return entities.Sights{}, errParsing
+		return entities.JourneySights{}, errParsing
 	}
 
 	sightsRepo := sightRep.NewSightRepo(db)
 	sights, err := sightsRepo.GetJourneySights(journeyID)
 
 	if err != nil {
-		return entities.Sights{}, errGetJourneySights
+		return entities.JourneySights{}, errGetJourneySights
 	}
 
-	return entities.Sights{Sight: sights}, nil
+	journey, err := sightsRepo.GetJourney(journeyID)
+	if err != nil {
+		return entities.JourneySights{}, errGetJourneySights
+	}
+
+	return entities.JourneySights{Journey: journey, Sight: sights}, nil
 }

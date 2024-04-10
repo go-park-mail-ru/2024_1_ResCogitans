@@ -25,7 +25,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middle.SessionMiddleware)
 
 	// upload image
-	// router.HandleFunc("/upload", user.upload)
+	router.HandleFunc("/upload", user.Upload)
 
 	router.Mount("/sights", SightRoutes())
 
@@ -48,7 +48,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	//journeys
 	router.Mount("/trip/{id}/delete", DeleteJourneyRoutes())
 	router.Mount("/trip/create", CreateJourneyRoutes())
-	router.Mount("/trips", JourneyRoutes())
+	router.Mount("/{userID}/trips", JourneyRoutes())
 
 	// journey_sights
 	router.Mount("/trip/{id}", JourneySightRoutes())
@@ -192,7 +192,7 @@ func JourneySightRoutes() chi.Router {
 	router := chi.NewRouter()
 
 	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.Sights]{ServeHTTP: journeyHandler.GetJourneySights}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySights]{ServeHTTP: journeyHandler.GetJourneySights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router

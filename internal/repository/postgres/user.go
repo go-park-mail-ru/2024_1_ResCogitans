@@ -95,3 +95,38 @@ func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
 
 	return nil
 }
+
+func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string]string) (entities.UserProfile, error) {
+	var profile entities.UserProfile
+	ctx := context.Background()
+
+	query := "UPDATE journey SET "
+	var queryParams []interface{}
+
+	// Добавляем поля для обновления в запрос
+	if dataStr["name"] != "" {
+		query += "name = $1, "
+		queryParams = append(queryParams, dataStr["name"])
+	}
+	if dataStr["bio"] != "" {
+		query += "bio = $2, "
+		queryParams = append(queryParams, dataStr["bio"])
+	}
+	if dataStr["avatar"] != "" {
+		query += "avatar = $3"
+		queryParams = append(queryParams, dataStr["avatar"])
+	}
+
+	// Убираем последнюю запятую и добавляем условие WHERE
+	query = query + " WHERE id = $4 RETURNING id, name, user_id, description"
+	queryParams = append(queryParams, dataInt["userID"])
+
+	row := repo.db.QueryRow(ctx, query, queryParams...)
+	err := row.Scan(&profile.UserID, &profile.Username, &profile.Bio, &profile.Avatar)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.UserProfile{}, err
+	}
+
+	return profile, nil
+}

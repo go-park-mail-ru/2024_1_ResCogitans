@@ -21,6 +21,11 @@ type Journeys struct {
 	Journey []Journey `json:"journeys"`
 }
 
+type JourneySights struct {
+	Journey Journey `json:"journey"`
+	Sight   []Sight `json:"sights"`
+}
+
 func (h Journey) Validate() error {
 	return nil
 }
