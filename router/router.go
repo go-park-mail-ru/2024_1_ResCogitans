@@ -24,6 +24,9 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(cors.CorsMiddleware)
 	router.Use(middle.SessionMiddleware)
 
+	// upload image
+	// router.HandleFunc("/upload", user.upload)
+
 	router.Mount("/sights", SightRoutes())
 
 	// user authorization and registration

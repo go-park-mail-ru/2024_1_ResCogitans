@@ -107,16 +107,18 @@ func (repo *SightRepo) DeleteCommentByCommentID(dataInt map[string]int) error {
 	return nil
 }
 
-func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]string) error {
+func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error) {
+	var journey entities.Journey
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3)`, dataStr["name"], dataInt["userID"], dataStr["description"])
+	row := repo.db.QueryRow(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3) RETURNING id, name, user_id, description`, dataStr["name"], dataInt["userID"], dataStr["description"])
+	err := row.Scan(&journey.ID, &journey.Name, &journey.UserID, &journey.Description)
 	if err != nil {
 		logger.Logger().Error(err.Error())
-		return err
+		return entities.Journey{}, err
 	}
 
-	return nil
+	return journey, nil
 }
 
 func (repo *SightRepo) DeleteJourneyByID(dataInt map[string]int) error {

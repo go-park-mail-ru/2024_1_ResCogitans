@@ -62,13 +62,13 @@ func (h JourneyHandler) CreateJourney(ctx context.Context, requestData entities.
 	dataStr["description"] = requestData.Description
 
 	sightsRepo := sightRep.NewSightRepo(db)
-	err = sightsRepo.CreateJourney(dataInt, dataStr)
+	journey, err := sightsRepo.CreateJourney(dataInt, dataStr)
 
 	if err != nil {
 		return entities.Journey{}, errCreateJourney
 	}
 
-	return entities.Journey{}, nil
+	return journey, nil
 }
 
 func (h JourneyHandler) DeleteJourney(ctx context.Context, requestData entities.Journey) (entities.Journey, error) {
