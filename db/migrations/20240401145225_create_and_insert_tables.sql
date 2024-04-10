@@ -187,6 +187,21 @@ INSERT INTO image(path, sight_id) VALUES
 ('public/12.jpg', 12);
 
 
+CREATE OR REPLACE FUNCTION create_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO "profile" (user_id, username, bio, avatar)
+    VALUES (NEW.id, NEW.email, '', '');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER create_profile_trigger
+AFTER INSERT ON "user"
+FOR EACH ROW
+EXECUTE FUNCTION create_profile();
+
+
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';

@@ -1,8 +1,7 @@
-package authorization
+package delivery
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
@@ -33,10 +32,6 @@ var (
 	errClearSession = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed clearing session",
-	}
-	errInternal = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "internal Error",
 	}
 	errSessionNotSet = errors.HttpError{
 		Code:    http.StatusUnauthorized,
@@ -69,21 +64,10 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return UserResponse{}, errInternal
 	}
 
-	// user, err := entities.GetUserByUsername(username)
-	// if err != nil {
-	// 	return UserResponse{}, errLoginUser
-	// }
-
-	// if ok = entities.IsAuthenticated(username, password); !ok {
-	// 	return UserResponse{}, errLoginUser
-	// }
-
 	err = usecase.SetSession(responseWriter, user.ID)
 	if err != nil {
 		return UserResponse{}, errSetSession
 	}
-
-	fmt.Println(usecase.SessionStore)
 
 	userResponse := UserResponse{
 		ID:       user.ID,

@@ -5,10 +5,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
 
 	sight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
+	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
@@ -26,9 +25,16 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middle.SessionMiddleware)
 
 	router.Mount("/sights", SightRoutes())
+
+	// user authorization and registration
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
+
+	// user profile
+	router.Mount("/profile/{id}", GetProfileRoutes())
+	// router.Mount("/profile/edit", ProfileEditRoutes())
+	// router.Mount("/profile/delete", ProfileDeleteRoutes())
 
 	// comments
 	router.Mount("/sight/{id}", SightByIDRoutes())
@@ -61,8 +67,8 @@ func SightRoutes() chi.Router {
 func SignUpRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	regHandler := registration.RegistrationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, registration.UserResponse]{ServeHTTP: regHandler.SignUp}
+	regHandler := user.RegistrationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
@@ -71,8 +77,8 @@ func SignUpRoutes() chi.Router {
 func LogOutRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	logOutHandler := authorization.AuthorizationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.UserResponse]{ServeHTTP: logOutHandler.LogOut}
+	logOutHandler := user.AuthorizationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: logOutHandler.LogOut}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
@@ -81,8 +87,8 @@ func LogOutRoutes() chi.Router {
 func AuthRoutes() chi.Router {
 	router := chi.NewRouter()
 
-	authHandler := authorization.AuthorizationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, authorization.UserResponse]{ServeHTTP: authHandler.Authorize}
+	authHandler := user.AuthorizationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: authHandler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
@@ -184,6 +190,16 @@ func JourneySightRoutes() chi.Router {
 
 	journeyHandler := sight.JourneyHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.Sights]{ServeHTTP: journeyHandler.GetJourneySights}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+// profile
+func GetProfileRoutes() chi.Router {
+	router := chi.NewRouter()
+	profileHandler := user.ProfileHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.GetUserProfile}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router

@@ -11,12 +11,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SightRepo struct
+// UserRepo struct
 type UserRepo struct {
 	db *pgxpool.Pool
 }
 
-// NewSightRepo creates sight repo
+// NewUserRepo creates sight repo
 func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{
 		db: db,
@@ -46,8 +46,6 @@ func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, e
 		return entities.User{}, err
 	}
 
-	fmt.Println(*user[0])
-
 	if user == nil {
 		fmt.Println("Empty user")
 		return entities.User{}, err
@@ -60,4 +58,23 @@ func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, e
 	}
 
 	return *user[0], nil
+}
+
+func (repo *UserRepo) GetUserProfile(dataStr map[string]int) (entities.UserProfile, error) {
+	var user []entities.UserProfile
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM "profile" WHERE user_id = $1`, dataStr["userID"])
+
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.UserProfile{}, err
+	}
+
+	if user == nil {
+		fmt.Println("Empty user")
+		return entities.UserProfile{}, err
+	}
+
+	return user[0], nil
 }

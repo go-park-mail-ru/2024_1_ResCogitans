@@ -14,6 +14,13 @@ type User struct {
 	Passwrd string `json:"password"`
 }
 
+type UserProfile struct {
+	UserID   int    `json:"id"`
+	Username string `json:"username"`
+	Bio      string `json:"bio"`
+	Avatar   string `json:"avatar"`
+}
+
 var (
 	users []User
 	mu    sync.Mutex

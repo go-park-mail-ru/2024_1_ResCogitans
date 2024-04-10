@@ -25,10 +25,6 @@ var (
 		Code:    http.StatusInternalServerError,
 		Message: "failed creating new journey",
 	}
-	errEditJourney = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "failed editing journey",
-	}
 	errDeleteJourney = errors.HttpError{
 		Code:    http.StatusInternalServerError,
 		Message: "failed deleting journey",
