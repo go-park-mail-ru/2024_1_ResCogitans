@@ -221,7 +221,7 @@ func EditProfileRoutes() chi.Router {
 	router := chi.NewRouter()
 	profileHandler := user.ProfileHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: profileHandler.EditUserProfile}
-	router.Get("/", wrapperInstance.HandlerWrapper)
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

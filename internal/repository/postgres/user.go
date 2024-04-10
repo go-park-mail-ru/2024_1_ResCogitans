@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -100,25 +101,34 @@ func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
 func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string]string) (entities.UserProfile, error) {
 	ctx := context.Background()
 
+	var count int = 1
+
 	query := "UPDATE profile SET "
 	var queryParams []interface{}
+	queryParams = append(queryParams, dataInt["userID"])
 	var setClauses []string
 
-	if name, ok := dataStr["username"]; ok {
-		setClauses = append(setClauses, "username = $1")
-		queryParams = append(queryParams, name)
+	if dataStr["username"] != "" {
+		count += 1
+		str := "username = $" + strconv.Itoa(count)
+		setClauses = append(setClauses, str)
+		queryParams = append(queryParams, dataStr["username"])
 	}
-	if bio, ok := dataStr["bio"]; ok {
-		setClauses = append(setClauses, "bio = $2")
-		queryParams = append(queryParams, bio)
+	if dataStr["bio"] != "" {
+		count += 1
+		str := "bio = $" + strconv.Itoa(count)
+		setClauses = append(setClauses, str)
+		queryParams = append(queryParams, dataStr["bio"])
 	}
-	if avatar, ok := dataStr["avatar"]; ok {
-		setClauses = append(setClauses, "avatar = $3")
-		queryParams = append(queryParams, avatar)
+	if dataStr["avatar"] != "" {
+		count += 1
+		str := "avatar = $" + strconv.Itoa(count)
+		setClauses = append(setClauses, str)
+		queryParams = append(queryParams, dataStr["avatar"])
 	}
 
-	query += strings.Join(setClauses, ", ") + " WHERE user_id = $4"
-	queryParams = append(queryParams, dataInt["userID"])
+	query += strings.Join(setClauses, ", ") + " WHERE user_id = $1"
+	fmt.Println(query)
 
 	_, err := repo.db.Exec(ctx, query, queryParams...)
 	if err != nil {
