@@ -118,7 +118,7 @@ func (h *JourneyHandler) GetJourneys(ctx context.Context, requestData entities.J
 	return entities.Journeys{Journey: journeys}, err
 }
 
-func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {
+func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entities.JourneySightID) (entities.JourneySight, error) {
 	db, err := db.GetPostgres()
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -132,16 +132,15 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 
 	dataInt := make(map[string]int)
 	dataInt["journeyID"] = journeyID
-	dataInt["sightID"] = requestData.SightID
 
 	sightsRepo := sightRep.NewSightRepo(db)
-	err = sightsRepo.AddJourneySight(dataInt)
+	err = sightsRepo.AddJourneySight(dataInt, requestData.ListID)
 
 	if err != nil {
 		return entities.JourneySight{}, errAddJourneySight
 	}
 
-	return entities.JourneySight{}, nil
+	return entities.JourneySight{JourneyID: journeyID}, nil
 }
 
 func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {

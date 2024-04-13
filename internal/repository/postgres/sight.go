@@ -57,7 +57,7 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT feedback.id, u.email, sight_id, rating, feedback FROM feedback INNER JOIN "user" AS u ON user_id = u.id WHERE sight_id = $1 `, id)
+	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT f.id, p.username, f.sight_id, f.rating, f.feedback FROM feedback AS f INNER JOIN "profile" AS p ON f.user_id = p.user_id WHERE sight_id =  $1 `, id)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -150,7 +150,7 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	return journeyList, nil
 }
 
-func (repo *SightRepo) AddJourneySight(dataInt map[string]int) error {
+func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int) error {
 	ctx := context.Background()
 	var priority []*int
 	var precedence int
@@ -163,10 +163,13 @@ func (repo *SightRepo) AddJourneySight(dataInt map[string]int) error {
 		precedence = *priority[0]
 	}
 
-	_, err := repo.db.Exec(ctx, `INSERT INTO journey_sight(journey_id, sight_id, priority) VALUES($1, $2, $3) `, dataInt["journeyID"], dataInt["sightID"], precedence+1)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return err
+	for _, id := range ids {
+		precedence += 1
+		_, err := repo.db.Exec(ctx, `INSERT INTO journey_sight(journey_id, sight_id, priority) VALUES($1, $2, $3) `, dataInt["journeyID"], id, precedence)
+		if err != nil {
+			logger.Logger().Error(err.Error())
+			return err
+		}
 	}
 
 	return nil

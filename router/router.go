@@ -172,7 +172,7 @@ func AddJourneySightRoutes() chi.Router {
 	router := chi.NewRouter()
 
 	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: journeyHandler.AddJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySightID, entities.JourneySight]{ServeHTTP: journeyHandler.AddJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router

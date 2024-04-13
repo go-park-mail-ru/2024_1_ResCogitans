@@ -17,6 +17,11 @@ type JourneySight struct {
 	SightName string `json:"sight_name"`
 }
 
+type JourneySightID struct {
+	// JourneyID int    `json:"journeyID"`
+	ListID []int `json:"sightIDs"`
+}
+
 type Journeys struct {
 	Journey []Journey `json:"journeys"`
 }
@@ -31,5 +36,9 @@ func (h Journey) Validate() error {
 }
 
 func (h JourneySight) Validate() error {
+	return nil
+}
+
+func (h JourneySightID) Validate() error {
 	return nil
 }
