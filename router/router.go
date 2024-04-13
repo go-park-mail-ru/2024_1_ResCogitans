@@ -212,7 +212,7 @@ func DeleteProfileRoutes() chi.Router {
 	router := chi.NewRouter()
 	profileHandler := user.ProfileHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.DeleteUser}
-	router.Get("/", wrapperInstance.HandlerWrapper)
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
