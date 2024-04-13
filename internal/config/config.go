@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env:"ENV" env-required:"true"`
-	StoragePath string `yaml:"storage_path" env-requiered:"true"`
-	HTTPServer  `yaml:"http_server"`
-	Dsn         `yaml:"dsn"`
+	Env            string `yaml:"env" env:"ENV" env-required:"true"`
+	StoragePath    string `yaml:"storage_path" env-requiered:"true"`
+	HTTPServer     `yaml:"http_server"`
+	Dsn            `yaml:"dsn"`
+	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
 }
 
 type HTTPServer struct {

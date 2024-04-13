@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
@@ -24,9 +26,6 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(cors.CorsMiddleware)
 	router.Use(middle.SessionMiddleware)
 
-	// upload image
-	router.HandleFunc("/upload", user.Upload)
-
 	router.Mount("/sights", SightRoutes())
 
 	// user authorization and registration
@@ -38,6 +37,12 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/profile/{id}", GetProfileRoutes())
 	router.Mount("/profile/{id}/edit", EditProfileRoutes())
 	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
+
+	//TODO:нужно приспособить обертку под работу multipart/form-data
+	handler := &user.ProfileHandler{}
+	router.Post("/profile/{id}/upload", func(w http.ResponseWriter, r *http.Request) {
+		handler.UploadFile(w, r)
+	})
 
 	// comments
 	router.Mount("/sight/{id}", SightByIDRoutes())

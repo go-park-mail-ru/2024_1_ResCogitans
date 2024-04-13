@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -117,11 +118,11 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	pathParams := wrapper.GetPathParamsFromCtx(ctx)
 	userID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		logger.Error("Cannot convert string to integer to get sight")
+		logger.Error("Cannot convert string to integer to get profile")
 		return entities.UserProfile{}, errParsing
 	}
-
-	if r, _ := httputils.HttpRequest(ctx); userID != usecase.GetSession(r) {
+	r, _ := httputils.HttpRequest(ctx)
+	if userID != usecase.GetSession(r) {
 		logger.Error("Cannot edit other's profile")
 		return entities.UserProfile{}, errProfilePermissionDenied
 	}
@@ -132,7 +133,6 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	dataInt["userID"] = userID
 	dataStr["username"] = requestData.Username
 	dataStr["bio"] = requestData.Bio
-	dataStr["avatar"] = requestData.Avatar
 
 	userRepo := userRep.NewUserRepo(db)
 	profile, err := userRepo.EditUserProfile(dataInt, dataStr)
@@ -142,4 +142,57 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	}
 
 	return profile, nil
+}
+
+// TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
+func (f *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
+    logger := logger.Logger()
+    db, err := db.GetPostgres()
+    if err != nil {
+        logger.Error(err.Error())
+        errors.WriteHttpError(err, w)
+        return
+    }
+
+    userID, err := strconv.Atoi(wrapper.GetPathParams(r)["id"])
+    if err != nil {
+        logger.Error("Handler error", "error", err)
+        errors.WriteHttpError(err, w)
+        return
+    }
+
+    if userID != usecase.GetSession(r) {
+        logger.Error("Cannot edit other's profile")
+        errors.WriteHttpError(errProfilePermissionDenied, w)
+        return
+    }
+
+    path, err := SaveFile(r)
+    if err != nil {
+        logger.Error("Handler error", "error", err)
+        errors.WriteHttpError(err, w)
+        return
+    }
+
+    dataInt := map[string]int{"userID": userID}
+    dataStr := map[string]string{"avatar": path}
+
+    userRepo := userRep.NewUserRepo(db)
+    profile, err := userRepo.EditUserProfile(dataInt, dataStr)
+    if err != nil {
+        logger.Error("Handler error", "error", err)
+        errors.WriteHttpError(err, w)
+        return
+    }
+
+    rawJSON, err := json.Marshal(profile)
+    if err != nil {
+        logger.Error("Error encoding response", "error", err)
+        errors.WriteHttpError(err, w)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json; charset=utf-8")
+    w.WriteHeader(http.StatusOK)
+    _, _ = w.Write(rawJSON)
 }
