@@ -10,9 +10,11 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env:"ENV" env-required:"true"`
-	StoragePath string `yaml:"storage_path" env-requiered:"true"`
-	HTTPServer  `yaml:"http_server"`
+	Env            string `yaml:"env" env:"ENV" env-required:"true"`
+	StoragePath    string `yaml:"storage_path" env-requiered:"true"`
+	HTTPServer     `yaml:"http_server"`
+	Dsn            `yaml:"dsn"`
+	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
 }
 
 type HTTPServer struct {
@@ -23,20 +25,12 @@ type HTTPServer struct {
 	Password    string        `yaml:"password" env-requiered:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
-type dsn struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBname   string
-}
-
-var DSN = dsn{
-	Host:     "localhost",
-	Port:     5432,
-	User:     "mrdzhofik",
-	Password: "password",
-	DBname:   "jantugan",
+type Dsn struct {
+	Host     string `env:"DB_HOST"`
+	Port     int    `env:"DB_PORT"`
+	User     string `env:"DB_USER"`
+	Password string `env:"DB_PASSWORD"`
+	DBname   string `env:"DB_NAME"`
 }
 
 func LoadConfig() (*Config, error) {
