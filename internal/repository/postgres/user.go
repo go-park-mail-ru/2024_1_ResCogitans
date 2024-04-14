@@ -73,7 +73,7 @@ func (repo *UserRepo) GetUserProfile(dataInt map[string]int) (entities.UserProfi
 	var user []entities.UserProfile
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM profile WHERE user_id = $1`, dataInt["userID"])
+	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM profile_data WHERE user_id = $1`, dataInt["userID"])
 
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -91,7 +91,7 @@ func (repo *UserRepo) GetUserProfile(dataInt map[string]int) (entities.UserProfi
 func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM profile WHERE user_id = $1`, dataInt["userID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM profile_data WHERE user_id = $1`, dataInt["userID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -110,7 +110,7 @@ func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string
 
 	var count int = 1
 
-	query := "UPDATE profile SET "
+	query := "UPDATE profile_data SET "
 	var queryParams []interface{}
 	queryParams = append(queryParams, dataInt["userID"])
 	var setClauses []string

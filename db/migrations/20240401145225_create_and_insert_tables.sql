@@ -6,7 +6,7 @@ SELECT 'up SQL query';
 CREATE TABLE city(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     city text NOT NULL,
-	region text NOT NULL,
+	region text,
 	UNIQUE (city, region)
 );
 
@@ -177,7 +177,7 @@ INSERT INTO sight(rating, name, description, city_id, country_id) VALUES
 	);
 
 
-INSERT INTO image(path, sight_id) VALUES 
+INSERT INTO image_data(path, sight_id) VALUES 
 ('public/1.jpg', 1),
 ('public/2.jpg', 2),
 ('public/3.jpg', 3),
