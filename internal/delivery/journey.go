@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -133,8 +134,13 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 	dataInt := make(map[string]int)
 	dataInt["journeyID"] = journeyID
 
+	dataStr := make(map[string]string)
+	dataStr["name"] = requestData.Name
+	dataStr["description"] = requestData.Description
+
 	sightsRepo := sightRep.NewSightRepo(db)
-	err = sightsRepo.AddJourneySight(dataInt, requestData.ListID)
+	fmt.Println(dataStr)
+	err = sightsRepo.AddJourneySight(dataInt, requestData.ListID, dataStr)
 
 	if err != nil {
 		return entities.JourneySight{}, errAddJourneySight

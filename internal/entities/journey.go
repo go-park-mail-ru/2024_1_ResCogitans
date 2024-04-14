@@ -18,8 +18,9 @@ type JourneySight struct {
 }
 
 type JourneySightID struct {
-	// JourneyID int    `json:"journeyID"`
-	ListID []int `json:"sightIDs"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ListID      []int  `json:"sightIDs"`
 }
 
 type Journeys struct {

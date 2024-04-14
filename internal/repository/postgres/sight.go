@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
@@ -155,7 +156,7 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	return journeyList, nil
 }
 
-func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int) error {
+func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int, dataStr map[string]string) error {
 	ctx := context.Background()
 	precedence := 0
 	// var priority []*int
@@ -169,7 +170,15 @@ func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int) error 
 	// 	precedence = *priority[0]
 	// }
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
+	fmt.Println(dataStr, dataInt)
+
+	_, err := repo.db.Exec(ctx, `UPDATE journey SET name = $1, description = $2 WHERE id = $3;`, dataStr["name"], dataStr["description"], dataInt["journeyID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	_, err = repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
