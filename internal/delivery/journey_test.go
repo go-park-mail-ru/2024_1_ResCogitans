@@ -96,9 +96,10 @@ func TestDeleteJourneyNotInt(t *testing.T) {
 
 // Add JourneySight
 func TestAddJourneySight(t *testing.T) {
+	ids := []int{1, 2, 3, 4}
 	handler := &journey.JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
+	JourneySightID := entities.JourneySightID{
+		ListID: ids,
 	}
 
 	ctx := context.Background()
@@ -106,15 +107,16 @@ func TestAddJourneySight(t *testing.T) {
 	param["id"] = "6"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, JourneySightID)
 
 	assert.Nil(t, err)
 }
 
 func TestAddJourneySightBad(t *testing.T) {
 	handler := &journey.JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
+	ids := []int{1, 2, 3, 13, 18}
+	JourneySightID := entities.JourneySightID{
+		ListID: ids,
 	}
 
 	ctx := context.Background()
@@ -122,23 +124,20 @@ func TestAddJourneySightBad(t *testing.T) {
 	param["id"] = "1"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, JourneySightID)
 
 	assert.EqualError(t, err, "failed adding journey sight")
 }
 
 func TestAddJourneySightNotInt(t *testing.T) {
 	handler := &journey.JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
-	}
 
 	ctx := context.Background()
 	param := make(map[string]string)
 	param["id"] = "ok"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, entities.JourneySightID{})
 
 	assert.EqualError(t, err, "cannot parsing not integer")
 }

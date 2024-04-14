@@ -13,14 +13,14 @@ CREATE TABLE country(
     country text NOT NULL UNIQUE
 );
 
-CREATE TABLE "user" (
+CREATE TABLE user_data (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     email text NOT NULL UNIQUE,
     passwrd text NOT NULL
 );
 
-CREATE TABLE "profile" (
-    user_id integer REFERENCES "user"(id),
+CREATE TABLE profile_data (
+    user_id integer REFERENCES user_data(id),
     username text UNIQUE,
     avatar text,
 	bio text
@@ -28,23 +28,24 @@ CREATE TABLE "profile" (
 
 CREATE TABLE sight(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    rating float NOT NULL CHECk (rating > 0 AND rating <= 5),
+    rating float NOT NULL CHECK (rating > 0 AND rating <= 5),
     name text NOT NULL,
     description text,
     city_id integer REFERENCES city (id),
-    country_id integer REFERENCES country (id)
+    country_id integer REFERENCES country (id),
+	UNIQUE (name, city_id)
 );
 
-CREATE TABLE image(
+CREATE TABLE image_data(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    "path" text NOT NULL,
+    "path" text NOT NULL UNIQUE,
     sight_id integer REFERENCES sight(id)
 );
 
 CREATE TABLE journey(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-	name text NOT NULL,
-    user_id integer REFERENCES "user"(id),
+	name text NOT NULL UNIQUE,
+    user_id integer REFERENCES user_data(id),
     description text
 );
 
@@ -52,12 +53,13 @@ CREATE TABLE journey_sight(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     journey_id integer REFERENCES journey(id),
     sight_id integer REFERENCES sight(id),
-    priority integer NOT NULL
+    priority integer NOT NULL,
+	UNIQUE (journey_id, sight_id, priority)
 );
 
 CREATE TABLE feedback(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    user_id integer REFERENCES "user"(id),
+    user_id integer REFERENCES user_data(id),
     sight_id integer REFERENCES sight(id),
     rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
     feedback text NOT NULL
@@ -190,14 +192,14 @@ INSERT INTO image(path, sight_id) VALUES
 CREATE OR REPLACE FUNCTION create_profile()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO "profile" (user_id, username, bio, avatar)
+    INSERT INTO profile_data (user_id, username, bio, avatar)
     VALUES (NEW.id, NEW.email, '', '');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER create_profile_trigger
-AFTER INSERT ON "user"
+AFTER INSERT ON user_data
 FOR EACH ROW
 EXECUTE FUNCTION create_profile();
 
@@ -207,12 +209,12 @@ EXECUTE FUNCTION create_profile();
 SELECT 'down SQL query';
 -- +goose StatementEnd
 
-DROP TABLE IF EXISTS "user" CASCADE;
+DROP TABLE IF EXISTS user_data CASCADE;
 DROP TABLE IF EXISTS city CASCADE;
 DROP TABLE IF EXISTS country CASCADE;
 DROP TABLE IF EXISTS sight CASCADE;
 DROP TABLE IF EXISTS journey CASCADE;
 DROP TABLE IF EXISTS journey_sight CASCADE;
-DROP TABLE IF EXISTS "image" CASCADE;
+DROP TABLE IF EXISTS image_data CASCADE;
 DROP TABLE IF EXISTS feedback CASCADE;
-DROP TABLE IF EXISTS "profile" CASCADE;
+DROP TABLE IF EXISTS profile_data CASCADE;
