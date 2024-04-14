@@ -19,7 +19,7 @@ CREATE TABLE user_data (
     passwrd text NOT NULL
 );
 
-CREATE TABLE profile_data (
+CREATE TABLE profile (
     user_id integer REFERENCES user_data(id),
     username text UNIQUE,
     avatar text,
@@ -192,7 +192,7 @@ INSERT INTO image(path, sight_id) VALUES
 CREATE OR REPLACE FUNCTION create_profile()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO profile_data (user_id, username, bio, avatar)
+    INSERT INTO profile (user_id, username, bio, avatar)
     VALUES (NEW.id, NEW.email, '', '');
     RETURN NEW;
 END;
@@ -217,4 +217,4 @@ DROP TABLE IF EXISTS journey CASCADE;
 DROP TABLE IF EXISTS journey_sight CASCADE;
 DROP TABLE IF EXISTS image_data CASCADE;
 DROP TABLE IF EXISTS feedback CASCADE;
-DROP TABLE IF EXISTS profile_data CASCADE;
+DROP TABLE IF EXISTS profile CASCADE;
