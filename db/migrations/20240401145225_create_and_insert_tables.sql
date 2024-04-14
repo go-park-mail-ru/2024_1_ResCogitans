@@ -5,7 +5,9 @@ SELECT 'up SQL query';
 
 CREATE TABLE city(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    city text NOT NULL
+    city text NOT NULL,
+	region text NOT NULL,
+	UNIQUE (city, region)
 );
 
 CREATE TABLE country(
@@ -62,7 +64,8 @@ CREATE TABLE feedback(
     user_id integer REFERENCES user_data(id),
     sight_id integer REFERENCES sight(id),
     rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
-    feedback text NOT NULL
+    feedback text NOT NULL,
+	UNIQUE(user_id, sight_id)
 );
 
 
