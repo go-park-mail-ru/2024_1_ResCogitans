@@ -124,7 +124,13 @@ func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]
 func (repo *SightRepo) DeleteJourneyByID(dataInt map[string]int) error {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1`, dataInt["journeyID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	_, err = repo.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
