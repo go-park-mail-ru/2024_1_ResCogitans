@@ -3,7 +3,7 @@ package entities
 type Journey struct {
 	ID          int    `json:"id"`
 	UserID      int    `json:"userID"`
-	Email       string `json:"username"`
+	Username    string `json:"username"` // Username
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }

@@ -137,7 +137,7 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile AS p ON p.user_id = $1`, userID)
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile AS p ON p.user_id = j.user_id WHERE j.user_id = $1`, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -146,7 +146,9 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journeyList []entities.Journey
 	for _, j := range journey {
 		journeyList = append(journeyList, *j)
+		fmt.Print(*j)
 	}
+
 	return journeyList, nil
 }
 
@@ -213,7 +215,7 @@ func (repo *SightRepo) GetJourney(journeyID int) (entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, u.email FROM journey AS j INNER JOIN user_data AS u ON u.id = j.user_id WHERE j.id = $1`, journeyID)
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile AS p ON p.user_id = j.user_id WHERE j.id = $1`, journeyID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.Journey{}, err
