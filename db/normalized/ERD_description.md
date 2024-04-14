@@ -1,11 +1,11 @@
 ```mermaid    
     erDiagram
-        USER {
+        USER_DATA {
             integet id PK
             text email
             text passwd 
         }
-        PROFILE {
+        PROFILE_DATA {
             integer user_id FK
             text username
             text avatar
@@ -15,6 +15,7 @@
         CITY {
             integer id PK
             text city 
+            text region
         }
         COUNTRY {
             integer id PK
@@ -28,7 +29,7 @@
             integer city_id FK
             integer country_id FK
         }
-        IMAGE {
+        IMAGE_DATA {
             integer id PK
             text path
             integer sight_id FK
