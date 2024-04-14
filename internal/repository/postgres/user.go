@@ -28,7 +28,7 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 func (repo *UserRepo) CreateUser(dataStr map[string]string) (entities.User, error) {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `INSERT INTO "user"(email, passwrd) VALUES ($1, $2)`, dataStr["email"], dataStr["passwrd"])
+	_, err := repo.db.Exec(ctx, `INSERT INTO user_data(email, passwrd) VALUES ($1, $2)`, dataStr["email"], dataStr["passwrd"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.User{}, err
@@ -41,7 +41,7 @@ func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, e
 	var user []*entities.User
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &user, `SELECT id, email, passwrd FROM "user" WHERE email = $1`, dataStr["email"])
+	err := pgxscan.Select(ctx, repo.db, &user, `SELECT id, email, passwrd FROM user_data WHERE email = $1`, dataStr["email"])
 
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -66,7 +66,7 @@ func (repo *UserRepo) GetUserProfile(dataInt map[string]int) (entities.UserProfi
 	var user []entities.UserProfile
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM "profile" WHERE user_id = $1`, dataInt["userID"])
+	err := pgxscan.Select(ctx, repo.db, &user, `SELECT user_id, username, bio, avatar FROM profile_data WHERE user_id = $1`, dataInt["userID"])
 
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -84,12 +84,12 @@ func (repo *UserRepo) GetUserProfile(dataInt map[string]int) (entities.UserProfi
 func (repo *UserRepo) DeleteUserProfile(dataInt map[string]int) error {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM "profile" WHERE user_id = $1`, dataInt["userID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM profile_data WHERE user_id = $1`, dataInt["userID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
 	}
-	_, err = repo.db.Exec(ctx, `DELETE FROM "user" WHERE id = $1`, dataInt["userID"])
+	_, err = repo.db.Exec(ctx, `DELETE FROM user_data WHERE id = $1`, dataInt["userID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -103,7 +103,7 @@ func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string
 
 	var count int = 1
 
-	query := "UPDATE profile SET "
+	query := "UPDATE profile_data SET "
 	var queryParams []interface{}
 	queryParams = append(queryParams, dataInt["userID"])
 	var setClauses []string
