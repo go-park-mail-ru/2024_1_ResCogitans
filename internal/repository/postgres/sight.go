@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
@@ -57,7 +56,7 @@ func (repo *SightRepo) GetCommentsBySightID(id int) ([]entities.Comment, error) 
 	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT f.id, f.user_id, p.username, f.sight_id, f.rating, f.feedback FROM feedback AS f INNER JOIN profile AS p ON f.user_id = p.user_id WHERE sight_id =  $1 `, id)
+	err := pgxscan.Select(ctx, repo.db, &comments, `SELECT f.id, f.user_id, p.username, f.sight_id, f.rating, f.feedback FROM feedback AS f INNER JOIN profile_data AS p ON f.user_id = p.user_id WHERE sight_id =  $1 `, id)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -124,13 +123,7 @@ func (repo *SightRepo) CreateJourney(dataInt map[string]int, dataStr map[string]
 func (repo *SightRepo) DeleteJourneyByID(dataInt map[string]int) error {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1`, dataInt["journeyID"])
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return err
-	}
-
-	_, err = repo.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -143,7 +136,7 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile AS p ON p.user_id = j.user_id WHERE j.user_id = $1`, userID)
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile_data AS p ON p.user_id = $1`, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -152,23 +145,28 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journeyList []entities.Journey
 	for _, j := range journey {
 		journeyList = append(journeyList, *j)
-		fmt.Print(*j)
 	}
-
 	return journeyList, nil
 }
 
 func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int) error {
 	ctx := context.Background()
-	var priority []*int
-	var precedence int
+	precedence := 0
+	// var priority []*int
+	// var precedence int
 
-	_ = pgxscan.Select(ctx, repo.db, &priority, `SELECT priority FROM journey_sight AS js WHERE js.journey_id = $1 ORDER BY priority DESC LIMIT 1;`, dataInt["journeyID"])
-	if priority == nil {
-		fmt.Println("Oops")
-		precedence = 0
-	} else {
-		precedence = *priority[0]
+	// _ = pgxscan.Select(ctx, repo.db, &priority, `SELECT priority FROM journey_sight AS js WHERE js.journey_id = $1 ORDER BY priority DESC LIMIT 1;`, dataInt["journeyID"])
+	// if priority == nil {
+	// 	fmt.Println("Oops")
+	// 	precedence = 0
+	// } else {
+	// 	precedence = *priority[0]
+	// }
+
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
 	}
 
 	for _, id := range ids {
@@ -214,6 +212,7 @@ func (repo *SightRepo) GetJourneySights(journeyID int) ([]entities.Sight, error)
 		}
 		sights = append(sights, sight)
 	}
+
 	return sights, nil
 }
 
@@ -221,7 +220,7 @@ func (repo *SightRepo) GetJourney(journeyID int) (entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile AS p ON p.user_id = j.user_id WHERE j.id = $1`, journeyID)
+	err := pgxscan.Select(ctx, repo.db, &journey, `SELECT j.id, j.name, j.description, u.email FROM journey AS j INNER JOIN user_data AS u ON u.id = j.user_id WHERE j.id = $1`, journeyID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.Journey{}, err
