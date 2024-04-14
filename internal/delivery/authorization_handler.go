@@ -37,6 +37,10 @@ var (
 		Code:    http.StatusUnauthorized,
 		Message: "session is not set",
 	}
+	errUserBySession = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed to find user",
+	}
 )
 
 func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (UserResponse, error) {
@@ -100,4 +104,28 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, requestData entities.
 	}
 
 	return UserResponse{}, nil
+}
+
+func (h *AuthorizationHandler) IsAuthorized(ctx context.Context, requestData entities.User) (entities.UserProfile, error) {
+	logger := logger.Logger()
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Error(err.Error())
+	}
+
+	r, _ := httputils.HttpRequest(ctx)
+	userID := usecase.GetSession(r)
+
+	if userID == 0 {
+		logger.Error("Session is not set")
+		return entities.UserProfile{}, errSessionNotSet
+	}
+
+	UserRepo := userRep.NewUserRepo(db)
+	user, err := UserRepo.GetUserProfile(map[string]int{"userID": userID})
+	if err != nil {
+		return entities.UserProfile{}, errUserBySession
+	}
+
+	return user, nil
 }

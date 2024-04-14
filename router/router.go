@@ -32,6 +32,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/signup", SignUpRoutes())
 	router.Mount("/login", AuthRoutes())
 	router.Mount("/logout", LogOutRoutes())
+	router.Mount("/check_auth", CheckCookieRoutes())
 
 	// user profile
 	router.Mount("/profile/{id}", GetProfileRoutes())
@@ -79,6 +80,16 @@ func SignUpRoutes() chi.Router {
 	regHandler := user.RegistrationHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: regHandler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func CheckCookieRoutes() chi.Router {
+	router := chi.NewRouter()
+
+	handler := user.AuthorizationHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserProfile]{ServeHTTP: handler.IsAuthorized}
+	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
