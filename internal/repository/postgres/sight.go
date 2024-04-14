@@ -163,7 +163,7 @@ func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int) error 
 	// 	precedence = *priority[0]
 	// }
 
-	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
+	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
