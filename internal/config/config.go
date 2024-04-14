@@ -35,7 +35,7 @@ var DSN = dsn{
 	Host:     "localhost",
 	Port:     5432,
 	User:     "mrdzhofik",
-	Password: "246858",
+	Password: "password",
 	DBname:   "jantugan",
 }
 
