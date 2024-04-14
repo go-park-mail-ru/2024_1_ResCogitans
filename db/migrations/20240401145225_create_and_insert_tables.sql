@@ -54,7 +54,7 @@ CREATE TABLE journey_sight(
     journey_id integer REFERENCES journey(id),
     sight_id integer REFERENCES sight(id),
     priority integer NOT NULL,
-	UNIQUE (journey_id, sight_id, priority)
+	UNIQUE (journey_id, sight_id)
 );
 
 CREATE TABLE feedback(
