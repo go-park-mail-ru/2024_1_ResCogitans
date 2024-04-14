@@ -29,7 +29,7 @@ func (repo *UserRepo) CreateUser(dataStr map[string]string) (entities.User, erro
 	ctx := context.Background()
 
 	var userID int
-	query := `INSERT INTO "user"(email, passwrd) VALUES ($1, $2) RETURNING id`
+	query := `INSERT INTO "user_data"(email, passwrd) VALUES ($1, $2) RETURNING id`
 	err := repo.db.QueryRow(ctx, query, dataStr["email"], dataStr["passwrd"]).Scan(&userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
@@ -162,7 +162,7 @@ func (repo *UserRepo) UpdateUserPassword(userID int, newPassword string) error {
 		return err
 	}
 
-	_, err = repo.db.Exec(ctx, `UPDATE "user" SET passwrd = $1 WHERE id = $2`, string(hashedPassword), userID)
+	_, err = repo.db.Exec(ctx, `UPDATE "user_data" SET passwrd = $1 WHERE id = $2`, string(hashedPassword), userID)
 	if err != nil {
 		logger.Error(err.Error())
 		return err
