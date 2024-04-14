@@ -38,6 +38,11 @@ var (
 		Code:    http.StatusUnauthorized,
 		Message: "permission denied",
 	}
+
+	errProfileResetPassword = errors.HttpError{
+		Code:    http.StatusUnauthorized,
+		Message: "weak password",
+	}
 )
 
 func (h *ProfileHandler) GetUserProfile(ctx context.Context, requestData entities.User) (ProfileResponse, error) {
@@ -118,7 +123,7 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	pathParams := wrapper.GetPathParamsFromCtx(ctx)
 	userID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		logger.Error("Cannot convert string to integer to get profile")
+		logger.Error("Error while converting string to int", "error", err)
 		return entities.UserProfile{}, errParsing
 	}
 	r, _ := httputils.HttpRequest(ctx)
@@ -144,55 +149,89 @@ func (h *ProfileHandler) EditUserProfile(ctx context.Context, requestData entiti
 	return profile, nil
 }
 
+func (h *ProfileHandler) UpdateUserPassword(ctx context.Context, requestData entities.User) (ProfileResponse, error) {
+	logger := logger.Logger()
+
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Error("Error while connecting to db", "error", err)
+	}
+
+	pathParams := wrapper.GetPathParamsFromCtx(ctx)
+	userID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		logger.Error("Error while converting string to int", "error", err)
+		return ProfileResponse{}, errParsing
+	}
+	r, _ := httputils.HttpRequest(ctx)
+	if userID != usecase.GetSession(r) {
+		logger.Error("Cannot edit other's profile")
+		return ProfileResponse{}, errProfilePermissionDenied
+	}
+
+	if !entities.ValidatePassword(requestData.Passwrd) {
+		return ProfileResponse{}, errProfileResetPassword
+	}
+
+	userRepo := userRep.NewUserRepo(db)
+	err = userRepo.UpdateUserPassword(requestData.ID, requestData.Passwrd)
+
+	if err != nil {
+		return ProfileResponse{}, err
+	}
+
+	return ProfileResponse{}, nil
+}
+
 // TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
 func (f *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
-    logger := logger.Logger()
-    db, err := db.GetPostgres()
-    if err != nil {
-        logger.Error(err.Error())
-        errors.WriteHttpError(err, w)
-        return
-    }
+	logger := logger.Logger()
+	db, err := db.GetPostgres()
+	if err != nil {
+		logger.Error(err.Error())
+		errors.WriteHttpError(err, w)
+		return
+	}
 
-    userID, err := strconv.Atoi(wrapper.GetPathParams(r)["id"])
-    if err != nil {
-        logger.Error("Handler error", "error", err)
-        errors.WriteHttpError(err, w)
-        return
-    }
+	userID, err := strconv.Atoi(wrapper.GetPathParams(r)["id"])
+	if err != nil {
+		logger.Error("Handler error", "error", err)
+		errors.WriteHttpError(err, w)
+		return
+	}
 
-    if userID != usecase.GetSession(r) {
-        logger.Error("Cannot edit other's profile")
-        errors.WriteHttpError(errProfilePermissionDenied, w)
-        return
-    }
+	if userID != usecase.GetSession(r) {
+		logger.Error("Cannot edit other's profile")
+		errors.WriteHttpError(errProfilePermissionDenied, w)
+		return
+	}
 
-    path, err := SaveFile(r)
-    if err != nil {
-        logger.Error("Handler error", "error", err)
-        errors.WriteHttpError(err, w)
-        return
-    }
+	path, err := SaveFile(r)
+	if err != nil {
+		logger.Error("Handler error", "error", err)
+		errors.WriteHttpError(err, w)
+		return
+	}
 
-    dataInt := map[string]int{"userID": userID}
-    dataStr := map[string]string{"avatar": path}
+	dataInt := map[string]int{"userID": userID}
+	dataStr := map[string]string{"avatar": path}
 
-    userRepo := userRep.NewUserRepo(db)
-    profile, err := userRepo.EditUserProfile(dataInt, dataStr)
-    if err != nil {
-        logger.Error("Handler error", "error", err)
-        errors.WriteHttpError(err, w)
-        return
-    }
+	userRepo := userRep.NewUserRepo(db)
+	profile, err := userRepo.EditUserProfile(dataInt, dataStr)
+	if err != nil {
+		logger.Error("Handler error", "error", err)
+		errors.WriteHttpError(err, w)
+		return
+	}
 
-    rawJSON, err := json.Marshal(profile)
-    if err != nil {
-        logger.Error("Error encoding response", "error", err)
-        errors.WriteHttpError(err, w)
-        return
-    }
+	rawJSON, err := json.Marshal(profile)
+	if err != nil {
+		logger.Error("Error encoding response", "error", err)
+		errors.WriteHttpError(err, w)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json; charset=utf-8")
-    w.WriteHeader(http.StatusOK)
-    _, _ = w.Write(rawJSON)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(rawJSON)
 }

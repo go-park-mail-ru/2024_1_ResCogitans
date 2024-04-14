@@ -56,7 +56,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 	dataStr["passwrd"] = user.Passwrd
 
 	UserRepo := userRep.NewUserRepo(db)
-	_, err = UserRepo.CreateUser(dataStr)
+	user, err = UserRepo.CreateUser(dataStr)
 
 	if err != nil {
 		return UserResponse{}, errCreateUser

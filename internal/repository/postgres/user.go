@@ -28,13 +28,20 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 func (repo *UserRepo) CreateUser(dataStr map[string]string) (entities.User, error) {
 	ctx := context.Background()
 
-	_, err := repo.db.Exec(ctx, `INSERT INTO "user"(email, passwrd) VALUES ($1, $2)`, dataStr["email"], dataStr["passwrd"])
+	var userID int
+	query := `INSERT INTO "user"(email, passwrd) VALUES ($1, $2) RETURNING id`
+	err := repo.db.QueryRow(ctx, query, dataStr["email"], dataStr["passwrd"]).Scan(&userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.User{}, err
 	}
 
-	return entities.User{}, nil
+	newUser := entities.User{
+		ID:    userID,
+		Email: dataStr["email"],
+	}
+
+	return newUser, nil
 }
 
 func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, error) {
@@ -143,4 +150,23 @@ func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string
 	}
 
 	return updatedProfile, nil
+}
+
+func (repo *UserRepo) UpdateUserPassword(userID int, newPassword string) error {
+	ctx := context.Background()
+	logger := logger.Logger()
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	_, err = repo.db.Exec(ctx, `UPDATE "user" SET passwrd = $1 WHERE id = $2`, string(hashedPassword), userID)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	return nil
 }

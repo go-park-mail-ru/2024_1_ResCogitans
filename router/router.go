@@ -37,6 +37,7 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Mount("/profile/{id}", GetProfileRoutes())
 	router.Mount("/profile/{id}/edit", EditProfileRoutes())
 	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
+	router.Mount("/profile/{id}/reset_password", UpdateUserPasswordRoutes())
 
 	//TODO:нужно приспособить обертку под работу multipart/form-data
 	handler := &user.ProfileHandler{}
@@ -226,6 +227,15 @@ func EditProfileRoutes() chi.Router {
 	router := chi.NewRouter()
 	profileHandler := user.ProfileHandler{}
 	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: profileHandler.EditUserProfile}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func UpdateUserPasswordRoutes() chi.Router {
+	router := chi.NewRouter()
+	profileHandler := user.ProfileHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.UpdateUserPassword}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
