@@ -8,6 +8,7 @@ import (
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
+	"github.com/pkg/errors"
 )
 
 const sessionId = "session_id"
@@ -16,23 +17,23 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
-type AuthInterface interface {
+type SessionInterface interface {
 	CreateSession(w http.ResponseWriter, userID int) error
 	GetSession(r *http.Request) (int, error)
 	ClearSession(w http.ResponseWriter, r *http.Request) error
 }
 
-type AuthUseCase struct {
+type SessionUseCase struct {
 	SessionStorage session.StorageInterface
 }
 
-func NewAuthUseCase(storage session.StorageInterface) AuthInterface {
-	return &AuthUseCase{
+func NewSessionUseCase(storage session.StorageInterface) SessionInterface {
+	return &SessionUseCase{
 		SessionStorage: storage,
 	}
 }
 
-func (a *AuthUseCase) CreateSession(w http.ResponseWriter, userID int) error {
+func (a *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
 	a.SessionStorage.SaveSession(sessionID, userID)
 	encoded, err := CookieHandler.Encode(sessionId, sessionID)
@@ -49,11 +50,18 @@ func (a *AuthUseCase) CreateSession(w http.ResponseWriter, userID int) error {
 	return nil
 }
 
-func (a *AuthUseCase) GetSession(r *http.Request) (int, error) {
+func (a *SessionUseCase) GetSession(r *http.Request) (int, error) {
+	println("11")
 	cookie, err := r.Cookie(sessionId)
+	if errors.Is(err, http.ErrNoCookie) {
+		return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Cookie not found")
+	}
+
 	if err != nil {
 		return 0, err
 	}
+
+	println("22")
 
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
@@ -62,7 +70,7 @@ func (a *AuthUseCase) GetSession(r *http.Request) (int, error) {
 	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
 }
 
-func (a *AuthUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
+func (a *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err

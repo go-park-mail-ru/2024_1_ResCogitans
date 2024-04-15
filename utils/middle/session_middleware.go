@@ -8,10 +8,10 @@ import (
 )
 
 type AuthMiddleware struct {
-	useCase usecase.AuthInterface
+	useCase usecase.SessionInterface
 }
 
-func NewAuthMiddleware(useCase usecase.AuthInterface) *AuthMiddleware {
+func NewAuthMiddleware(useCase usecase.SessionInterface) *AuthMiddleware {
 	return &AuthMiddleware{
 		useCase: useCase,
 	}

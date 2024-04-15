@@ -11,11 +11,11 @@ import (
 )
 
 type UpdateDataHandler struct {
-	sessionUseCase usecase.AuthInterface
+	sessionUseCase usecase.SessionInterface
 	userUseCase    usecase.UserInterface
 }
 
-func NewUpdateDataHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *UpdateDataHandler {
+func NewUpdateDataHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserInterface) *UpdateDataHandler {
 	return &UpdateDataHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,

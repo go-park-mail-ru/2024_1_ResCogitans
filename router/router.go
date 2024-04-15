@@ -13,6 +13,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/updateUserData"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/app"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
@@ -26,6 +27,7 @@ func SetupRouter(app *app.App) *chi.Mux {
 	router.Use(middleware.Logger)
 	router.Use(cors.CorsMiddleware)
 	router.Use(app.AuthMiddleware.Auth)
+	router.Use(middle.XSSMiddleware)
 
 	router.Mount("/sights", SightRoute())
 	router.Mount("/signup", SignUpRoute(app.RegHandler))

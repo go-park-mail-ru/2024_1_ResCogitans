@@ -9,11 +9,11 @@ import (
 )
 
 type DeactivationHandler struct {
-	sessionUseCase usecase.AuthInterface
+	sessionUseCase usecase.SessionInterface
 	userUseCase    usecase.UserInterface
 }
 
-func NewDeactivationHandler(sessionUseCase usecase.AuthInterface, userUseCase usecase.UserInterface) *DeactivationHandler {
+func NewDeactivationHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserInterface) *DeactivationHandler {
 	return &DeactivationHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,

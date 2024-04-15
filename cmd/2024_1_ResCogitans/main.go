@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/deactivation"
@@ -14,6 +17,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/app"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
+	"github.com/go-redis/redis/v8"
 )
 
 func main() {
@@ -24,8 +28,25 @@ func main() {
 		return
 	}
 
-	sessionStorage := session.NewSessionStorage()
-	sessionUseCase := usecase.NewAuthUseCase(sessionStorage)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "redis-13041.c302.asia-northeast1-1.gce.cloud.redislabs.com:13041",
+		Username: "default",
+		Password: "Hwsuxke8YC8vT6E2jOKd7lTK6cPEvq5I", // Замените на ваш пароль
+		DB:       0,                                  // Обычно используется 0 для первой базы данных
+	})
+
+	// Используем контекст с отменой по умолчанию для выполнения операций Redis
+	ctx := context.Background()
+
+	// Проверяем подключение
+	pong, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(pong, "response from Redis")
+
+	redisStorage := session.NewRedisStorage("redis-13041.c302.asia-northeast1-1.gce.cloud.redislabs.com:13041", "default", "Hwsuxke8YC8vT6E2jOKd7lTK6cPEvq5I", 0)
+	sessionUseCase := usecase.NewSessionUseCase(redisStorage)
 
 	userStorage := user.NewUserStorage()
 	userUseCase := usecase.NewUserUseCase(userStorage)

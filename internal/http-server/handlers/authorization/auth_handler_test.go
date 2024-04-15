@@ -18,7 +18,7 @@ import (
 
 func TestAuthorize(t *testing.T) {
 	sessionStorage := session.NewSessionStorage()
-	sessionUseCase := usecase.NewAuthUseCase(sessionStorage)
+	sessionUseCase := usecase.NewSessionUseCase(sessionStorage)
 
 	userStorage := user.NewUserStorage()
 	userUseCase := usecase.NewUserUseCase(userStorage)
