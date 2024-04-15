@@ -5,6 +5,7 @@ SELECT 'up SQL query';
 
 CREATE TABLE city(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
+	country_id integer REFERENCES country(id),
     city text NOT NULL,
 	region text,
 	UNIQUE (city, region)
@@ -34,7 +35,6 @@ CREATE TABLE sight(
     name text NOT NULL,
     description text,
     city_id integer REFERENCES city (id),
-    country_id integer REFERENCES country (id),
 	UNIQUE (name, city_id)
 );
 
@@ -70,17 +70,17 @@ CREATE TABLE feedback(
 );
 
 
-INSERT INTO city (city) VALUES 
-('Москва'),
-('Вольск'),
-('Тамбов'),
-('Бахчисарай'),
-('Евпатория'),
-('Балаклава'),
-('Казань'),
-('Салта'),
-('Мир'),
-('Гудаута');
+INSERT INTO city (city, country_id) VALUES 
+('Москва', 1),
+('Вольск', 1),
+('Тамбов', 1),
+('Бахчисарай', 4),
+('Евпатория', 1),
+('Балаклава', 2),
+('Казань', 3),
+('Салта', 4),
+('Мир', 2),
+('Гудаута', 6);
 
 INSERT INTO country(country) VALUES
 ('Россия'),

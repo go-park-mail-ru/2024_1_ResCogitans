@@ -14,6 +14,7 @@
         }
         CITY {
             integer id PK
+            integer country_id FK
             text city 
             text region
         }
@@ -27,7 +28,6 @@
             text name
             text description
             integer city_id FK
-            integer country_id FK
         }
         IMAGE_DATA {
             integer id PK
@@ -56,7 +56,7 @@
 
         PROFILE ||--|| USER : has
         SIGHT }o--|| CITY: includes
-        SIGHT }o--|| COUNTRY: includes
+        CITY }0--|| COUNTRY: includes
         JOURNEY }o--|| USER : creates
         JOURNEY_SIGHT }|--|| JOURNEY: has
         JOURNEY_SIGHT }|--|| SIGHT : contains
