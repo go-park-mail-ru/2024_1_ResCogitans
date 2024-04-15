@@ -57,9 +57,13 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 
 	UserRepo := userRep.NewUserRepo(db)
 	user, err = UserRepo.CreateUser(dataStr)
-
 	if err != nil {
 		return UserResponse{}, errCreateUser
+	}
+
+	err = usecase.SetSession(responseWriter, user.ID)
+	if err != nil {
+		return UserResponse{}, errSetSession
 	}
 
 	return UserResponse{ID: user.ID, Username: user.Email}, nil

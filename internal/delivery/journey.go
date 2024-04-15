@@ -62,6 +62,8 @@ func (h JourneyHandler) CreateJourney(ctx context.Context, requestData entities.
 	dataStr["name"] = requestData.Name
 	dataStr["description"] = requestData.Description
 
+	fmt.Println("Create journey:", dataStr)
+
 	sightsRepo := sightRep.NewSightRepo(db)
 	journey, err := sightsRepo.CreateJourney(dataInt, dataStr)
 
@@ -139,7 +141,6 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 	dataStr["description"] = requestData.Description
 
 	sightsRepo := sightRep.NewSightRepo(db)
-	fmt.Println(dataStr)
 	err = sightsRepo.AddJourneySight(dataInt, requestData.ListID, dataStr)
 
 	if err != nil {
