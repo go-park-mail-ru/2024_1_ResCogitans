@@ -49,7 +49,6 @@ CREATE TABLE journey(
 	name text NOT NULL,
     user_id integer REFERENCES user_data(id),
     description text,
-	UNIQUE(name, user_id)
 );
 
 CREATE TABLE journey_sight(

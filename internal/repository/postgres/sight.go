@@ -159,25 +159,15 @@ func (repo *SightRepo) GetJourneys(userID int) ([]entities.Journey, error) {
 func (repo *SightRepo) AddJourneySight(dataInt map[string]int, ids []int, dataStr map[string]string) error {
 	ctx := context.Background()
 	precedence := 0
-	// var priority []*int
-	// var precedence int
 
-	// _ = pgxscan.Select(ctx, repo.db, &priority, `SELECT priority FROM journey_sight AS js WHERE js.journey_id = $1 ORDER BY priority DESC LIMIT 1;`, dataInt["journeyID"])
-	// if priority == nil {
-	// 	fmt.Println("Oops")
-	// 	precedence = 0
-	// } else {
-	// 	precedence = *priority[0]
-	// }
+	_, err := repo.db.Exec(ctx, `UPDATE journey SET name = $1, description = $2 WHERE id = $3;`, dataStr["name"], dataStr["description"], dataInt["journeyID"])
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+	fmt.Println("Succes update")
 
-	// _, err = repo.db.Exec(ctx, `UPDATE journey SET name = $1, description = $2 WHERE id = $3;`, dataStr["name"], dataStr["description"], dataInt["journeyID"])
-	// if err != nil {
-	// 	logger.Logger().Error(err.Error())
-	// 	return err
-	// }
-	// fmt.Println("Succes update")
-
-	_, err := repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
+	_, err = repo.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_sight.journey_id = $1;`, dataInt["journeyID"])
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
