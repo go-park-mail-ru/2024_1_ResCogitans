@@ -7,15 +7,22 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 )
 
-type userIDType struct{}
+type AuthMiddleware struct {
+	useCase usecase.SessionInterface
+}
 
-var userIDKey userIDType
+func NewAuthMiddleware(useCase usecase.SessionInterface) *AuthMiddleware {
+	return &AuthMiddleware{
+		useCase: useCase,
+	}
+}
 
-func SessionMiddleware(next http.Handler) http.Handler {
+func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := usecase.GetSession(r)
+		userID, _ := m.useCase.GetSession(r)
 
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		ctx := context.WithValue(r.Context(), "userID", userID)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
 	})
 }

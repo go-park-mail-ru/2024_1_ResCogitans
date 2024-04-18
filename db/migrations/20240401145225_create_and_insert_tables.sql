@@ -16,11 +16,12 @@ CREATE TABLE country(
 CREATE TABLE "user" (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     email text NOT NULL UNIQUE,
-    passwrd text NOT NULL
+    passwrd text NOT NULL,
+    salt text NOT NULL
 );
 
 CREATE TABLE "profile" (
-    user_id integer REFERENCES "user"(id),
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
     username text UNIQUE,
     avatar text,
 	bio text
@@ -64,7 +65,7 @@ CREATE TABLE feedback(
 );
 
 
-INSERT INTO city (city) VALUES 
+INSERT INTO city (city) VALUES
 ('Москва'),
 ('Вольск'),
 ('Тамбов'),
@@ -85,11 +86,11 @@ INSERT INTO country(country) VALUES
 ('Абхазия');
 
 
-INSERT INTO sight(rating, name, description, city_id, country_id) VALUES 
+INSERT INTO sight(rating, name, description, city_id, country_id) VALUES
     (
-        2.1, 
-        'У дяди Вани',	
-        'Ресторан с видом на Сталинскую высотку.', 
+        2.1,
+        'У дяди Вани',
+        'Ресторан с видом на Сталинскую высотку.',
         1,
         1
     ),
@@ -172,7 +173,7 @@ INSERT INTO sight(rating, name, description, city_id, country_id) VALUES
 	);
 
 
-INSERT INTO image(path, sight_id) VALUES 
+INSERT INTO image(path, sight_id) VALUES
 ('public/1.jpg', 1),
 ('public/2.jpg', 2),
 ('public/3.jpg', 3),
@@ -200,7 +201,6 @@ CREATE TRIGGER create_profile_trigger
 AFTER INSERT ON "user"
 FOR EACH ROW
 EXECUTE FUNCTION create_profile();
-
 
 -- +goose Down
 -- +goose StatementBegin

@@ -19,3 +19,8 @@ func (h Sight) Validate() error {
 type Sights struct {
 	Sight []Sight `json:"sights"`
 }
+
+type SightComments struct {
+	Sight Sight     `json:"sight"`
+	Comms []Comment `json:"comments"`
+}

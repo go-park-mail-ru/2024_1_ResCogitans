@@ -4,16 +4,22 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
+	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/avatar"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/profile"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/registration"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 
-	sight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
-	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 )
 
-func SetupRouter(cfg *config.Config) *chi.Mux {
+func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
@@ -22,206 +28,188 @@ func SetupRouter(cfg *config.Config) *chi.Mux {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
 	router.Use(cors.CorsMiddleware)
-	router.Use(middle.SessionMiddleware)
+	router.Use(handlers.AuthMiddleware.Auth)
 
 	// upload image
 	router.HandleFunc("/upload", user.Upload)
 
-	router.Mount("/sights", SightRoutes())
+	router.Mount("/sights", SightRoutes(handlers.SightHandler))
 
 	// user authorization and registration
-	router.Mount("/signup", SignUpRoutes())
-	router.Mount("/login", AuthRoutes())
-	router.Mount("/logout", LogOutRoutes())
+	router.Mount("/signup", SignUpRoutes(handlers.RegHandler))
+	router.Mount("/login", AuthRoutes(handlers.AuthHandler))
+	router.Mount("/logout", LogOutRoutes(handlers.AuthHandler))
 
 	// user profile
-	router.Mount("/profile/{id}", GetProfileRoutes())
-	router.Mount("/profile/{id}/edit", EditProfileRoutes())
-	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
+	router.Mount("/profile/{id}", GetProfileRoutes(handlers.ProfileHandler))
+	router.Mount("/profile/{id}/edit", EditProfileRoutes(handlers.ProfileHandler))
+	router.Mount("/profile/{id}/delete", DeleteProfileRoutes(handlers.DeactivationHandler))
 
 	// comments
-	router.Mount("/sight/{id}", SightByIDRoutes())
-	router.Mount("/sight/{id}/create", CreateCommentRoutes())
-	router.Mount("/sight/{sid}/edit/{cid}", EditCommentRoutes())
-	router.Mount("/sight/{sid}/delete/{cid}", DeleteCommentRoutes())
+	router.Mount("/sight/{id}", GetSightRoutes(handlers.SightHandler))
+	router.Mount("/sight/{id}/create", CreateCommentRoutes(handlers.CommentHandler))
+	router.Mount("/sight/{sid}/edit/{cid}", EditCommentRoutes(handlers.CommentHandler))
+	router.Mount("/sight/{sid}/delete/{cid}", DeleteCommentRoutes(handlers.CommentHandler))
 
 	//journeys
-	router.Mount("/trip/{id}/delete", DeleteJourneyRoutes())
-	router.Mount("/trip/create", CreateJourneyRoutes())
-	router.Mount("/{userID}/trips", JourneyRoutes())
+	router.Mount("/trip/{id}/delete", DeleteJourneyRoutes(handlers.JourneyHandler))
+	router.Mount("/trip/create", CreateJourneyRoutes(handlers.JourneyHandler))
+	router.Mount("/{userID}/trips", JourneyRoutes(handlers.JourneyHandler))
 
 	// journey_sights
-	router.Mount("/trip/{id}", JourneySightRoutes())
-	router.Mount("/trip/{id}/sight/add", AddJourneySightRoutes())
-	router.Mount("/trip/{id}/sight/delete", DeleteJourneySightRoutes())
+	router.Mount("/trip/{id}", JourneySightRoutes(handlers.JourneyHandler))
+	router.Mount("/trip/{id}/sight/add", AddJourneySightRoutes(handlers.JourneyHandler))
+	router.Mount("/trip/{id}/sight/delete", DeleteJourneySightRoutes(handlers.JourneyHandler))
 
 	return router
 }
 
-func SightRoutes() chi.Router {
+func SightRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
-	sightsHandler := sight.SightsHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: sightsHandler.GetSights}
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: handler.GetSights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func SignUpRoutes() chi.Router {
+func SignUpRoutes(handler *registration.RegistrationHandler) chi.Router {
 	router := chi.NewRouter()
 
-	regHandler := user.RegistrationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: regHandler.SignUp}
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func LogOutRoutes() chi.Router {
+func LogOutRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
 
-	logOutHandler := user.AuthorizationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: logOutHandler.LogOut}
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.LogOut}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func AuthRoutes() chi.Router {
+func AuthRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
 
-	authHandler := user.AuthorizationHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.UserResponse]{ServeHTTP: authHandler.Authorize}
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func SightByIDRoutes() chi.Router {
+func GetSightRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
-	SightByIDHandler := sight.SightsHandler{}
 
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, sight.SightComments]{ServeHTTP: SightByIDHandler.GetSightByID}
-
+	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.SightComments]{ServeHTTP: handler.GetSight}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func CreateCommentRoutes() chi.Router {
+func CreateCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
 
-	commHandler := sight.CommentHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.CreateComment}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.CreateComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func EditCommentRoutes() chi.Router {
+func EditCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
 
-	commHandler := sight.CommentHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.EditComment}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.EditComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func DeleteCommentRoutes() chi.Router {
+func DeleteCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
 
-	commHandler := sight.CommentHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: commHandler.DeleteComment}
+	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.DeleteComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func CreateJourneyRoutes() chi.Router {
+func CreateJourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: journeyHandler.CreateJourney}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.CreateJourney}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func DeleteJourneyRoutes() chi.Router {
+func DeleteJourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: journeyHandler.DeleteJourney}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.DeleteJourney}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func JourneyRoutes() chi.Router {
+func JourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journeys]{ServeHTTP: journeyHandler.GetJourneys}
+	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journeys]{ServeHTTP: handler.GetJourneys}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func AddJourneySightRoutes() chi.Router {
+func AddJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: journeyHandler.AddJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: handler.AddJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func DeleteJourneySightRoutes() chi.Router {
+func DeleteJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: journeyHandler.DeleteJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: handler.DeleteJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func JourneySightRoutes() chi.Router {
+func JourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	journeyHandler := sight.JourneyHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySights]{ServeHTTP: journeyHandler.GetJourneySights}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySights]{ServeHTTP: handler.GetJourneySights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
 // profile
-func GetProfileRoutes() chi.Router {
+func GetProfileRoutes(handler *profile.ProfileHandler) chi.Router {
 	router := chi.NewRouter()
-	profileHandler := user.ProfileHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.GetUserProfile}
+	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: handler.Get}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }
 
-func DeleteProfileRoutes() chi.Router {
+func EditProfileRoutes(handler *profile.ProfileHandler) chi.Router {
 	router := chi.NewRouter()
-	profileHandler := user.ProfileHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.DeleteUser}
-	router.Get("/", wrapperInstance.HandlerWrapper)
-
-	return router
-}
-
-func EditProfileRoutes() chi.Router {
-	router := chi.NewRouter()
-	profileHandler := user.ProfileHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: profileHandler.EditUserProfile}
+	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: handler.Edit}
 	router.Post("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func DeleteProfileRoutes(handler *deactivation.DeactivationHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.Deactivate}
+	router.Get("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

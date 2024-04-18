@@ -34,9 +34,23 @@ type dsn struct {
 var DSN = dsn{
 	Host:     "localhost",
 	Port:     5432,
-	User:     "mrdzhofik",
-	Password: "246858",
-	DBname:   "jantugan",
+	User:     "postgres",
+	Password: "admin",
+	DBname:   "res",
+}
+
+type redisData struct {
+	Addr     string
+	Username string
+	Password string
+	DB       int
+}
+
+var RedisData = redisData{
+	Addr:     "redis-13041.c302.asia-northeast1-1.gce.cloud.redislabs.com:13041",
+	Username: "default",
+	Password: "Hwsuxke8YC8vT6E2jOKd7lTK6cPEvq5I",
+	DB:       0,
 }
 
 func LoadConfig() (*Config, error) {

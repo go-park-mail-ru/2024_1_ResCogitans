@@ -33,3 +33,8 @@ func (h Journey) Validate() error {
 func (h JourneySight) Validate() error {
 	return nil
 }
+
+type JourneyResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+}
