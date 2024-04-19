@@ -70,7 +70,7 @@ func (repo *UserRepo) AuthorizeUser(dataStr map[string]string) (entities.User, e
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user[0].Passwrd), []byte(dataStr["passwrd"]))
-	if user == nil {
+	if err != nil {
 		fmt.Println("Passwords not match!")
 		return entities.User{}, err
 	}

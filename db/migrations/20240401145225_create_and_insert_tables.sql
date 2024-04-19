@@ -3,16 +3,17 @@
 SELECT 'up SQL query';
 -- +goose StatementEnd
 
-CREATE TABLE city(
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    city text NOT NULL,
-    region text,
-    country_id REFERENCES country(id)
-);
 
 CREATE TABLE country(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
     country text NOT NULL UNIQUE
+);
+
+CREATE TABLE city(
+    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
+    city text NOT NULL,
+    region text,
+    country_id integer REFERENCES country(id)
 );
 
 CREATE TABLE user_data (
@@ -30,12 +31,11 @@ CREATE TABLE profile_data (
 
 CREATE TABLE sight(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    rating float NOT NULL CHECK (rating > 0 AND rating <= 5),
+    rating float,
     name text NOT NULL,
     description text,
     city_id integer REFERENCES city (id),
 	country_id integer REFERENCES country(id),
-    country_id integer REFERENCES country (id),
 	UNIQUE (name, city_id)
 );
 
@@ -68,6 +68,13 @@ CREATE TABLE feedback(
     feedback text NOT NULL
 );
 
+INSERT INTO country(country) VALUES
+('Россия'),
+('Беларусь'),
+('Татарстан'),
+('Крым'),
+('Дагестан'),
+('Абхазия');
 
 INSERT INTO city (city, country_id) VALUES 
 ('Москва', 1),
@@ -81,17 +88,9 @@ INSERT INTO city (city, country_id) VALUES
 ('Мир', 2),
 ('Гудаута', 6),
 ('Дербент', 5),
-('Нижний Новгород', 1);
+('Нижний Новгород', 1),
 ('Ицари', 5),
 ('Сулакский каньон', 5);
-
-INSERT INTO country(country) VALUES
-('Россия'),
-('Беларусь'),
-('Татарстан'),
-('Крым'),
-('Дагестан'),
-('Абхазия');
 
 
 INSERT INTO sight(name, description, city_id, country_id) VALUES 
@@ -167,7 +166,7 @@ INSERT INTO sight(name, description, city_id, country_id) VALUES
 		'Единственный в России подземный водопад.',
 		8,
         5
-	)
+	),
 	(
         'Озеро Рица',	
         'Рица — горное озеро ледниково-тектонического происхождения на Западном Кавказе, в Гудаутском районе Абхазии', 
@@ -246,6 +245,28 @@ CREATE TRIGGER create_profile_trigger
 AFTER INSERT ON user_data
 FOR EACH ROW
 EXECUTE FUNCTION create_profile();
+
+
+CREATE OR REPLACE FUNCTION update_sight_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sight
+    SET rating = (SELECT AVG(rating) FROM feedback WHERE sight_id = NEW.sight_id)
+    WHERE id = NEW.sight_id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER after_insert_feedback
+AFTER INSERT ON feedback
+FOR EACH ROW
+EXECUTE FUNCTION update_sight_rating();
+
+CREATE TRIGGER after_update_feedback
+AFTER UPDATE ON feedback
+FOR EACH ROW
+EXECUTE FUNCTION update_sight_rating();
 
 
 -- +goose Down
