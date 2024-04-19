@@ -20,7 +20,7 @@ type UserProfile struct {
 	UserID   int    `json:"id"`
 	Username string `json:"username"`
 	Bio      string `json:"bio"`
-	Avatar   string `json:"avatar"`
+	Avatar   string `json:"avatar,omitempty"`
 }
 
 func (h UserProfile) Validate() error {

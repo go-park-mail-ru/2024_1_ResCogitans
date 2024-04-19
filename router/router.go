@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
@@ -41,6 +43,16 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/logout", LogOutRoutes(handlers.AuthHandler))
 
 	// user profile
+	router.Mount("/profile/{id}", GetProfileRoutes())
+	router.Mount("/profile/{id}/edit", EditProfileRoutes())
+	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
+	router.Mount("/profile/{id}/reset_password", UpdateUserPasswordRoutes())
+
+	//TODO:нужно приспособить обертку под работу multipart/form-data
+	handler := &user.ProfileHandler{}
+	router.Post("/profile/{id}/upload", func(w http.ResponseWriter, r *http.Request) {
+		handler.UploadFile(w, r)
+	})
 	router.Mount("/profile/{id}", GetProfileRoutes(handlers.ProfileHandler))
 	router.Mount("/profile/{id}/edit", EditProfileRoutes(handlers.ProfileHandler))
 	router.Mount("/profile/{id}/delete", DeleteProfileRoutes(handlers.DeactivationHandler))
@@ -210,6 +222,15 @@ func DeleteProfileRoutes(handler *deactivation.DeactivationHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.Deactivate}
 	router.Get("/", wrapperInstance.HandlerWrapper)
+
+	return router
+}
+
+func UpdateUserPasswordRoutes() chi.Router {
+	router := chi.NewRouter()
+	profileHandler := user.ProfileHandler{}
+	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.UpdateUserPassword}
+	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
 }

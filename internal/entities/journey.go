@@ -3,7 +3,7 @@ package entities
 type Journey struct {
 	ID          int    `json:"id"`
 	UserID      int    `json:"userID"`
-	Email       string `json:"username"`
+	Username    string `json:"username"` // Username
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -15,6 +15,12 @@ type JourneySight struct {
 	SightID   int    `json:"sightID"`
 	Priority  int    `json:"priority"`
 	SightName string `json:"sight_name"`
+}
+
+type JourneySightID struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ListID      []int  `json:"sightIDs"`
 }
 
 type Journeys struct {
@@ -31,6 +37,10 @@ func (h Journey) Validate() error {
 }
 
 func (h JourneySight) Validate() error {
+	return nil
+}
+
+func (h JourneySightID) Validate() error {
 	return nil
 }
 

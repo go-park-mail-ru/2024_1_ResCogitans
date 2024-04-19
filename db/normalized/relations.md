@@ -1,8 +1,8 @@
 ## Описание переменных отношений
-* ### user
+* ### user_data
   Данные пользователя для входа
 
-* ### profile
+* ### profile_data
   Персональные данные пользователя
 
 * ### city
@@ -14,7 +14,7 @@
 * ### sight
   Множество достопримечательностей
 
-* ### image
+* ### image_data
   Множество картинок для достопримечательностей
 
 * ### feedback
@@ -27,16 +27,16 @@
   Отношение служащее связью M:M для [sight](#sight) и [journey](#journey).
 
 ## Описание функциональных зависимостей
-#### Relation [user](#user):
+#### Relation [user_data](#user_data):
 {id} -> {email, passwrd}
 
-#### Relation [profile](#profile):
+#### Relation [profile](#profile_data):
 {user_id} -> {username, bio, avatar}
 
 #### Relation [sight](#sight):
 {id} -> {rating, name, description, city_id, country_id,}
 
-#### Relation [image](#image):
+#### Relation [image](#image_data):
 {id} -> {path, sight_id}
 
 #### Relation [journey](#journey):

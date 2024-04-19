@@ -1,9 +1,10 @@
-package journey_test
+package delivery_test
 
 import (
 	"context"
 	"testing"
 
+	journey "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 	"github.com/stretchr/testify/assert"
@@ -11,7 +12,7 @@ import (
 
 // Get Journey
 func TestGetJourney(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 	journeys := entities.Journey{UserID: 1}
 
 	ctx := context.Background()
@@ -24,7 +25,7 @@ func TestGetJourney(t *testing.T) {
 
 // Get JourneySight
 func TestGetJourneySights(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
@@ -38,7 +39,7 @@ func TestGetJourneySights(t *testing.T) {
 
 // Get JourneySight bad ID
 func TestGetJourneySightsNotInt(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
@@ -52,7 +53,7 @@ func TestGetJourneySightsNotInt(t *testing.T) {
 
 // Create
 func TestCreateJourney(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 	journeys := entities.Journey{
 		UserID:      1,
 		Name:        "siu",
@@ -68,7 +69,7 @@ func TestCreateJourney(t *testing.T) {
 
 // Delete
 func TestDeleteJourney(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
@@ -81,7 +82,7 @@ func TestDeleteJourney(t *testing.T) {
 }
 
 func TestDeleteJourneyNotInt(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
@@ -95,9 +96,10 @@ func TestDeleteJourneyNotInt(t *testing.T) {
 
 // Add JourneySight
 func TestAddJourneySight(t *testing.T) {
-	handler := &JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
+	ids := []int{1, 2, 3, 4}
+	handler := &journey.JourneyHandler{}
+	JourneySightID := entities.JourneySightID{
+		ListID: ids,
 	}
 
 	ctx := context.Background()
@@ -105,15 +107,16 @@ func TestAddJourneySight(t *testing.T) {
 	param["id"] = "6"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, JourneySightID)
 
 	assert.Nil(t, err)
 }
 
 func TestAddJourneySightBad(t *testing.T) {
-	handler := &JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
+	handler := &journey.JourneyHandler{}
+	ids := []int{1, 2, 3, 13, 18}
+	JourneySightID := entities.JourneySightID{
+		ListID: ids,
 	}
 
 	ctx := context.Background()
@@ -121,30 +124,27 @@ func TestAddJourneySightBad(t *testing.T) {
 	param["id"] = "1"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, JourneySightID)
 
 	assert.EqualError(t, err, "failed adding journey sight")
 }
 
 func TestAddJourneySightNotInt(t *testing.T) {
-	handler := &JourneyHandler{}
-	journeySight := entities.JourneySight{
-		SightID: 6,
-	}
+	handler := &journey.JourneyHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
 	param["id"] = "ok"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.AddJourneySight(ctx, journeySight)
+	_, err := handler.AddJourneySight(ctx, entities.JourneySightID{})
 
 	assert.EqualError(t, err, "cannot parsing not integer")
 }
 
 // Delete JourneySight
 func TestDeleteJourneySight(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 	journeySight := entities.JourneySight{
 		SightID: 6,
 	}
@@ -160,7 +160,7 @@ func TestDeleteJourneySight(t *testing.T) {
 }
 
 func TestDeleteJourneySightNotInt(t *testing.T) {
-	handler := &JourneyHandler{}
+	handler := &journey.JourneyHandler{}
 	journeySight := entities.JourneySight{
 		SightID: 6,
 	}
