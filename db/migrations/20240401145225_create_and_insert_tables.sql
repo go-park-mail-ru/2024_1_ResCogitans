@@ -5,7 +5,9 @@ SELECT 'up SQL query';
 
 CREATE TABLE city(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-    city text NOT NULL
+    city text NOT NULL,
+    region text,
+    country_id REFERENCES country(id)
 );
 
 CREATE TABLE country(
