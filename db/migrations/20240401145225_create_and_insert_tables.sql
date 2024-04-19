@@ -5,10 +5,7 @@ SELECT 'up SQL query';
 
 CREATE TABLE city(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-	country_id integer REFERENCES country(id),
-    city text NOT NULL,
-	region text,
-	UNIQUE (city, region)
+    city text NOT NULL
 );
 
 CREATE TABLE country(
@@ -36,6 +33,7 @@ CREATE TABLE sight(
     description text,
     city_id integer REFERENCES city (id),
 	country_id integer REFERENCES country(id),
+    country_id integer REFERENCES country (id),
 	UNIQUE (name, city_id)
 );
 
@@ -47,9 +45,9 @@ CREATE TABLE image_data(
 
 CREATE TABLE journey(
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY ,
-	name text NOT NULL,
+	name text NOT NULL UNIQUE,
     user_id integer REFERENCES user_data(id),
-    description text,
+    description text
 );
 
 CREATE TABLE journey_sight(
@@ -65,8 +63,7 @@ CREATE TABLE feedback(
     user_id integer REFERENCES user_data(id),
     sight_id integer REFERENCES sight(id),
     rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
-    feedback text NOT NULL,
-	UNIQUE(user_id, sight_id)
+    feedback text NOT NULL
 );
 
 

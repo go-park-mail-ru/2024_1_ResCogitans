@@ -7,6 +7,7 @@ type Comment struct {
 	SightID  int    `json:"sightID"`
 	Rating   int    `json:"rating"`
 	Feedback string `json:"feedback"`
+	Avatar   string `json:"avatar"`
 }
 
 type Comments struct {
