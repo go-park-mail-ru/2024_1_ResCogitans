@@ -3,14 +3,23 @@ package repository
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	errEditProfile = errors.HttpError{
+		Code:    http.StatusInternalServerError,
+		Message: "failed edit profile",
+	}
 )
 
 // UserRepo struct
@@ -143,10 +152,15 @@ func (repo *UserRepo) EditUserProfile(dataInt map[string]int, dataStr map[string
 		return entities.UserProfile{}, err
 	}
 
+	if count == 1 {
+		logger.Logger().Error("No values to update")
+		return entities.UserProfile{}, err
+	}
+
 	updatedProfile, err := repo.GetUserProfile(dataInt)
 	if err != nil {
 		logger.Logger().Error(err.Error())
-		return entities.UserProfile{}, err
+		return entities.UserProfile{}, errEditProfile
 	}
 
 	return updatedProfile, nil
