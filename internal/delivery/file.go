@@ -98,6 +98,12 @@ func SaveFile(r *http.Request) (string, error) {
 		return string(""), errFileSize
 	}
 
+	// Reset the file pointer to the beginning of the file
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		logger.Error("Error while resetting file pointer:", "error", err)
+		return string(""), err
+	}
+
 	cfg, _ := config.LoadConfig()
 	targetFile, err := os.Create(cfg.FileUploadPath + handler.Filename)
 	if err != nil {
