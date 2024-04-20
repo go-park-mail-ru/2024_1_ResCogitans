@@ -9,7 +9,7 @@ type JourneyUseCaseInterface interface {
 	CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error)
 	DeleteJourneyByID(dataInt map[string]int) error
 	GetJourneys(userID int) ([]entities.Journey, error)
-	AddJourneySight(dataInt map[string]int) error
+	AddJourneySight(journeyID int, ids []int) error
 	DeleteJourneySight(dataInt map[string]int) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)
@@ -37,8 +37,8 @@ func (ju *JourneyUseCase) GetJourneys(userID int) ([]entities.Journey, error) {
 	return ju.SightStorage.GetJourneys(userID)
 }
 
-func (ju *JourneyUseCase) AddJourneySight(dataInt map[string]int) error {
-	return ju.SightStorage.AddJourneySight(dataInt)
+func (ju *JourneyUseCase) AddJourneySight(journeyID int, ids []int) error {
+	return ju.SightStorage.AddJourneySight(journeyID, ids)
 }
 
 func (ju *JourneyUseCase) DeleteJourneySight(dataInt map[string]int) error {

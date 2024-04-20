@@ -69,7 +69,7 @@ func (h *JourneyHandler) GetJourneys(ctx context.Context, _ entities.Journey) (e
 	return entities.Journeys{Journey: journeys}, nil
 }
 
-func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {
+func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entities.JourneySightID) (entities.JourneySight, error) {
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
@@ -78,14 +78,17 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 
 	dataInt := make(map[string]int)
 	dataInt["journeyID"] = journeyID
-	dataInt["sightID"] = requestData.SightID
 
-	err = h.JourneyUseCase.AddJourneySight(dataInt)
+	dataStr := make(map[string]string)
+	dataStr["name"] = requestData.Name
+	dataStr["description"] = requestData.Description
+
+	err = h.JourneyUseCase.AddJourneySight(journeyID, requestData.ListID)
 	if err != nil {
 		return entities.JourneySight{}, err
 	}
 
-	return entities.JourneySight{}, nil
+	return entities.JourneySight{JourneyID: journeyID}, nil
 }
 
 func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {

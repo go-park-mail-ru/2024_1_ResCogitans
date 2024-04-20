@@ -33,6 +33,14 @@ type Dsn struct {
 	DBname   string `env:"DB_NAME"`
 }
 
+var DSN = Dsn{
+	Host:     "localhost",
+	Port:     5432,
+	User:     "postgres",
+	Password: "admin",
+	DBname:   "res",
+}
+
 type redisData struct {
 	Addr     string
 	Username string

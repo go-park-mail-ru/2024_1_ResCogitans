@@ -13,37 +13,24 @@ import (
 
 // GetPostgress gets connection to postgres database
 func GetPostgres() (*pgxpool.Pool, error) {
-	log := logger.Logger()
+	dbInfo := config.DSN
 
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Error("Failed to load database config", "error", err)
-		return nil, err
-	}
-
-	dsn := buildDSN(cfg.Dsn)
-
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		dbInfo.Host, dbInfo.Port, dbInfo.User, dbInfo.Password, dbInfo.DBname)
 	poolConfig, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		log.Error("Failed to parse database config", "error", err)
+		logger.Logger().Error("Cannot open database")
 		return nil, err
 	}
-
 	poolConfig.MaxConns = 10
 	poolConfig.MaxConnLifetime = time.Hour
 
 	pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
-		log.Error("Failed to connect to database", "error", err)
 		return nil, err
 	}
 
 	return pool, nil
-}
-
-func buildDSN(cfg config.Dsn) string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBname)
 }
 
 func GetRedis() (*redis.Client, error) {

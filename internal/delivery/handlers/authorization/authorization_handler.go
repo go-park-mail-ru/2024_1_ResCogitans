@@ -102,3 +102,30 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (ent
 
 	return entities.UserResponse{}, nil
 }
+
+func (h *AuthorizationHandler) UpdatePassword(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+	username := requestData.Username
+	password := requestData.Password
+
+	request, err := httputils.GetRequestFromCtx(ctx)
+	if err != nil {
+		return entities.UserResponse{}, err
+	}
+
+	userID, err := h.sessionUseCase.GetSession(request)
+	if err != nil {
+		return entities.UserResponse{}, err
+	}
+
+	err = h.userUseCase.UserDataVerification(username, password)
+	if err != nil {
+		return entities.UserResponse{}, err
+	}
+
+	user, err := h.userUseCase.ChangePassword(userID, password)
+	if err != nil {
+		return entities.UserResponse{}, err
+	}
+
+	return entities.UserResponse{Username: user.Username, ID: user.ID}, nil
+}

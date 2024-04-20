@@ -18,7 +18,7 @@ type UserUseCaseInterface interface {
 	GetUserByID(userID int) (entities.User, error)
 	DeleteUser(userID int) error
 	UserDataVerification(email, password string) error
-	ChangeData(userID int, email, password string) (entities.User, error)
+	ChangePassword(userID int, password string) (entities.User, error)
 	UserExists(email, password string) error
 	IsEmailTaken(email string) (bool, error)
 }
@@ -83,19 +83,7 @@ func ValidatePassword(password string) bool {
 	return hasDigit && hasUppercase && hasLowercase && hasMinLength && hasMaxLength
 }
 
-func (u *UserUseCase) ChangeData(userID int, email, password string) (entities.User, error) {
-	user, err := u.UserStorage.GetUserByID(userID)
-	if err != nil {
-		return entities.User{}, err
-	}
-
-	if user.Username != email {
-		err := u.UserStorage.ChangeEmail(userID, email)
-		if err != nil {
-			return entities.User{}, err
-		}
-	}
-
+func (u *UserUseCase) ChangePassword(userID int, password string) (entities.User, error) {
 	salt := uuid.New().String()
 	saltedPassword := password + salt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), bcrypt.DefaultCost)

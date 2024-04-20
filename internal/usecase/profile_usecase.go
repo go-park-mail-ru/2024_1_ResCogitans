@@ -8,6 +8,7 @@ import (
 type ProfileUseCaseInterface interface {
 	GetUserProfile(userID int) (entities.UserProfile, error)
 	EditUserProfile(newData entities.UserProfile) error
+	EditUserProfileAvatar(userID int, avatar string) (entities.UserProfile, error)
 }
 
 type ProfileUseCase struct {
@@ -46,4 +47,12 @@ func (pu *ProfileUseCase) EditUserProfile(newData entities.UserProfile) error {
 		}
 	}
 	return nil
+}
+
+func (pu *ProfileUseCase) EditUserProfileAvatar(userID int, avatar string) (entities.UserProfile, error) {
+	err := pu.ProfileStorage.EditUserAvatar(userID, avatar)
+	if err != nil {
+		return entities.UserProfile{}, err
+	}
+	return pu.ProfileStorage.GetUserProfileByID(userID)
 }

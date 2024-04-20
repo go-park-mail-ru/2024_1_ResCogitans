@@ -6,12 +6,11 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/pkg/errors"
 )
 
 type FileHandler struct{}
@@ -28,18 +27,6 @@ var (
 		"\x89PNG\r\n\x1a\n": "image/png",
 		"GIF87a":            "image/gif",
 		"GIF89a":            "image/gif",
-	}
-	errUploadFile = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "failed upload file",
-	}
-	errFileExtension = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "bad extension",
-	}
-	errFileSize = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "file size exceeds the limit of " + strconv.Itoa(maxFileSizeMB) + " MB",
 	}
 )
 
@@ -89,13 +76,13 @@ func SaveFile(r *http.Request) (string, error) {
 	flag := ValidateFileExtension(file)
 	if !flag {
 		logger.Error("Not valid format!")
-		return string(""), errFileExtension
+		return string(""), errors.New("Not valid format!")
 	}
 
 	flag = ValidateFileSize(handler)
 	if !flag {
 		logger.Error("Error while checking file size:", "error", err)
-		return string(""), errFileSize
+		return string(""), errors.New("Error while checking file size!")
 	}
 
 	cfg, _ := config.LoadConfig()

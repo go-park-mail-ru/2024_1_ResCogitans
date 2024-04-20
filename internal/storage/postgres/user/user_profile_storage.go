@@ -40,7 +40,7 @@ func (up *UserProfileStorage) GetUserProfileByID(userID int) (entities.UserProfi
 	defer up.mu.Unlock()
 	up.ctx = context.Background()
 
-	err := pgxscan.Select(up.ctx, up.db, &user, `SELECT user_id, username, bio, avatar FROM "profile" WHERE user_id = $1`, userID)
+	err := pgxscan.Select(up.ctx, up.db, &user, `SELECT user_id, username, bio, avatar FROM profile_data WHERE user_id = $1`, userID)
 	if err != nil {
 		return entities.UserProfile{}, err
 	}
@@ -55,7 +55,7 @@ func (up *UserProfileStorage) EditUsername(userID int, username string) error {
 	up.mu.Lock()
 	defer up.mu.Unlock()
 	up.ctx = context.Background()
-	_, err := up.db.Exec(up.ctx, `UPDATE "profile" SET username = $1 WHERE user_id = $2`, username, userID)
+	_, err := up.db.Exec(up.ctx, `UPDATE profile_data SET username = $1 WHERE user_id = $2`, username, userID)
 	return err
 }
 
@@ -63,14 +63,12 @@ func (up *UserProfileStorage) EditUserBio(userID int, bio string) error {
 	up.mu.Lock()
 	defer up.mu.Unlock()
 	up.ctx = context.Background()
-	_, err := up.db.Exec(up.ctx, `UPDATE "profile" SET bio = $1 WHERE user_id = $2`, bio, userID)
+	_, err := up.db.Exec(up.ctx, `UPDATE profile_data SET bio = $1 WHERE user_id = $2`, bio, userID)
 	return err
 }
 
 func (up *UserProfileStorage) EditUserAvatar(userID int, avatar string) error {
-	up.mu.Lock()
-	defer up.mu.Unlock()
-	up.ctx = context.Background()
-	_, err := up.db.Exec(up.ctx, `UPDATE "profile" SET avatar = $1 WHERE user_id = $2`, avatar, userID)
+	ctx := context.Background()
+	_, err := up.db.Exec(ctx, "UPDATE profile_data SET avatar = $1 WHERE user_id = $2", avatar, userID)
 	return err
 }

@@ -1,4 +1,4 @@
-package delivery_test
+package journey
 
 import (
 	"context"

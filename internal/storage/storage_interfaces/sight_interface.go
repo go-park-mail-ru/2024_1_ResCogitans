@@ -14,7 +14,7 @@ type SightStorageInterface interface {
 	CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error)
 	DeleteJourney(dataInt map[string]int) error
 	GetJourneys(userID int) ([]entities.Journey, error)
-	AddJourneySight(dataInt map[string]int) error
+	AddJourneySight(journeyID int, ids []int) error
 	DeleteJourneySight(dataInt map[string]int) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)

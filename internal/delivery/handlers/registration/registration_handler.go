@@ -34,7 +34,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 	sessionID, err := h.sessionUseCase.GetSession(request)
 	if err != nil {
 		httpError := httperrors.UnwrapHttpError(err)
-		if httpError.Message != "Session not found" && httpError.Message != "Cookie not found" {
+		if httpError.Message != "Session not found" && httpError.Message != "Cookie not found" && httpError.Message != "Error decoding cookie" {
 			return entities.UserResponse{}, httpError
 		}
 	}

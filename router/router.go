@@ -43,19 +43,15 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/logout", LogOutRoutes(handlers.AuthHandler))
 
 	// user profile
-	router.Mount("/profile/{id}", GetProfileRoutes())
-	router.Mount("/profile/{id}/edit", EditProfileRoutes())
-	router.Mount("/profile/{id}/delete", DeleteProfileRoutes())
-	router.Mount("/profile/{id}/reset_password", UpdateUserPasswordRoutes())
-
-	//TODO:нужно приспособить обертку под работу multipart/form-data
-	handler := &user.ProfileHandler{}
-	router.Post("/profile/{id}/upload", func(w http.ResponseWriter, r *http.Request) {
-		handler.UploadFile(w, r)
-	})
 	router.Mount("/profile/{id}", GetProfileRoutes(handlers.ProfileHandler))
 	router.Mount("/profile/{id}/edit", EditProfileRoutes(handlers.ProfileHandler))
 	router.Mount("/profile/{id}/delete", DeleteProfileRoutes(handlers.DeactivationHandler))
+	router.Mount("/profile/{id}/reset_password", UpdateUserPasswordRoutes(handlers.AuthHandler))
+
+	//TODO:нужно приспособить обертку под работу multipart/form-data
+	router.Post("/profile/{id}/upload", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ProfileHandler.UploadFile(w, r)
+	})
 
 	// comments
 	router.Mount("/sight/{id}", GetSightRoutes(handlers.SightHandler))
@@ -177,7 +173,7 @@ func JourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 func AddJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: handler.AddJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneySightID, entities.JourneySight]{ServeHTTP: handler.AddJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
@@ -226,10 +222,9 @@ func DeleteProfileRoutes(handler *deactivation.DeactivationHandler) chi.Router {
 	return router
 }
 
-func UpdateUserPasswordRoutes() chi.Router {
+func UpdateUserPasswordRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
-	profileHandler := user.ProfileHandler{}
-	wrapperInstance := &wrapper.Wrapper[entities.User, user.ProfileResponse]{ServeHTTP: profileHandler.UpdateUserPassword}
+	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.UpdatePassword}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 
 	return router
