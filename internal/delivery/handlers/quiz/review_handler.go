@@ -10,11 +10,17 @@ import (
 
 type QuizHandler struct {
 	questionUseCase usecase.QuestionUseCaseInterface
+	commentUseCase  usecase.CommentUseCaseInterface
+	journeyUseCase  usecase.JourneyUseCaseInterface
 }
 
-func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface) *QuizHandler {
+func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface,
+	commentUseCase usecase.CommentUseCaseInterface,
+	journeyUseCase usecase.JourneyUseCaseInterface) *QuizHandler {
 	return &QuizHandler{
 		questionUseCase: questionUseCase,
+		commentUseCase:  commentUseCase,
+		journeyUseCase:  journeyUseCase,
 	}
 }
 
@@ -24,6 +30,42 @@ func (h *QuizHandler) CreateReview(_ context.Context, requestData entities.Revie
 		return false, err
 	}
 	return true, nil
+}
+
+func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entities.DataCheck, error) {
+	userID, err := httputils.GetUserFromCtx(ctx)
+	if err != nil {
+		return entities.DataCheck{}, err
+	}
+	questions, err := h.questionUseCase.GetQuestions()
+	if err != nil {
+		return entities.DataCheck{}, err
+	}
+
+	ok, err := h.questionUseCase.CheckReview(userID)
+	if err != nil {
+		return entities.DataCheck{}, err
+	}
+	if ok {
+		return entities.DataCheck{Flag: false}, nil
+	}
+
+	ok, err = h.journeyUseCase.CheckJourney(userID)
+	if err != nil {
+		return entities.DataCheck{}, err
+	}
+	if ok {
+		return entities.DataCheck{Flag: true, Questions: questions}, nil
+	}
+
+	ok, err = h.commentUseCase.CheckCommentByUserID(userID)
+	if err != nil {
+		return entities.DataCheck{}, err
+	}
+	if ok {
+		return entities.DataCheck{Flag: true, Questions: questions}, nil
+	}
+	return entities.DataCheck{Flag: false}, nil
 }
 
 func (h *QuizHandler) SetStat(ctx context.Context, _ entities.Statistic) ([]entities.Statistic, error) {

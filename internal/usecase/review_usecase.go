@@ -7,6 +7,8 @@ import (
 
 type QuestionUseCaseInterface interface {
 	CreateReview(review entities.Review) error
+	GetQuestions() ([]entities.QuestionResponse, error)
+	CheckReview(userID int) (bool, error)
 	SetStat(userID int) ([]entities.Statistic, error)
 }
 
@@ -25,9 +27,43 @@ func (uc *QuestionUseCase) CreateReview(review entities.Review) error {
 }
 
 func (uc *QuestionUseCase) SetStat(userID int) ([]entities.Statistic, error) {
-	stat, err := uc.QuestionStorage.SetStat(userID)
+	AVGStat, err := uc.QuestionStorage.GetAvgStat()
 	if err != nil {
 		return []entities.Statistic{}, err
 	}
-	return stat, nil
+
+	UserStat, err := uc.QuestionStorage.GetUserStat(userID)
+	if err != nil {
+		return []entities.Statistic{}, err
+	}
+
+	if len(UserStat) == 0 {
+		return AVGStat, nil
+	}
+	index := 0
+	for i, question := range AVGStat {
+		if question.ID == UserStat[index].ID {
+			AVGStat[i].UserGrade = UserStat[index].UserGrade
+			if index == len(UserStat)-1 {
+				return AVGStat, nil
+			}
+			index++
+		}
+	}
+	return AVGStat, nil
+}
+
+func (uc *QuestionUseCase) GetQuestions() ([]entities.QuestionResponse, error) {
+	return uc.QuestionStorage.GetQuestions()
+}
+
+func (uc *QuestionUseCase) CheckReview(userID int) (bool, error) {
+	reviews, err := uc.QuestionStorage.GetReview(userID)
+	if err != nil {
+		return false, err
+	}
+	if len(reviews) == 0 {
+		return false, nil
+	}
+	return true, nil
 }

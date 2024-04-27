@@ -9,6 +9,7 @@ type CommentUseCaseInterface interface {
 	CreateCommentBySightID(sightID int, comment entities.Comment) error
 	EditCommentByCommentID(commentID int, comment entities.Comment) error
 	DeleteCommentByCommentID(commentID int) error
+	CheckCommentByUserID(userID int) (bool, error)
 }
 
 type CommentUseCase struct {
@@ -31,4 +32,15 @@ func (cu *CommentUseCase) EditCommentByCommentID(commentID int, comment entities
 
 func (cu *CommentUseCase) DeleteCommentByCommentID(commentID int) error {
 	return cu.SightStorage.DeleteComment(commentID)
+}
+
+func (cu *CommentUseCase) CheckCommentByUserID(userID int) (bool, error) {
+	comments, err := cu.SightStorage.GetCommentsByUserID(userID)
+	if err != nil {
+		return false, err
+	}
+	if len(comments) == 0 {
+		return false, nil
+	}
+	return true, nil
 }

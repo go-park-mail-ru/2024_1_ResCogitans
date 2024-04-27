@@ -5,21 +5,23 @@ import (
 )
 
 type UseCases struct {
-	UserUseCase    usecase.UserUseCaseInterface
-	SessionUseCase usecase.SessionInterface
-	ProfileUseCase usecase.ProfileUseCaseInterface
-	SightUseCase   usecase.SightUseCaseInterface
-	JourneyUseCase usecase.JourneyUseCaseInterface
-	CommentUseCase usecase.CommentUseCaseInterface
+	UserUseCase     usecase.UserUseCaseInterface
+	SessionUseCase  usecase.SessionInterface
+	ProfileUseCase  usecase.ProfileUseCaseInterface
+	SightUseCase    usecase.SightUseCaseInterface
+	JourneyUseCase  usecase.JourneyUseCaseInterface
+	CommentUseCase  usecase.CommentUseCaseInterface
+	QuestionUseCase usecase.QuestionUseCaseInterface
 }
 
 func UseCaseInit(storages *Storages) *UseCases {
 	return &UseCases{
-		UserUseCase:    usecase.NewUserUseCase(storages.UserStorage),
-		SessionUseCase: usecase.NewSessionUseCase(storages.SessionStorage),
-		ProfileUseCase: usecase.NewProfileUseCase(storages.ProfileStorage),
-		SightUseCase:   usecase.NewSightUseCase(storages.SightStorage),
-		JourneyUseCase: usecase.NewJourneyUseCase(storages.SightStorage),
-		CommentUseCase: usecase.NewCommentUseCase(storages.SightStorage),
+		UserUseCase:     usecase.NewUserUseCase(storages.UserStorage),
+		SessionUseCase:  usecase.NewSessionUseCase(storages.SessionStorage),
+		ProfileUseCase:  usecase.NewProfileUseCase(storages.ProfileStorage),
+		SightUseCase:    usecase.NewSightUseCase(storages.SightStorage),
+		JourneyUseCase:  usecase.NewJourneyUseCase(storages.SightStorage),
+		CommentUseCase:  usecase.NewCommentUseCase(storages.SightStorage),
+		QuestionUseCase: usecase.NewQuestionUseCase(storages.QuestionStorage),
 	}
 }

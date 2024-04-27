@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/profile"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/quiz"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
@@ -19,6 +20,7 @@ type Handlers struct {
 	SightHandler        *sight.SightHandler
 	JourneyHandler      *journey.JourneyHandler
 	CommentHandler      *comment.CommentHandler
+	QuizHandler         *quiz.QuizHandler
 
 	AuthMiddleware *middle.AuthMiddleware
 }
@@ -32,6 +34,7 @@ func HandlerInit(cases *UseCases) *Handlers {
 		SightHandler:        sight.NewSightsHandler(cases.SightUseCase),
 		JourneyHandler:      journey.NewJourneyHandler(cases.JourneyUseCase),
 		CommentHandler:      comment.NewCommentHandler(cases.CommentUseCase),
+		QuizHandler:         quiz.NewQuizHandler(cases.QuestionUseCase, cases.CommentUseCase, cases.JourneyUseCase),
 		AuthMiddleware:      middle.NewAuthMiddleware(cases.SessionUseCase),
 	}
 }

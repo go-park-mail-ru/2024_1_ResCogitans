@@ -12,6 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/profile"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/quiz"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/registration"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
@@ -60,7 +61,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/sight/{id}/create", CreateCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/edit/{cid}", EditCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/delete/{cid}", DeleteCommentRoutes(handlers.CommentHandler))
-	router.Mount("/api/sight/search", SearchSightsRoutes(handlers.SightHandler))
+	router.Mount("/api/sight/quiz", SearchSightsRoutes(handlers.SightHandler))
 
 	//journeys
 	router.Mount("/api/trip/{id}/delete", DeleteJourneyRoutes(handlers.JourneyHandler))
@@ -72,6 +73,11 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/trip/{id}/sight/add", AddJourneySightRoutes(handlers.JourneyHandler))
 	router.Mount("/api/trip/{id}/edit", EditJourney(handlers.JourneyHandler))
 	router.Mount("/api/trip/{id}/sight/delete", DeleteJourneySightRoutes(handlers.JourneyHandler))
+
+	// quiz
+	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
+	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
+	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
 
 	return router
 }
@@ -213,6 +219,27 @@ func UpdateUserPasswordRoutes(handler *authorization.AuthorizationHandler) chi.R
 func SearchSightsRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: handler.SearchSights}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func CreateReviewRoutes(handler *quiz.QuizHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Review, bool]{ServeHTTP: handler.CreateReview}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func CheckUserReviewRoutes(handler *quiz.QuizHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Review, entities.DataCheck]{ServeHTTP: handler.CheckData}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func GetStatistic(handler *quiz.QuizHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Statistic, []entities.Statistic]{ServeHTTP: handler.SetStat}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }

@@ -111,11 +111,11 @@ func (ss *SightStorage) GetCommentsBySightID(id int) ([]entities.Comment, error)
 	return commentsList, nil
 }
 
-func (ss *SightStorage) GetCommentsByUserID(user_id int) ([]entities.Comment, error) {
+func (ss *SightStorage) GetCommentsByUserID(userID int) ([]entities.Comment, error) {
 	var comments []*entities.Comment
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &comments, `SELECT f.id, f.user_id, f.sight_id, f.rating, f.feedback FROM feedback AS f WHERE user_id =  $1 `, user_id)
+	err := pgxscan.Select(ctx, ss.db, &comments, `SELECT f.id, f.user_id, f.sight_id, f.rating, f.feedback FROM feedback AS f WHERE user_id =  $1 `, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -199,7 +199,7 @@ func (ss *SightStorage) GetJourneys(userID int) ([]entities.Journey, error) {
 	var journey []*entities.Journey
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile_data AS p ON p.user_id = $1 WHERE j.user_id = $1`, userID)
+	err := pgxscan.Select(ctx, ss.db, &journey, `SELECT j.id, j.name, j.description, p.username FROM journey AS j INNER JOIN profile_data AS p ON p.user_id = $1 WHERE j.user_id = $1;`, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err

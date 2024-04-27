@@ -9,6 +9,7 @@ type SightStorageInterface interface {
 	GetSight(sightID int) (entities.Sight, error)
 	SearchSights(str string) (entities.Sights, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
+	GetCommentsByUserID(userID int) ([]entities.Comment, error)
 	CreateCommentBySightID(sightID int, comment entities.Comment) error
 	EditComment(commentID int, comment entities.Comment) error
 	DeleteComment(commentID int) error

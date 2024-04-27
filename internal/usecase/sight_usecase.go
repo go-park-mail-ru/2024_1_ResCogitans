@@ -8,6 +8,7 @@ import (
 type SightUseCaseInterface interface {
 	GetSightByID(sightID int) (entities.Sight, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
+	GetCommentsByUserID(userID int) ([]entities.Comment, error)
 	GetSightsList() ([]entities.Sight, error)
 	SearchSights(str string) (entities.Sights, error)
 }
@@ -28,6 +29,10 @@ func (su *SightUseCase) GetSightByID(sightID int) (entities.Sight, error) {
 
 func (su *SightUseCase) GetCommentsBySightID(commentID int) ([]entities.Comment, error) {
 	return su.SightStorage.GetCommentsBySightID(commentID)
+}
+
+func (su *SightUseCase) GetCommentsByUserID(userID int) ([]entities.Comment, error) {
+	return su.SightStorage.GetCommentsByUserID(userID)
 }
 
 func (su *SightUseCase) GetSightsList() ([]entities.Sight, error) {

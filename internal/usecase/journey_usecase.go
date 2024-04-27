@@ -14,6 +14,7 @@ type JourneyUseCaseInterface interface {
 	DeleteJourneySight(journeyID int, sight entities.JourneySight) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)
+	CheckJourney(userID int) (bool, error)
 }
 
 type JourneyUseCase struct {
@@ -56,4 +57,15 @@ func (ju *JourneyUseCase) GetJourneySights(journeyID int) ([]entities.Sight, err
 
 func (ju *JourneyUseCase) GetJourney(journeyID int) (entities.Journey, error) {
 	return ju.SightStorage.GetJourney(journeyID)
+}
+
+func (ju *JourneyUseCase) CheckJourney(userID int) (bool, error) {
+	journeys, err := ju.SightStorage.GetJourneys(userID)
+	if err != nil {
+		return false, err
+	}
+	if len(journeys) == 0 {
+		return false, nil
+	}
+	return true, nil
 }

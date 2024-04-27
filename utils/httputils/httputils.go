@@ -3,7 +3,6 @@ package httputils
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -52,13 +51,9 @@ func GetResponseWriterFromCtx(ctx context.Context) (http.ResponseWriter, error) 
 
 func GetUserFromCtx(ctx context.Context) (int, error) {
 	user := ctx.Value("userID")
-	stringID, ok := user.(string)
+	userID, ok := user.(int)
 	if !ok {
 		return 0, errors.New("Failed getting user from context")
-	}
-	userID, err := strconv.Atoi(stringID)
-	if err != nil {
-		return 0, err
 	}
 	return userID, nil
 }
