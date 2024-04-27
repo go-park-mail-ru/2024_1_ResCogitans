@@ -54,3 +54,20 @@ func (qs *QuestionStorage) GetQuestions() ([]entities.QuestionResponse, error) {
 
 	return questionList, nil
 }
+
+func (qs *QuestionStorage) GetReview(userID int) ([]entities.Review, error) {
+	var review []*entities.Review
+	ctx := context.Background()
+	err := pgxscan.Select(ctx, qs.db, &review, `SELECT * FROM quiz WHERE user_id = $1`, userID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return []entities.Review{}, err
+	}
+
+	var reviewList []entities.Review
+	for _, r := range review {
+		reviewList = append(reviewList, *r)
+	}
+
+	return reviewList, nil
+}

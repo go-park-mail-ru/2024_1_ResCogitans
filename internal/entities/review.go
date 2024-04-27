@@ -21,3 +21,9 @@ type QuestionResponse struct {
 	QuestionID int    `json:"questionID"`
 	Text       string `json:"text"`
 }
+
+type Statistic struct {
+	Text         string  `json:"text"`
+	UserGrade    int     `json:"UserGrade"`
+	AverageGrade float64 `json:"AverageGrade"`
+}
