@@ -7,6 +7,7 @@ import (
 
 type QuestionUseCaseInterface interface {
 	CreateReview(review entities.Review) error
+	SetStat(userID int) ([]entities.Statistic, error)
 }
 
 type QuestionUseCase struct {
@@ -21,4 +22,12 @@ func NewQuestionUseCase(storage storage.QuestionInterface) QuestionUseCaseInterf
 
 func (uc *QuestionUseCase) CreateReview(review entities.Review) error {
 	return uc.QuestionStorage.AddReview(review)
+}
+
+func (uc *QuestionUseCase) SetStat(userID int) ([]entities.Statistic, error) {
+	stat, err := uc.QuestionStorage.SetStat(userID)
+	if err != nil {
+		return []entities.Statistic{}, err
+	}
+	return stat, nil
 }
