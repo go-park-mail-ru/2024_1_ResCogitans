@@ -24,13 +24,13 @@ func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface,
 	}
 }
 
-func (h *QuizHandler) CreateReview(_ context.Context, requestData entities.Review) (bool, error) {
+func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Review) (bool, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	err := h.questionUseCase.CreateReview(userID, requestData)
+	err = h.questionUseCase.CreateReview(userID, requestData)
 	if err != nil {
 		return false, err
 	}
