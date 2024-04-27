@@ -29,7 +29,7 @@ type Journeys struct {
 
 type JourneySights struct {
 	Journey Journey `json:"journey"`
-	Sight   []Sight `json:"sights"`
+	Sights  []Sight `json:"sights"`
 }
 
 func (h Journey) Validate() error {
@@ -42,9 +42,4 @@ func (h JourneySight) Validate() error {
 
 func (h JourneySightID) Validate() error {
 	return nil
-}
-
-type JourneyResponse struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
 }

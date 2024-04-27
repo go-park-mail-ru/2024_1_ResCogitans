@@ -58,11 +58,39 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 		ON sight.country_id = country.id 
 	WHERE sight.id = $1`, id)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return entities.Sight{}, err
 	}
 
 	return *sight[0], nil
+}
+
+func (ss *SightStorage) SearchSights(str string) (entities.Sights, error) {
+	query := `
+        SELECT id, rating, name, description, city_id, country_id
+        FROM sight
+        WHERE LOWER(name) LIKE LOWER($1)
+    `
+	rows, err := ss.db.Query(context.Background(), query, "%"+str+"%")
+	if err != nil {
+		return entities.Sights{}, err
+	}
+	defer rows.Close()
+
+	var sights entities.Sights
+	for rows.Next() {
+		var sight entities.Sight
+		err := rows.Scan(&sight.ID, &sight.Rating, &sight.Name, &sight.Description, &sight.CityID, &sight.CountryID)
+		if err != nil {
+			return entities.Sights{}, err
+		}
+		sights.Sight = append(sights.Sight, sight)
+	}
+
+	if err := rows.Err(); err != nil {
+		return entities.Sights{}, err
+	}
+
+	return sights, nil
 }
 
 func (ss *SightStorage) GetCommentsBySightID(id int) ([]entities.Comment, error) {
@@ -83,10 +111,10 @@ func (ss *SightStorage) GetCommentsBySightID(id int) ([]entities.Comment, error)
 	return commentsList, nil
 }
 
-func (ss *SightStorage) CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error {
+func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.Comment) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, dataInt["userID"], dataInt["sightID"], dataInt["rating"], dataStr["feedback"])
+	_, err := ss.db.Exec(ctx, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, comment.UserID, sightID, comment.Rating, comment.Feedback)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -95,10 +123,10 @@ func (ss *SightStorage) CreateCommentBySightID(dataStr map[string]string, dataIn
 	return nil
 }
 
-func (ss *SightStorage) EditComment(dataStr map[string]string, dataInt map[string]int) error {
+func (ss *SightStorage) EditComment(commentID int, comment entities.Comment) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, dataInt["rating"], dataStr["feedback"], dataInt["id"])
+	_, err := ss.db.Exec(ctx, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, comment.Rating, comment.Feedback, commentID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -107,10 +135,10 @@ func (ss *SightStorage) EditComment(dataStr map[string]string, dataInt map[strin
 	return nil
 }
 
-func (ss *SightStorage) DeleteComment(dataInt map[string]int) error {
+func (ss *SightStorage) DeleteComment(commentID int) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `DELETE FROM feedback WHERE id = $1`, dataInt["id"])
+	_, err := ss.db.Exec(ctx, `DELETE FROM feedback WHERE id = $1`, commentID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -120,43 +148,27 @@ func (ss *SightStorage) DeleteComment(dataInt map[string]int) error {
 }
 
 // CreateJourney создает новую поездку в базе данных.
-func (ss *SightStorage) CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error) {
-	var journey entities.Journey
+func (ss *SightStorage) CreateJourney(journey entities.Journey) (entities.Journey, error) {
 	ctx := context.Background()
 
-	// Проверяем, существует ли userID в таблице user_data
-	var userExists bool
-	err := ss.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM user_data WHERE id = $1)`, dataInt["userID"]).Scan(&userExists)
+	row := ss.db.QueryRow(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3) RETURNING id, name, user_id, description;`, journey.Name, journey.UserID, journey.Description)
+	err := row.Scan(&journey.ID, &journey.Name, &journey.UserID, &journey.Description)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return entities.Journey{}, err
 	}
-
-	if !userExists {
-		return entities.Journey{}, fmt.Errorf("user with id %d does not exist", dataInt["userID"])
-	}
-
-	// Если все проверки пройдены, вставляем запись в journey
-	row := ss.db.QueryRow(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3) RETURNING id, name, user_id, description;`, dataStr["name"], dataInt["userID"], dataStr["description"])
-	err = row.Scan(&journey.ID, &journey.Name, &journey.UserID, &journey.Description)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return entities.Journey{}, err
-	}
-
 	return journey, nil
 }
 
-func (ss *SightStorage) DeleteJourney(dataInt map[string]int) error {
+func (ss *SightStorage) DeleteJourney(journeyID int) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1`, dataInt["journeyID"])
+	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1`, journeyID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
 	}
 
-	_, err = ss.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, dataInt["journeyID"])
+	_, err = ss.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, journeyID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
@@ -210,16 +222,36 @@ func (ss *SightStorage) AddJourneySight(journeyID int, sightIDs []int) error {
 	return nil
 }
 
-func (ss *SightStorage) DeleteJourneySight(dataInt map[string]int) error {
+func (ss *SightStorage) EditJourney(journeyID int, name, description string) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, dataInt["journeyID"], dataInt["sightID"])
+	// Проверяем, существует ли journeyID в таблице journey
+	var journeyExists bool
+	err := ss.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM journey WHERE id = $1)`, journeyID).Scan(&journeyExists)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	if !journeyExists {
+		return fmt.Errorf("journey with id %d does not exist", journeyID)
+	}
+
+	// Обновляем имя и описание поездки
+	_, err = ss.db.Exec(ctx, `UPDATE journey SET name = $1, description = $2 WHERE id = $3`, name, description, journeyID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
 	}
 
 	return nil
+}
+
+func (ss *SightStorage) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
+	ctx := context.Background()
+
+	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, journeyID, sight.SightID)
+	return err
 }
 
 func (ss *SightStorage) GetJourneySights(journeyID int) ([]entities.Sight, error) {
@@ -236,8 +268,7 @@ func (ss *SightStorage) GetJourneySights(journeyID int) ([]entities.Sight, error
 	for _, id := range idList {
 		sight, err := ss.GetSight(*id)
 		if err != nil {
-			logger.Logger().Error(err.Error())
-			continue
+			return nil, err
 		}
 		sights = append(sights, sight)
 	}
@@ -254,8 +285,5 @@ func (ss *SightStorage) GetJourney(journeyID int) (entities.Journey, error) {
 		logger.Logger().Error(err.Error())
 		return entities.Journey{}, err
 	}
-
-	fmt.Println(*journey[0])
-
 	return *journey[0], nil
 }

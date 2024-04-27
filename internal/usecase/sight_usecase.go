@@ -9,6 +9,7 @@ type SightUseCaseInterface interface {
 	GetSightByID(sightID int) (entities.Sight, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
 	GetSightsList() ([]entities.Sight, error)
+	SearchSights(str string) (entities.Sights, error)
 }
 
 type SightUseCase struct {
@@ -31,4 +32,8 @@ func (su *SightUseCase) GetCommentsBySightID(commentID int) ([]entities.Comment,
 
 func (su *SightUseCase) GetSightsList() ([]entities.Sight, error) {
 	return su.SightStorage.GetSightsList()
+}
+
+func (su *SightUseCase) SearchSights(str string) (entities.Sights, error) {
+	return su.SightStorage.SearchSights(str)
 }

@@ -6,11 +6,12 @@ import (
 )
 
 type JourneyUseCaseInterface interface {
-	CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error)
-	DeleteJourneyByID(dataInt map[string]int) error
+	CreateJourney(journey entities.Journey) (entities.Journey, error)
+	DeleteJourneyByID(journeyID int) error
 	GetJourneys(userID int) ([]entities.Journey, error)
 	AddJourneySight(journeyID int, ids []int) error
-	DeleteJourneySight(dataInt map[string]int) error
+	EditJourney(journeyID int, name, description string) error
+	DeleteJourneySight(journeyID int, sight entities.JourneySight) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)
 }
@@ -25,12 +26,12 @@ func NewJourneyUseCase(storage storage.SightStorageInterface) JourneyUseCaseInte
 	}
 }
 
-func (ju *JourneyUseCase) CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error) {
-	return ju.SightStorage.CreateJourney(dataInt, dataStr)
+func (ju *JourneyUseCase) CreateJourney(journey entities.Journey) (entities.Journey, error) {
+	return ju.SightStorage.CreateJourney(journey)
 }
 
-func (ju *JourneyUseCase) DeleteJourneyByID(dataInt map[string]int) error {
-	return ju.SightStorage.DeleteJourney(dataInt)
+func (ju *JourneyUseCase) DeleteJourneyByID(journeyID int) error {
+	return ju.SightStorage.DeleteJourney(journeyID)
 }
 
 func (ju *JourneyUseCase) GetJourneys(userID int) ([]entities.Journey, error) {
@@ -41,8 +42,12 @@ func (ju *JourneyUseCase) AddJourneySight(journeyID int, ids []int) error {
 	return ju.SightStorage.AddJourneySight(journeyID, ids)
 }
 
-func (ju *JourneyUseCase) DeleteJourneySight(dataInt map[string]int) error {
-	return ju.SightStorage.DeleteJourneySight(dataInt)
+func (ju *JourneyUseCase) EditJourney(journeyID int, name, description string) error {
+	return ju.SightStorage.EditJourney(journeyID, name, description)
+}
+
+func (ju *JourneyUseCase) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
+	return ju.SightStorage.DeleteJourneySight(journeyID, sight)
 }
 
 func (ju *JourneyUseCase) GetJourneySights(journeyID int) ([]entities.Sight, error) {

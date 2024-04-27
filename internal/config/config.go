@@ -11,9 +11,10 @@ import (
 
 type Config struct {
 	Env            string `yaml:"env" env:"ENV" env-required:"true"`
-	StoragePath    string `yaml:"storage_path" env-requiered:"true"`
+	StoragePath    string `yaml:"storage_path" env-required:"true"`
 	HTTPServer     `yaml:"http_server"`
 	Dsn            `yaml:"dsn"`
+	Redis          `yaml:"redis"`
 	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
 }
 
@@ -21,38 +22,23 @@ type HTTPServer struct {
 	Address     string        `yaml:"address" env-default:"localhost:8080"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
-	User        string        `yaml:"user" env-requiered:"true"`
-	Password    string        `yaml:"password" env-requiered:"true" env:"HTTP_SERVER_PASSWORD"`
+	User        string        `yaml:"user" env-required:"true"`
+	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
 type Dsn struct {
-	Host     string `env:"DB_HOST"`
-	Port     int    `env:"DB_PORT"`
-	User     string `env:"DB_USER"`
-	Password string `env:"DB_PASSWORD"`
-	DBname   string `env:"DB_NAME"`
+	Host     string `env:"DB_POSTGRES_HOST"`
+	Port     int    `env:"DB_POSTGRES_PORT"`
+	User     string `env:"DB_POSTGRES_USER"`
+	Password string `env:"DB_POSTGRES_PASSWORD"`
+	DBName   string `env:"DB_POSTGRES_NAME"`
 }
 
-var DSN = Dsn{
-	Host:     "localhost",
-	Port:     5432,
-	User:     "postgres",
-	Password: "admin",
-	DBname:   "res",
-}
-
-type redisData struct {
-	Addr     string
-	Username string
-	Password string
-	DB       int
-}
-
-var RedisData = redisData{
-	Addr:     "redis-13041.c302.asia-northeast1-1.gce.cloud.redislabs.com:13041",
-	Username: "default",
-	Password: "Hwsuxke8YC8vT6E2jOKd7lTK6cPEvq5I",
-	DB:       0,
+type Redis struct {
+	Host     string `yaml:"host" env:"DB_REDIS_HOST"`
+	Port     int    `yaml:"port" env:"DB_REDIS_PORT"`
+	DB       int    `yaml:"db" env:"DB_REDIS_DB"`
+	Password string `yaml:"password" env:"DB_REDIS_PASSWORD"`
 }
 
 func LoadConfig() (*Config, error) {

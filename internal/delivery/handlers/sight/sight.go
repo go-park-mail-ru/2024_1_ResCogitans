@@ -59,3 +59,11 @@ func (h *SightHandler) GetSight(ctx context.Context, _ entities.Sight) (entities
 	}
 	return entities.SightComments{Sight: sight, Comms: comments}, nil
 }
+
+func (h *SightHandler) SearchSights(_ context.Context, requestData entities.Sight) (entities.Sights, error) {
+	sights, err := h.SightUseCase.SearchSights(requestData.Name)
+	if err != nil {
+		return entities.Sights{}, err
+	}
+	return sights, nil
+}

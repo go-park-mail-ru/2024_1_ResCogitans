@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func DataBaseIniInitialization() (*pgxpool.Pool, *redis.Client, error) {
+func DataBaseInitialization() (*pgxpool.Pool, *redis.Client, error) {
 	pdb, err := db.GetPostgres()
 	if err != nil {
 		return nil, nil, err

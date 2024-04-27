@@ -37,15 +37,13 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	if httpReq.ContentLength > 0 {
 		err := json.NewDecoder(limitedReader).Decode(&requestData)
 		if err != nil {
-			errText := "Error decoding request body"
-			logger.Error(errText, "error", err)
+			logger.Error("Error decoding request body", "error", err)
 			httperrors.WriteHttpError(err, resWriter)
 			return
 		}
 
 		if err = requestData.Validate(); err != nil {
-			errorText := "Validation error"
-			logger.Error(errorText, "error", err)
+			logger.Error("Validation error", "error", err)
 			httperrors.WriteHttpError(err, resWriter)
 			return
 		}

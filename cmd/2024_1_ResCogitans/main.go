@@ -15,9 +15,9 @@ func main() {
 		logger.Error("Failed to load config", "error", err)
 		return
 	}
-	logger.Info("Start config", "config", cfg)
+	logger.Info("Start config")
 
-	pdb, rdb, err := initialization.DataBaseIniInitialization()
+	pdb, rdb, err := initialization.DataBaseInitialization()
 	if err != nil {
 		logger.Error("DataBase initialization error", "error", err)
 	}

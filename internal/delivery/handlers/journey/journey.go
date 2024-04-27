@@ -7,7 +7,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 )
 
 type JourneyHandler struct {
@@ -21,14 +20,7 @@ func NewJourneyHandler(usecase usecase.JourneyUseCaseInterface) *JourneyHandler 
 }
 
 func (h *JourneyHandler) CreateJourney(_ context.Context, requestData entities.Journey) (entities.Journey, error) {
-	dataStr := make(map[string]string)
-	dataInt := make(map[string]int)
-
-	dataInt["userID"] = requestData.UserID
-	dataStr["name"] = requestData.Name
-	dataStr["description"] = requestData.Description
-
-	journey, err := h.JourneyUseCase.CreateJourney(dataInt, dataStr)
+	journey, err := h.JourneyUseCase.CreateJourney(requestData)
 	if err != nil {
 		return entities.Journey{}, err
 	}
@@ -36,18 +28,29 @@ func (h *JourneyHandler) CreateJourney(_ context.Context, requestData entities.J
 	return journey, nil
 }
 
+func (h *JourneyHandler) EditJourney(ctx context.Context, requestData entities.Journey) (entities.Journey, error) {
+	pathParams := httputils.GetPathParamsFromCtx(ctx)
+	journeyID, err := strconv.Atoi(pathParams["id"])
+	if err != nil {
+		return entities.Journey{}, err
+	}
+	name := requestData.Name
+	description := requestData.Description
+	err = h.JourneyUseCase.EditJourney(journeyID, name, description)
+	if err != nil {
+		return entities.Journey{}, err
+	}
+	return h.JourneyUseCase.GetJourney(journeyID)
+}
+
 func (h *JourneyHandler) DeleteJourney(ctx context.Context, _ entities.Journey) (entities.Journey, error) {
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		logger.Logger().Error("Cannot convert string to integer to get sight")
 		return entities.Journey{}, err
 	}
 
-	dataInt := make(map[string]int)
-	dataInt["journeyID"] = journeyID
-
-	err = h.JourneyUseCase.DeleteJourneyByID(dataInt)
+	err = h.JourneyUseCase.DeleteJourneyByID(journeyID)
 	if err != nil {
 		return entities.Journey{}, err
 	}
@@ -76,13 +79,6 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 		return entities.JourneySight{}, err
 	}
 
-	dataInt := make(map[string]int)
-	dataInt["journeyID"] = journeyID
-
-	dataStr := make(map[string]string)
-	dataStr["name"] = requestData.Name
-	dataStr["description"] = requestData.Description
-
 	err = h.JourneyUseCase.AddJourneySight(journeyID, requestData.ListID)
 	if err != nil {
 		return entities.JourneySight{}, err
@@ -95,15 +91,10 @@ func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData ent
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	journeyID, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		logger.Logger().Error("Cannot convert string to integer to get sight")
 		return entities.JourneySight{}, err
 	}
 
-	dataInt := make(map[string]int)
-	dataInt["journeyID"] = journeyID
-	dataInt["sightID"] = requestData.SightID
-
-	err = h.JourneyUseCase.DeleteJourneySight(dataInt)
+	err = h.JourneyUseCase.DeleteJourneySight(journeyID, requestData)
 	if err != nil {
 		return entities.JourneySight{}, err
 	}
@@ -119,7 +110,6 @@ func (h *JourneyHandler) GetJourneySights(ctx context.Context, _ entities.Journe
 	}
 
 	sights, err := h.JourneyUseCase.GetJourneySights(journeyID)
-
 	if err != nil {
 		return entities.JourneySights{}, err
 	}
@@ -129,5 +119,5 @@ func (h *JourneyHandler) GetJourneySights(ctx context.Context, _ entities.Journe
 		return entities.JourneySights{}, err
 	}
 
-	return entities.JourneySights{Journey: journey, Sight: sights}, nil
+	return entities.JourneySights{Journey: journey, Sights: sights}, nil
 }

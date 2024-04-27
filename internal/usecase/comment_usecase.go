@@ -1,13 +1,14 @@
 package usecase
 
 import (
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 )
 
 type CommentUseCaseInterface interface {
-	CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error
-	EditCommentByCommentID(dataStr map[string]string, dataInt map[string]int) error
-	DeleteCommentByCommentID(dataInt map[string]int) error
+	CreateCommentBySightID(sightID int, comment entities.Comment) error
+	EditCommentByCommentID(commentID int, comment entities.Comment) error
+	DeleteCommentByCommentID(commentID int) error
 }
 
 type CommentUseCase struct {
@@ -20,14 +21,14 @@ func NewCommentUseCase(storage storage.SightStorageInterface) CommentUseCaseInte
 	}
 }
 
-func (cu *CommentUseCase) CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error {
-	return cu.SightStorage.CreateCommentBySightID(dataStr, dataInt)
+func (cu *CommentUseCase) CreateCommentBySightID(sightID int, comment entities.Comment) error {
+	return cu.SightStorage.CreateCommentBySightID(sightID, comment)
 }
 
-func (cu *CommentUseCase) EditCommentByCommentID(dataStr map[string]string, dataInt map[string]int) error {
-	return cu.SightStorage.EditComment(dataStr, dataInt)
+func (cu *CommentUseCase) EditCommentByCommentID(commentID int, comment entities.Comment) error {
+	return cu.SightStorage.EditComment(commentID, comment)
 }
 
-func (cu *CommentUseCase) DeleteCommentByCommentID(dataInt map[string]int) error {
-	return cu.SightStorage.DeleteComment(dataInt)
+func (cu *CommentUseCase) DeleteCommentByCommentID(commentID int) error {
+	return cu.SightStorage.DeleteComment(commentID)
 }

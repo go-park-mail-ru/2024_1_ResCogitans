@@ -7,7 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/pkg/errors"
 )
 
 type CommentHandler struct {
@@ -27,16 +27,11 @@ func (h *CommentHandler) CreateComment(ctx context.Context, requestData entities
 		return entities.Comment{}, err
 	}
 
-	dataStr := make(map[string]string)
-	dataInt := make(map[string]int)
+	if requestData.Rating < 0 {
+		return entities.Comment{}, errors.New("Rating must be greater than zero")
+	}
 
-	dataInt["userID"] = requestData.UserID
-	dataInt["sightID"] = sightID
-	dataInt["rating"] = requestData.Rating
-
-	dataStr["feedback"] = requestData.Feedback
-
-	err = h.CommentUseCase.CreateCommentBySightID(dataStr, dataInt)
+	err = h.CommentUseCase.CreateCommentBySightID(sightID, requestData)
 	if err != nil {
 		return entities.Comment{}, err
 	}
@@ -48,18 +43,10 @@ func (h *CommentHandler) EditComment(ctx context.Context, requestData entities.C
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	commentID, err := strconv.Atoi(pathParams["cid"])
 	if err != nil {
-		logger.Logger().Error("Cannot convert string to integer to get sight")
 		return entities.Comment{}, err
 	}
 
-	dataStr := make(map[string]string)
-	dataInt := make(map[string]int)
-
-	dataInt["id"] = commentID
-	dataInt["rating"] = requestData.Rating
-	dataStr["feedback"] = requestData.Feedback
-
-	err = h.CommentUseCase.EditCommentByCommentID(dataStr, dataInt)
+	err = h.CommentUseCase.EditCommentByCommentID(commentID, requestData)
 	if err != nil {
 		return entities.Comment{}, err
 	}
@@ -71,14 +58,10 @@ func (h *CommentHandler) DeleteComment(ctx context.Context, _ entities.Comment) 
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	commentID, err := strconv.Atoi(pathParams["cid"])
 	if err != nil {
-		logger.Logger().Error("Cannot convert string to integer to get sight")
 		return entities.Comment{}, err
 	}
 
-	dataInt := make(map[string]int)
-	dataInt["id"] = commentID
-
-	err = h.CommentUseCase.DeleteCommentByCommentID(dataInt)
+	err = h.CommentUseCase.DeleteCommentByCommentID(commentID)
 	if err != nil {
 		return entities.Comment{}, err
 	}

@@ -7,15 +7,17 @@ import (
 type SightStorageInterface interface {
 	GetSightsList() ([]entities.Sight, error)
 	GetSight(sightID int) (entities.Sight, error)
+	SearchSights(str string) (entities.Sights, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
-	CreateCommentBySightID(dataStr map[string]string, dataInt map[string]int) error
-	EditComment(dataStr map[string]string, dataInt map[string]int) error
-	DeleteComment(dataInt map[string]int) error
-	CreateJourney(dataInt map[string]int, dataStr map[string]string) (entities.Journey, error)
-	DeleteJourney(dataInt map[string]int) error
+	CreateCommentBySightID(sightID int, comment entities.Comment) error
+	EditComment(commentID int, comment entities.Comment) error
+	DeleteComment(commentID int) error
+	CreateJourney(journey entities.Journey) (entities.Journey, error)
+	DeleteJourney(journeyID int) error
 	GetJourneys(userID int) ([]entities.Journey, error)
 	AddJourneySight(journeyID int, ids []int) error
-	DeleteJourneySight(dataInt map[string]int) error
+	EditJourney(journeyID int, name, description string) error
+	DeleteJourneySight(journeyID int, sight entities.JourneySight) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)
 }

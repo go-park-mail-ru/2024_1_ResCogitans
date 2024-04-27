@@ -4,7 +4,7 @@ type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Salt     string `json:"salt"`
+	Salt     string
 }
 
 type UserResponse struct {
@@ -20,7 +20,7 @@ type UserProfile struct {
 	UserID   int    `json:"id"`
 	Username string `json:"username"`
 	Bio      string `json:"bio"`
-	Avatar   string `json:"avatar,omitempty"`
+	Avatar   string `json:"avatar"`
 }
 
 func (h UserProfile) Validate() error {
