@@ -111,6 +111,24 @@ func (ss *SightStorage) GetCommentsBySightID(id int) ([]entities.Comment, error)
 	return commentsList, nil
 }
 
+func (ss *SightStorage) GetCommentsByUserID(user_id int) ([]entities.Comment, error) {
+	var comments []*entities.Comment
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, ss.db, &comments, `SELECT f.id, f.user_id, f.sight_id, f.rating, f.feedback FROM feedback AS f WHERE user_id =  $1 `, user_id)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	var commentsList []entities.Comment
+	for _, s := range comments {
+		commentsList = append(commentsList, *s)
+	}
+
+	return commentsList, nil
+}
+
 func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.Comment) error {
 	ctx := context.Background()
 
