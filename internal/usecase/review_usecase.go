@@ -6,7 +6,7 @@ import (
 )
 
 type QuestionUseCaseInterface interface {
-	CreateReview(review entities.Review) error
+	CreateReview(userID int, review entities.Review) error
 	GetQuestions() ([]entities.QuestionResponse, error)
 	CheckReview(userID int) (bool, error)
 	SetStat(userID int) ([]entities.Statistic, error)
@@ -22,8 +22,8 @@ func NewQuestionUseCase(storage storage.QuestionInterface) QuestionUseCaseInterf
 	}
 }
 
-func (uc *QuestionUseCase) CreateReview(review entities.Review) error {
-	return uc.QuestionStorage.AddReview(review)
+func (uc *QuestionUseCase) CreateReview(userID int, review entities.Review) error {
+	return uc.QuestionStorage.AddReview(userID, review)
 }
 
 func (uc *QuestionUseCase) SetStat(userID int) ([]entities.Statistic, error) {
