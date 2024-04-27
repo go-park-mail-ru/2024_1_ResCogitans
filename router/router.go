@@ -16,6 +16,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
@@ -31,6 +32,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Use(middleware.Logger)
 	router.Use(cors.CorsMiddleware)
 	router.Use(handlers.AuthMiddleware.Auth)
+	router.Use(middle.XSSMiddleware)
 
 	// upload image
 	router.HandleFunc("/upload", user.Upload)
