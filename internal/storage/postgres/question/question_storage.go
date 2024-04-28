@@ -20,7 +20,7 @@ func NewQuestionStorage(db *pgxpool.Pool) *QuestionStorage {
 	}
 }
 
-func (qs *QuestionStorage) AddReview(review entities.Review) error {
+func (qs *QuestionStorage) AddReview(userID int, review entities.Review) error {
 	currentTime := time.Now()
 	moscowLocation, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
@@ -34,7 +34,7 @@ func (qs *QuestionStorage) AddReview(review entities.Review) error {
         INSERT INTO quiz (user_id, rating, question_id, created_at)
         VALUES ($1, $2, $3, $4)
     `
-	_, err = qs.db.Exec(context.Background(), query, review.UserID, review.Rating, review.QuestionID, timePlusThreeHours)
+	_, err = qs.db.Exec(context.Background(), query, userID, review.Rating, review.QuestionID, timePlusThreeHours)
 	return err
 }
 
