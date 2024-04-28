@@ -33,6 +33,12 @@ CREATE TABLE profile_data
     bio      text
 );
 
+CREATE TABLE category
+(
+    id      integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name    text NOT NULL UNIQUE
+);
+
 CREATE TABLE sight
 (
     id          integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -41,7 +47,8 @@ CREATE TABLE sight
     description text,
     city_id     integer REFERENCES city (id),
     country_id  integer REFERENCES country (id),
-    UNIQUE (name, city_id)
+    UNIQUE (name, city_id),
+    category_id     integer REFERENCES category (id)
 );
 
 CREATE TABLE image_data
@@ -117,90 +124,113 @@ VALUES ('Москва', 1),
        ('Ицари', 5),
        ('Сулакский каньон', 5);
 
+INSERT INTO category (name)
+VALUES ('Рестораны'),
+       ('Отели'),
+       ('Достопримечательности');
 
-INSERT INTO sight(name, description, city_id, country_id)
+INSERT INTO sight(name, description, city_id, country_id, category_id)
 VALUES ('У дяди Вани',
         'Ресторан с видом на Сталинскую высотку.',
+        1,
         1,
         1),
        ('Государственный музей изобразительных искусств имени А.С. Пушкина',
         'Музей.',
         1,
-        1),
+        1,
+        3),
        ('МГТУ им. Н. Э. Баумана',
         'Хороший вуз.',
         1,
-        1),
+        1,
+        3),
        ('Вкусно - и точка',
         'Неплохое кафе, вызывает гастрит.',
+        1,
         1,
         1),
        ('Краеведческий музей',
         'Один из самых больших провинциальных музеев краеведческого профиля.',
         2,
-        1),
+        1,
+        3),
        ('Спасо-Преображенский кафедральный собор',
         'Спасо-Преображенский кафедральный собор расположен в центре города и является первым каменным храмом Тамбова и старейшим в Тамбовской обл.',
         3,
-        1),
+        1,
+        3),
        ('Мирский замок',
         'Памятник архитектуры, внесён в список Всемирного наследия ЮНЕСКО.',
         9,
-        2),
+        2,
+        3),
        ('Чуфут-Кале',
         'Пещерный город в Крыму. Топ.',
         4,
-        4),
+        4,
+        3),
        ('Сасык-Сиваш',
         'Розовое озеро. Оно реально розовое.',
         5,
-        4),
+        4,
+        3),
        ('Крепость Чембело',
         'Остатки крепости.',
         6,
-        4),
+        4,
+        3),
        ('Мечеть Кул Зариф',
         'Главная джума-мечеть республики Татарстан и города Казани.',
         7,
+        3,
         3),
        ('Салтинский Подземный Водопад',
         'Единственный в России подземный водопад.',
         8,
-        5),
+        5,
+        3),
        ('Озеро Рица',
         'Рица — горное озеро ледниково-тектонического происхождения на Западном Кавказе, в Гудаутском районе Абхазии',
         10,
-        6)
+        6,
+        3)
         ,
        ('Архитектурный комплекс Цитадель Нарын-Кала',
         'Древняя дербентская крепость, возведённая по повелению персидского правителя Хосрова I Ануширвана в VI веке, включена ЮНЕСКО в Список Всемирного наследия.',
         11,
-        5)
+        5,
+        3)
         ,
        ('Сторожевые башни Северного Кавказа',
         'Хорошо сохранившиеся родовые башни XIV–XVI веков, которые выполняли роль жилища и защиты от врагов.',
         13,
-        5)
+        5,
+        3)
         ,
        ('Сулакский каньон',
         'У истоков реки Сулак берёт начало уникальный каньон. Давным-давно бурная река расколола гору, разделив Салатавский и Гимринский хребты.',
         14,
-        5)
+        5,
+        3)
         ,
        ('Стрелка Волги и Оки',
         'Место, где реки Ока и Волга, сливаясь, образуют живописный треугольный мыс, называют Стрелкой. Это природная достопримечательность Нижнего Новгорода.',
         12,
-        1)
+        1,
+        3)
         ,
        ('Чкаловская лестница',
         'Чкаловская лестница - один из символов Нижнего Новгорода. Между Верхневолжской и Нижневолжской набережными находится интересная нижегородская достопримечательность, которая видна даже на космических снимках',
         12,
-        1)
+        1,
+        3)
         ,
        ('Нижегородский Кремль',
         'Нижегородский кремль – древняя крепость и одновременно главная историческая достопримечательность Нижнего Новгорода',
         12,
-        1);
+        1,
+        3);
 
 
 INSERT INTO image_data(path, sight_id)
@@ -227,7 +257,6 @@ VALUES ('public/1.jpg', 1),
 INSERT INTO question(text)
 VALUES ('Насколько вы удовлетворены удобством КудаТуда?'),
        ('Насколько интуитивно понятен интерфейс?');
-
 
 CREATE OR REPLACE FUNCTION create_profile()
     RETURNS TRIGGER AS
@@ -267,22 +296,6 @@ AFTER UPDATE ON feedback
 FOR EACH ROW
 EXECUTE FUNCTION update_sight_rating();
 
-CREATE TABLE question
-(
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    text text NOT NULL
-);
-
-CREATE TABLE quiz
-(
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id integer REFERENCES user_data (id),
-    rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
-    question_id integer REFERENCES question (id),
-    created_at timestamptz
-);
-
-
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
@@ -299,3 +312,4 @@ DROP TABLE IF EXISTS feedback CASCADE;
 DROP TABLE IF EXISTS profile_data CASCADE;
 DROP TABLE IF EXISTS question CASCADE;
 DROP TABLE IF EXISTS quiz CASCADE;
+DROP TABLE IF EXISTS category CASCADE;
