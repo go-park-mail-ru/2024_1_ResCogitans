@@ -282,6 +282,11 @@ CREATE TABLE quiz
     created_at timestamptz
 );
 
+INSERT INTO question(text)
+VALUES ('Насколько вы удовлетворены удобством КудаТуда?'),
+       ('Насколько интуитивно понятен интерфейс?'),
+       ('Оцените представленные достопримечательности');
+
 
 -- +goose Down
 -- +goose StatementBegin

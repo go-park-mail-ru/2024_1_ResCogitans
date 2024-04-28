@@ -41,7 +41,7 @@ func (qs *QuestionStorage) AddReview(review entities.Review) error {
 func (qs *QuestionStorage) GetQuestions() ([]entities.QuestionResponse, error) {
 	var questions []*entities.QuestionResponse
 	ctx := context.Background()
-	err := pgxscan.Select(ctx, qs.db, &questions, `SELECT id AS question_id, text FROM question ORDER BY question_id`)
+	err := pgxscan.Select(ctx, qs.db, &questions, `SELECT * FROM question`)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return []entities.QuestionResponse{}, err
@@ -58,8 +58,7 @@ func (qs *QuestionStorage) GetQuestions() ([]entities.QuestionResponse, error) {
 func (qs *QuestionStorage) GetReview(userID int) ([]entities.Review, error) {
 	var review []*entities.Review
 	ctx := context.Background()
-	err := pgxscan.Select(ctx, qs.db, &review, `SELECT user_id, rating, question_id, created_at FROM quiz WHERE user_id = $1`, userID)
-
+	err := pgxscan.Select(ctx, qs.db, &review, `SELECT * FROM quiz WHERE user_id = $1`, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return []entities.Review{}, err
@@ -73,35 +72,14 @@ func (qs *QuestionStorage) GetReview(userID int) ([]entities.Review, error) {
 	return reviewList, nil
 }
 
-func (qs *QuestionStorage) SetStat(userID int) ([]entities.Statistic, error) {
-	var statistic []*entities.Statistic
-	ctx := context.Background()
-	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.text, r.rating AS user_grade, AVG(r.rating) AS average_grade
-	FROM quiz r  
-	INNER JOIN question q ON r.question_id = q.id 
--- 	WHERE user_id = $1 
-	GROUP BY r.question_id, q.text, r.rating`, userID)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return []entities.Statistic{}, err
-	}
-
-	var statisticList []entities.Statistic
-	for _, s := range statistic {
-		statisticList = append(statisticList, *s)
-	}
-
-	return statisticList, nil
-}
-
 func (qs *QuestionStorage) GetAvgStat() ([]entities.Statistic, error) {
 	var statistic []*entities.Statistic
 	ctx := context.Background()
-	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.id, q.text, AVG(r.rating) as average_grade
-  FROM quiz r 
-  INNER JOIN question q ON r.question_id = q.id 
-  GROUP BY q.id, r.question_id, q.text
-  ORDER BY q.id`)
+	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.id, q.text, AVG(r.rating),
+	FROM quiz r 
+	INNER JOIN question q ON r.question_id = q.id 
+	GROUP BY r.question_id
+	ORDER BY q.id`)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return []entities.Statistic{}, err
@@ -119,11 +97,11 @@ func (qs *QuestionStorage) GetUserStat(userID int) ([]entities.Statistic, error)
 	var statistic []*entities.Statistic
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.id, q.text, r.rating AS user_grade
-  FROM question q 
-  INNER JOIN quiz r ON q.id = r.question_id 
-  WHERE user_id = $1
-  ORDER BY q.id `, userID)
+	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.question_id, q.text, r.rating 
+	FROM question q 
+	INNER JOIN quiz r ON q.id = r.question_id 
+	WHERE user_id = $1
+	ORDER BY q.id `, userID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return []entities.Statistic{}, err
