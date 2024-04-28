@@ -24,14 +24,29 @@ func NewSightStorage(db *pgxpool.Pool) storage.SightStorageInterface {
 	}
 }
 
-func (ss *SightStorage) GetSightsList() ([]entities.Sight, error) {
+func (ss *SightStorage) GetSightsList(categoryID int) ([]entities.Sight, error) {
 	var sights []*entities.Sight
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &sights, `SELECT sight.id, COALESCE(rating, 0) AS rating, name, description, city_id, country_id, im.path 
-	FROM sight 
-	INNER JOIN image_data AS im 
-		ON sight.id = im.sight_id `)
+	query := `SELECT sight.id,
+			COALESCE(rating, 0) AS rating,
+			name,
+			description,
+			city_id,
+			country_id,
+			category_id,
+			im.path 
+		FROM sight 
+		INNER JOIN image_data AS im 
+			ON sight.id = im.sight_id`
+
+	args := make([]interface{}, 0)
+	if categoryID != 0 {
+		query += ` WHERE category_id = $1`
+		args = append(args, categoryID)
+	}
+
+	err := pgxscan.Select(ctx, ss.db, &sights, query, args...)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -60,16 +75,16 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 			country.country,
 			category_id,
 			category.name AS category
-	FROM sight 
-	INNER JOIN image_data AS im 
-		ON sight.id = im.sight_id 
-	INNER JOIN city 
-		ON sight.city_id = city.id 
-	INNER JOIN country 
-		ON sight.country_id = country.id
-	INNER JOIN category 
-		ON sight.category_id = category.id
-	WHERE sight.id = $1`, id)
+		FROM sight 
+		INNER JOIN image_data AS im 
+			ON sight.id = im.sight_id 
+		INNER JOIN city 
+			ON sight.city_id = city.id 
+		INNER JOIN country 
+			ON sight.country_id = country.id
+		INNER JOIN category 
+			ON sight.category_id = category.id
+		WHERE sight.id = $1`, id)
 	if err != nil {
 		return entities.Sight{}, err
 	}

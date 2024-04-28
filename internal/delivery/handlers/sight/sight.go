@@ -27,8 +27,10 @@ func NewSightsHandler(usecase usecase.SightUseCaseInterface) *SightHandler {
 // @Produce json
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
-func (h *SightHandler) GetSights(_ context.Context, _ entities.Sight) (entities.Sights, error) {
-	sights, err := h.SightUseCase.GetSightsList()
+func (h *SightHandler) GetSights(ctx context.Context, _ entities.Sight) (entities.Sights, error) {
+	params := httputils.GetQueryParamsFromCtx(ctx)
+	categoryID, _ := strconv.Atoi(params["category_id"])
+	sights, err := h.SightUseCase.GetSightsList(categoryID)
 	if err != nil {
 		return entities.Sights{}, err
 	}
