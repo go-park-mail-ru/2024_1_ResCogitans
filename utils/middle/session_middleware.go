@@ -22,7 +22,7 @@ func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := m.useCase.GetSession(r)
 		if !httperrors.IsHttpError(err) && err != nil {
-			http.Error(w, "Problem when searching for cookies", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 		}
 
 		ctx := context.WithValue(r.Context(), "userID", userID)

@@ -267,21 +267,6 @@ AFTER UPDATE ON feedback
 FOR EACH ROW
 EXECUTE FUNCTION update_sight_rating();
 
-CREATE TABLE question
-(
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    text text NOT NULL
-);
-
-CREATE TABLE quiz
-(
-    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id integer REFERENCES user_data (id),
-    rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
-    question_id integer REFERENCES question (id),
-    created_at timestamptz
-);
-
 
 -- +goose Down
 -- +goose StatementBegin

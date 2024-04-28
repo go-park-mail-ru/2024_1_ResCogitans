@@ -2,9 +2,11 @@ package quiz
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 )
 
@@ -29,6 +31,9 @@ func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Rev
 	if err != nil {
 		return false, err
 	}
+	if userID == 0 {
+		return false, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
+	}
 
 	err = h.questionUseCase.CreateReview(userID, requestData)
 	if err != nil {
@@ -42,7 +47,11 @@ func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entitie
 	if err != nil {
 		return entities.DataCheck{}, err
 	}
-	println(userID, " :userID")
+
+	if userID == 0 {
+		return entities.DataCheck{Flag: false}, nil
+	}
+
 	questions, err := h.questionUseCase.GetQuestions()
 	if err != nil {
 		return entities.DataCheck{}, err
@@ -78,6 +87,9 @@ func (h *QuizHandler) SetStat(ctx context.Context, _ entities.Statistic) ([]enti
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
 		return []entities.Statistic{}, err
+	}
+	if userID == 0 {
+		return []entities.Statistic{}, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
 	}
 
 	stat, err := h.questionUseCase.SetStat(userID)

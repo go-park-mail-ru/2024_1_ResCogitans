@@ -55,11 +55,10 @@ func (a *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error 
 
 func (a *SessionUseCase) GetSession(r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
-	if errors.Is(err, http.ErrNoCookie) {
-		return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Cookie not found")
-	}
-
 	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return 0, httperrors.NewHttpError(http.StatusUnauthorized, "Cookie not found")
+		}
 		return 0, err
 	}
 

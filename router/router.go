@@ -17,10 +17,10 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
-
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
@@ -78,6 +78,10 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
+	))
 
 	return router
 }
