@@ -48,14 +48,27 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 	var sight []*entities.Sight
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &sight, `SELECT sight.id, COALESCE(rating, 0) AS rating, sight.name, description, city_id, sight.country_id, im.path, city.city, country.country 
+	err := pgxscan.Select(ctx, ss.db, &sight,
+		`SELECT sight.id,
+			COALESCE(rating, 0) AS rating,
+			sight.name,
+			description,
+			city_id,
+			sight.country_id,
+			im.path,
+			city.city,
+			country.country,
+			category_id,
+			category.name AS category
 	FROM sight 
 	INNER JOIN image_data AS im 
 		ON sight.id = im.sight_id 
 	INNER JOIN city 
 		ON sight.city_id = city.id 
 	INNER JOIN country 
-		ON sight.country_id = country.id 
+		ON sight.country_id = country.id
+	INNER JOIN category 
+		ON sight.category_id = category.id
 	WHERE sight.id = $1`, id)
 	if err != nil {
 		return entities.Sight{}, err
