@@ -48,7 +48,7 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 	var sight []*entities.Sight
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &sight, `SELECT sight.id, COALESCE(rating, 0) AS rating, sight.name, description, city_id, sight.country_id, im.path, city.city, country.country 
+	err := pgxscan.Select(ctx, ss.db, &sight, `SELECT sight.id, COALESCE(rating, 0) AS rating, sight.name, description, city_id, sight.country_id, im.path, city.city, country.country, longitude, latitude 
 	FROM sight 
 	INNER JOIN image_data AS im 
 		ON sight.id = im.sight_id 
@@ -263,13 +263,6 @@ func (ss *SightStorage) EditJourney(journeyID int, name, description string) err
 	}
 
 	return nil
-}
-
-func (ss *SightStorage) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
-	ctx := context.Background()
-
-	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, journeyID, sight.SightID)
-	return err
 }
 
 func (ss *SightStorage) GetJourneySights(journeyID int) ([]entities.Sight, error) {

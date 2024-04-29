@@ -87,21 +87,6 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 	return entities.JourneySight{JourneyID: journeyID}, nil
 }
 
-func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData entities.JourneySight) (entities.JourneySight, error) {
-	pathParams := httputils.GetPathParamsFromCtx(ctx)
-	journeyID, err := strconv.Atoi(pathParams["id"])
-	if err != nil {
-		return entities.JourneySight{}, err
-	}
-
-	err = h.JourneyUseCase.DeleteJourneySight(journeyID, requestData)
-	if err != nil {
-		return entities.JourneySight{}, err
-	}
-
-	return entities.JourneySight{}, nil
-}
-
 func (h *JourneyHandler) GetJourneySights(ctx context.Context, _ entities.JourneySight) (entities.JourneySights, error) {
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	journeyID, err := strconv.Atoi(pathParams["id"])

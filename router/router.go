@@ -36,7 +36,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Use(middle.XSSMiddleware)
 
 	// upload image
-	router.HandleFunc("/upload", user.Upload)
+	router.HandleFunc("/api/profile/{id}/upload", user.Upload)
 
 	router.Mount("/api/sights", SightRoutes(handlers.SightHandler))
 
@@ -72,7 +72,6 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/trip/{id}", JourneySightRoutes(handlers.JourneyHandler))
 	router.Mount("/api/trip/{id}/sight/add", AddJourneySightRoutes(handlers.JourneyHandler))
 	router.Mount("/api/trip/{id}/edit", EditJourney(handlers.JourneyHandler))
-	router.Mount("/api/trip/{id}/sight/delete", DeleteJourneySightRoutes(handlers.JourneyHandler))
 
 	// quiz
 	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
@@ -169,13 +168,6 @@ func AddJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 func EditJourney(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.EditJourney}
-	router.Post("/", wrapperInstance.HandlerWrapper)
-	return router
-}
-
-func DeleteJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
-	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: handler.DeleteJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }

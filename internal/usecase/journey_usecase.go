@@ -11,7 +11,6 @@ type JourneyUseCaseInterface interface {
 	GetJourneys(userID int) ([]entities.Journey, error)
 	AddJourneySight(journeyID int, ids []int) error
 	EditJourney(journeyID int, name, description string) error
-	DeleteJourneySight(journeyID int, sight entities.JourneySight) error
 	GetJourneySights(journeyID int) ([]entities.Sight, error)
 	GetJourney(journeyID int) (entities.Journey, error)
 	CheckJourney(userID int) (bool, error)
@@ -45,10 +44,6 @@ func (ju *JourneyUseCase) AddJourneySight(journeyID int, ids []int) error {
 
 func (ju *JourneyUseCase) EditJourney(journeyID int, name, description string) error {
 	return ju.SightStorage.EditJourney(journeyID, name, description)
-}
-
-func (ju *JourneyUseCase) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
-	return ju.SightStorage.DeleteJourneySight(journeyID, sight)
 }
 
 func (ju *JourneyUseCase) GetJourneySights(journeyID int) ([]entities.Sight, error) {

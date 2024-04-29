@@ -1,7 +1,6 @@
 package initialization
 
 import (
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/question"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/user"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/redis/session"
@@ -20,10 +19,10 @@ type Storages struct {
 
 func StorageInit(pdb *pgxpool.Pool, rdb *redis.Client) *Storages {
 	return &Storages{
-		UserStorage:     user.NewUserStorage(pdb),
-		ProfileStorage:  user.NewUserProfileStorage(pdb),
-		SessionStorage:  session.NewSessionStorage(rdb),
-		SightStorage:    sight.NewSightStorage(pdb),
-		QuestionStorage: question.NewQuestionStorage(pdb),
+		UserStorage:    user.NewUserStorage(pdb),
+		ProfileStorage: user.NewUserProfileStorage(pdb),
+		SessionStorage: session.NewSessionStorage(rdb),
+		SightStorage:   sight.NewSightStorage(pdb),
+		// QuestionStorage: question.NewQuestionStorage(pdb),
 	}
 }
