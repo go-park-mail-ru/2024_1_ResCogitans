@@ -6,7 +6,8 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/server"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
-	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
+
+	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/cmd/2024_1_ResCogitans/docs"
 )
 
 // @title Swagger Example API

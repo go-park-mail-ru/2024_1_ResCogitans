@@ -79,8 +79,14 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
 
+	// swagger
+
+	router.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./cmd/2024_1_ResCogitans/docs/swagger.json")
+	})
+
 	router.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
 	))
 
 	return router
