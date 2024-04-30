@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/avatar"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/category"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
@@ -78,6 +79,9 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
+
+	// categories
+	router.Mount("/api/categories", GetCategories(handlers.CategoryHandler))
 
 	return router
 }
@@ -240,6 +244,13 @@ func CheckUserReviewRoutes(handler *quiz.QuizHandler) chi.Router {
 func GetStatistic(handler *quiz.QuizHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Statistic, []entities.Statistic]{ServeHTTP: handler.SetStat}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func GetCategories(handler *category.CategoryHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Category, entities.Categories]{ServeHTTP: handler.GetCategories}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
