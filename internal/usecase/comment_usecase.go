@@ -6,8 +6,8 @@ import (
 )
 
 type CommentUseCaseInterface interface {
-	CreateCommentBySightID(sightID int, comment entities.Comment) error
-	EditCommentByCommentID(commentID int, comment entities.Comment) error
+	CreateCommentBySightID(sightID int, comment entities.CommentRequest) error
+	EditCommentByCommentID(commentID int, comment entities.CommentRequest) error
 	DeleteCommentByCommentID(commentID int) error
 	CheckCommentByUserID(userID int) (bool, error)
 }
@@ -22,11 +22,11 @@ func NewCommentUseCase(storage storage.SightStorageInterface) CommentUseCaseInte
 	}
 }
 
-func (cu *CommentUseCase) CreateCommentBySightID(sightID int, comment entities.Comment) error {
+func (cu *CommentUseCase) CreateCommentBySightID(sightID int, comment entities.CommentRequest) error {
 	return cu.SightStorage.CreateCommentBySightID(sightID, comment)
 }
 
-func (cu *CommentUseCase) EditCommentByCommentID(commentID int, comment entities.Comment) error {
+func (cu *CommentUseCase) EditCommentByCommentID(commentID int, comment entities.CommentRequest) error {
 	return cu.SightStorage.EditComment(commentID, comment)
 }
 

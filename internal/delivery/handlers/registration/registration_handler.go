@@ -22,7 +22,18 @@ func NewRegistrationHandler(sessionUseCase usecase.SessionInterface, userUseCase
 	}
 }
 
-func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+// SignUp godoc
+// @Summary Регистрация пользователя
+// @Description Регистрирует пользователя по почте и паролю
+// @Tags Авторизация
+// @Accept json
+// @Produce json
+// @Param user body entities.UserRequest true "Информация о пользователе, которая нужна при регистрации"
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/signup [post]
+func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.UserRequest) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 

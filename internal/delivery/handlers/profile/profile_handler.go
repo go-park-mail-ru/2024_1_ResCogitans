@@ -24,7 +24,15 @@ func NewProfileHandler(userProfileUseCase usecase.ProfileUseCaseInterface) *Prof
 	}
 }
 
-func (h *ProfileHandler) Get(ctx context.Context, _ entities.UserProfile) (entities.UserProfile, error) {
+// Get godoc
+// @Summary Получение данных пользователя
+// @Tags Профиль
+// @Accept json
+// @Produce json
+// @Success 200 {object} entities.UserProfile
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id} [get]
+func (h *ProfileHandler) Get(ctx context.Context, _ entities.ProfileRequest) (entities.UserProfile, error) {
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	idStr := pathParams["id"]
 	userID, err := strconv.Atoi(idStr)
@@ -34,7 +42,15 @@ func (h *ProfileHandler) Get(ctx context.Context, _ entities.UserProfile) (entit
 	return h.userProfileUseCase.GetUserProfile(userID)
 }
 
-func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.UserProfile) (entities.UserProfile, error) {
+// Edit godoc
+// @Summary Изменение данных пользователя
+// @Tags Профиль
+// @Accept json
+// @Param user body entities.ProfileRequest true "Данные пользователя, если поле пустое, то оно не меняется"
+// @Success 200 {object} entities.UserProfile
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/edit [post]
+func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.ProfileRequest) (entities.UserProfile, error) {
 	username := requestData.Username
 	bio := requestData.Bio
 	avatar := requestData.Avatar
@@ -59,7 +75,7 @@ func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.UserProf
 	return h.userProfileUseCase.GetUserProfile(userID)
 }
 
-// TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
+// UploadFile TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
 func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	logger := logger.Logger()
 

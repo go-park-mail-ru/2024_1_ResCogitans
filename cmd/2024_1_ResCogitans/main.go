@@ -1,29 +1,15 @@
 package main
 
 import (
+	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/docs"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/server"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
-
-	_ "github.com/go-park-mail-ru/2024_1_ResCogitans/cmd/2024_1_ResCogitans/docs"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/swagger"
 )
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server seller server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost:8080
-// @BasePath /api/v1
 func main() {
 	logger := logger.Logger()
 	cfg, err := config.LoadConfig()
@@ -43,6 +29,11 @@ func main() {
 	handlers := initialization.HandlerInit(usecases)
 
 	router := router.SetupRouter(cfg, handlers)
+
+	err = swagger.StartSwagger()
+	if err != nil {
+		logger.Error("Failed to start swagger", "error", err)
+	}
 
 	if err := server.StartServer(router, cfg); err != nil {
 		logger.Error("Failed to start server", "error", err)

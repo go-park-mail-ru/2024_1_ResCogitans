@@ -1,21 +1,27 @@
 package entities
 
-type Comment struct {
-	ID       int    `json:"id"`
+type CommentRequest struct {
 	UserID   int    `json:"userID"`
-	Username string `json:"username"`
-	SightID  int    `json:"sightID"`
 	Rating   int    `json:"rating"`
 	Feedback string `json:"feedback"`
-	Avatar   string `json:"avatar"`
+}
+
+func (h CommentRequest) Validate() error {
+	return nil
+}
+
+type Comment struct {
+	ID       int
+	UserID   int
+	Username string
+	SightID  int
+	Rating   int
+	Feedback string
+	Avatar   string
 }
 
 type Comments struct {
 	Comment []Comment `json:"comments"`
-}
-
-func (h Comment) Validate() error {
-	return nil
 }
 
 func (h Comments) Validate() error {

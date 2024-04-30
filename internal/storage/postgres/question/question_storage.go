@@ -20,7 +20,7 @@ func NewQuestionStorage(db *pgxpool.Pool) *QuestionStorage {
 	}
 }
 
-func (qs *QuestionStorage) AddReview(userID int, review entities.Review) error {
+func (qs *QuestionStorage) AddReview(userID int, review entities.ReviewRequest) error {
 	currentTime := time.Now()
 	moscowLocation, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {

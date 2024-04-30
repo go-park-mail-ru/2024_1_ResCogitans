@@ -5,7 +5,7 @@ import (
 )
 
 type QuestionInterface interface {
-	AddReview(userID int, review entities.Review) error
+	AddReview(userID int, review entities.ReviewRequest) error
 	SetStat(userID int) ([]entities.Statistic, error)
 	GetQuestions() ([]entities.QuestionResponse, error)
 	GetReview(userID int) ([]entities.Review, error)

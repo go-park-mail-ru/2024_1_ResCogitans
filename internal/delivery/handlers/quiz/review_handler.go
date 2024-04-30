@@ -26,7 +26,18 @@ func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface,
 	}
 }
 
-func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Review) (bool, error) {
+// CreateReview godoc
+// @Summary Создание отзыва сайта
+// @Description Возвращает true при удачном создании, false при неудачном
+// @Tags Опросник
+// @Accept json
+// @Produce json
+// @Param user body entities.ReviewRequest true "Отзыв пользователя и номер вопроса"
+// @Success 200 {object} bool
+// @Failure 401 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/review/create [post]
+func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.ReviewRequest) (bool, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
 		return false, err
@@ -42,7 +53,15 @@ func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Rev
 	return true, nil
 }
 
-func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entities.DataCheck, error) {
+// CheckData godoc
+// @Summary Проверка необходимости отображения опросника
+// @Tags Опросник
+// @Accept json
+// @Produce json
+// @Success 200 {object} entities.DataCheck
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/review/check [get]
+func (h *QuizHandler) CheckData(ctx context.Context, _ entities.ReviewRequest) (entities.DataCheck, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
 		return entities.DataCheck{}, err
@@ -83,6 +102,15 @@ func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entitie
 	return entities.DataCheck{Flag: false}, nil
 }
 
+// SetStat godoc
+// @Summary Статистика опросника для конкретного пользователя
+// @Tags Опросник
+// @Accept json
+// @Produce json
+// @Success 200 {object} []entities.Statistic
+// @Failure 401 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/review/get [get]
 func (h *QuizHandler) SetStat(ctx context.Context, _ entities.Statistic) ([]entities.Statistic, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {

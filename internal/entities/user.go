@@ -1,9 +1,18 @@
 package entities
 
-type User struct {
-	ID       int    `json:"id"`
+type UserRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+func (h UserRequest) Validate() error {
+	return nil
+}
+
+type User struct {
+	ID       int
+	Username string
+	Password string
 	Salt     string
 }
 
@@ -12,7 +21,13 @@ type UserResponse struct {
 	Username string `json:"username"`
 }
 
-func (h User) Validate() error {
+type ProfileRequest struct {
+	Username string `json:"username"`
+	Bio      string `json:"bio"`
+	Avatar   string `json:"avatar"`
+}
+
+func (h ProfileRequest) Validate() error {
 	return nil
 }
 
@@ -21,8 +36,4 @@ type UserProfile struct {
 	Username string `json:"username"`
 	Bio      string `json:"bio"`
 	Avatar   string `json:"avatar"`
-}
-
-func (h UserProfile) Validate() error {
-	return nil
 }

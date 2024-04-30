@@ -22,7 +22,18 @@ func NewAuthorizationHandler(sessionUseCase usecase.SessionInterface, userUseCas
 	}
 }
 
-func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+// Authorize godoc
+// @Summary Авторизация пользователя
+// @Description Авторизует пользователя и возвращает информацию о нем
+// @Tags Авторизация
+// @Accept json
+// @Produce json
+// @Param user body entities.UserRequest true "Информация о пользователе, которая нужна при авторизации"
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/login [post]
+func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entities.UserRequest) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 
@@ -79,7 +90,17 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 	return userResponse, nil
 }
 
-func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (entities.UserResponse, error) {
+// LogOut godoc
+// @Summary Выход из аккаунта
+// @Description Выход авторизованного пользователя из аккаунта
+// @Tags Авторизация
+// @Accept json
+// @Produce json
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/logout [post]
+func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.UserRequest) (entities.UserResponse, error) {
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
 		return entities.UserResponse{}, err
@@ -103,7 +124,18 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (ent
 	return entities.UserResponse{}, nil
 }
 
-func (h *AuthorizationHandler) UpdatePassword(ctx context.Context, requestData entities.User) (entities.UserResponse, error) {
+// UpdatePassword godoc
+// @Summary Смена пароля
+// @Description Смена пароля авторизованного пользователя. Необходим только новый пароль
+// @Tags Авторизация
+// @Accept json
+// @Produce json
+// @Param user body entities.UserRequest true "Ник пользователя и новый пароль"
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} httperrors.HttpError
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/reset_password [post]
+func (h *AuthorizationHandler) UpdatePassword(ctx context.Context, requestData entities.UserRequest) (entities.UserResponse, error) {
 	username := requestData.Username
 	password := requestData.Password
 

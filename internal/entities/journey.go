@@ -1,9 +1,19 @@
 package entities
 
+type JourneyRequest struct {
+	UserID      int    `json:"userID"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func (h JourneyRequest) Validate() error {
+	return nil
+}
+
 type Journey struct {
 	ID          int    `json:"id"`
 	UserID      int    `json:"userID"`
-	Username    string `json:"username"` // Username
+	Username    string `json:"username"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -17,12 +27,6 @@ type JourneySight struct {
 	SightName string `json:"sight_name"`
 }
 
-type JourneySightID struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ListID      []int  `json:"sightIDs"`
-}
-
 type Journeys struct {
 	Journey []Journey `json:"journeys"`
 }
@@ -32,14 +36,6 @@ type JourneySights struct {
 	Sights  []Sight `json:"sights"`
 }
 
-func (h Journey) Validate() error {
-	return nil
-}
-
 func (h JourneySight) Validate() error {
-	return nil
-}
-
-func (h JourneySightID) Validate() error {
 	return nil
 }

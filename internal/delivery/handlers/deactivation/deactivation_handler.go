@@ -20,7 +20,16 @@ func NewDeactivationHandler(sessionUseCase usecase.SessionInterface, userUseCase
 	}
 }
 
-func (h *DeactivationHandler) Deactivate(ctx context.Context, _ entities.User) (entities.UserResponse, error) {
+// Deactivate godoc
+// @Summary Удаление аккаунта
+// @Description Удаляет из базы данных user и profile
+// @Tags Деактивация
+// @Accept json
+// @Produce json
+// @Success 200 {object} entities.UserResponse
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/delete [get]
+func (h *DeactivationHandler) Deactivate(ctx context.Context, _ entities.UserRequest) (entities.UserResponse, error) {
 	request, err := httputils.GetRequestFromCtx(ctx)
 	if err != nil {
 		return entities.UserResponse{}, err

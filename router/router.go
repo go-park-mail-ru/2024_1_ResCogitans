@@ -20,7 +20,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/cors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/middle"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
@@ -79,170 +78,159 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
 
-	// swagger
-
-	router.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./cmd/2024_1_ResCogitans/docs/swagger.json")
-	})
-
-	router.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
-	))
-
 	return router
 }
 
 func SightRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: handler.GetSights}
+	wrapperInstance := &wrapper.Wrapper[entities.SightRequest, entities.Sights]{ServeHTTP: handler.GetSights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func SignUpRoutes(handler *registration.RegistrationHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.SignUp}
+	wrapperInstance := &wrapper.Wrapper[entities.UserRequest, entities.UserResponse]{ServeHTTP: handler.SignUp}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func LogOutRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.LogOut}
+	wrapperInstance := &wrapper.Wrapper[entities.UserRequest, entities.UserResponse]{ServeHTTP: handler.LogOut}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func AuthRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.Authorize}
+	wrapperInstance := &wrapper.Wrapper[entities.UserRequest, entities.UserResponse]{ServeHTTP: handler.Authorize}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func GetSightRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.SightComments]{ServeHTTP: handler.GetSight}
+	wrapperInstance := &wrapper.Wrapper[entities.SightRequest, entities.SightComments]{ServeHTTP: handler.GetSight}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func CreateCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.CreateComment}
+	wrapperInstance := &wrapper.Wrapper[entities.CommentRequest, bool]{ServeHTTP: handler.CreateComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func EditCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.EditComment}
+	wrapperInstance := &wrapper.Wrapper[entities.CommentRequest, bool]{ServeHTTP: handler.EditComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func DeleteCommentRoutes(handler *comment.CommentHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Comment, entities.Comment]{ServeHTTP: handler.DeleteComment}
+	wrapperInstance := &wrapper.Wrapper[entities.CommentRequest, bool]{ServeHTTP: handler.DeleteComment}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func CreateJourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.CreateJourney}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneyRequest, entities.Journey]{ServeHTTP: handler.CreateJourney}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func DeleteJourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.DeleteJourney}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneyRequest, entities.Journey]{ServeHTTP: handler.DeleteJourney}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func JourneyRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journeys]{ServeHTTP: handler.GetJourneys}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneyRequest, entities.Journeys]{ServeHTTP: handler.GetJourneys}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func AddJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySightID, entities.JourneySight]{ServeHTTP: handler.AddJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.SightsList, entities.JourneySight]{ServeHTTP: handler.AddJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func EditJourney(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Journey, entities.Journey]{ServeHTTP: handler.EditJourney}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneyRequest, entities.Journey]{ServeHTTP: handler.EditJourney}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func DeleteJourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySight]{ServeHTTP: handler.DeleteJourneySight}
+	wrapperInstance := &wrapper.Wrapper[entities.SightIDRequest, entities.JourneySight]{ServeHTTP: handler.DeleteJourneySight}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func JourneySightRoutes(handler *journey.JourneyHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.JourneySight, entities.JourneySights]{ServeHTTP: handler.GetJourneySights}
+	wrapperInstance := &wrapper.Wrapper[entities.JourneyRequest, entities.JourneySights]{ServeHTTP: handler.GetJourneySights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
-// profile
 func GetProfileRoutes(handler *profile.ProfileHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: handler.Get}
+	wrapperInstance := &wrapper.Wrapper[entities.ProfileRequest, entities.UserProfile]{ServeHTTP: handler.Get}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func EditProfileRoutes(handler *profile.ProfileHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.UserProfile, entities.UserProfile]{ServeHTTP: handler.Edit}
+	wrapperInstance := &wrapper.Wrapper[entities.ProfileRequest, entities.UserProfile]{ServeHTTP: handler.Edit}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func DeleteProfileRoutes(handler *deactivation.DeactivationHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.Deactivate}
+	wrapperInstance := &wrapper.Wrapper[entities.UserRequest, entities.UserResponse]{ServeHTTP: handler.Deactivate}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func UpdateUserPasswordRoutes(handler *authorization.AuthorizationHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.User, entities.UserResponse]{ServeHTTP: handler.UpdatePassword}
+	wrapperInstance := &wrapper.Wrapper[entities.UserRequest, entities.UserResponse]{ServeHTTP: handler.UpdatePassword}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func SearchSightsRoutes(handler *sight.SightHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Sight, entities.Sights]{ServeHTTP: handler.SearchSights}
+	wrapperInstance := &wrapper.Wrapper[entities.SightRequest, entities.Sights]{ServeHTTP: handler.SearchSights}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func CreateReviewRoutes(handler *quiz.QuizHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Review, bool]{ServeHTTP: handler.CreateReview}
+	wrapperInstance := &wrapper.Wrapper[entities.ReviewRequest, bool]{ServeHTTP: handler.CreateReview}
 	router.Post("/", wrapperInstance.HandlerWrapper)
 	return router
 }
 
 func CheckUserReviewRoutes(handler *quiz.QuizHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Review, entities.DataCheck]{ServeHTTP: handler.CheckData}
+	wrapperInstance := &wrapper.Wrapper[entities.ReviewRequest, entities.DataCheck]{ServeHTTP: handler.CheckData}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }

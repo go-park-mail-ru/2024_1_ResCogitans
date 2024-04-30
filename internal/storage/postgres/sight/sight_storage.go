@@ -129,7 +129,7 @@ func (ss *SightStorage) GetCommentsByUserID(userID int) ([]entities.Comment, err
 	return commentsList, nil
 }
 
-func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.Comment) error {
+func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.CommentRequest) error {
 	ctx := context.Background()
 
 	_, err := ss.db.Exec(ctx, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, comment.UserID, sightID, comment.Rating, comment.Feedback)
@@ -141,7 +141,7 @@ func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.Com
 	return nil
 }
 
-func (ss *SightStorage) EditComment(commentID int, comment entities.Comment) error {
+func (ss *SightStorage) EditComment(commentID int, comment entities.CommentRequest) error {
 	ctx := context.Background()
 
 	_, err := ss.db.Exec(ctx, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, comment.Rating, comment.Feedback, commentID)
@@ -165,16 +165,15 @@ func (ss *SightStorage) DeleteComment(commentID int) error {
 	return nil
 }
 
-// CreateJourney создает новую поездку в базе данных.
-func (ss *SightStorage) CreateJourney(journey entities.Journey) (entities.Journey, error) {
+func (ss *SightStorage) CreateJourney(journey entities.JourneyRequest) (entities.Journey, error) {
 	ctx := context.Background()
-
+	var response entities.Journey
 	row := ss.db.QueryRow(ctx, `INSERT INTO journey(name, user_id, description) VALUES ($1, $2, $3) RETURNING id, name, user_id, description;`, journey.Name, journey.UserID, journey.Description)
-	err := row.Scan(&journey.ID, &journey.Name, &journey.UserID, &journey.Description)
+	err := row.Scan(&response.ID, &response.Name, &response.UserID, &response.Description)
 	if err != nil {
 		return entities.Journey{}, err
 	}
-	return journey, nil
+	return response, nil
 }
 
 func (ss *SightStorage) DeleteJourney(journeyID int) error {
@@ -265,10 +264,10 @@ func (ss *SightStorage) EditJourney(journeyID int, name, description string) err
 	return nil
 }
 
-func (ss *SightStorage) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
+func (ss *SightStorage) DeleteJourneySight(journeyID int, sight entities.SightIDRequest) error {
 	ctx := context.Background()
 
-	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, journeyID, sight.SightID)
+	_, err := ss.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1 AND sight_id = $2 `, journeyID, sight.ID)
 	return err
 }
 

@@ -4,26 +4,13 @@ import (
 	"time"
 )
 
-type Review struct {
-	ID         int       `json:"id"`
-	UserID     int       `json:"userID"`
-	Rating     int       `json:"rating"`
-	QuestionID int       `json:"questionID"`
-	CreatedAt  time.Time `json:"createdAt"`
+type ReviewRequest struct {
+	Rating     int `json:"rating"`
+	QuestionID int `json:"questionID"`
 }
 
-func (h Review) Validate() error {
+func (h ReviewRequest) Validate() error {
 	return nil
-}
-
-type DataCheck struct {
-	Questions []QuestionResponse `json:"questions"`
-	Flag      bool               `json:"flag"`
-}
-
-type QuestionResponse struct {
-	QuestionID int    `json:"questionID"`
-	Text       string `json:"text"`
 }
 
 type Statistic struct {
@@ -35,4 +22,22 @@ type Statistic struct {
 
 func (h Statistic) Validate() error {
 	return nil
+}
+
+type Review struct {
+	ID         int
+	UserID     int
+	Rating     int
+	QuestionID int
+	CreatedAt  time.Time
+}
+
+type DataCheck struct {
+	Questions []QuestionResponse `json:"questions"`
+	Flag      bool               `json:"flag"`
+}
+
+type QuestionResponse struct {
+	QuestionID int    `json:"questionID"`
+	Text       string `json:"text"`
 }
