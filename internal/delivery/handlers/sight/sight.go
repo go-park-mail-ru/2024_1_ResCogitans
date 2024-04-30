@@ -28,9 +28,7 @@ func NewSightsHandler(usecase usecase.SightUseCaseInterface) *SightHandler {
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
 func (h *SightHandler) GetSights(ctx context.Context, _ entities.Sight) (entities.Sights, error) {
-	params := httputils.GetQueryParamsFromCtx(ctx)
-	categoryID, _ := strconv.Atoi(params["category_id"])
-	sights, err := h.SightUseCase.GetSightsList(categoryID)
+	sights, err := h.SightUseCase.GetSightsList()
 	if err != nil {
 		return entities.Sights{}, err
 	}
@@ -62,8 +60,8 @@ func (h *SightHandler) GetSight(ctx context.Context, _ entities.Sight) (entities
 	return entities.SightComments{Sight: sight, Comms: comments}, nil
 }
 
-func (h *SightHandler) SearchSights(_ context.Context, requestData entities.Sight) (entities.Sights, error) {
-	sights, err := h.SightUseCase.SearchSights(requestData.Name)
+func (h *SightHandler) SearchSights(ctx context.Context, requestData entities.Sight) (entities.Sights, error) {
+	sights, err := h.SightUseCase.SearchSights(httputils.GetQueryParamsFromCtx(ctx))
 	if err != nil {
 		return entities.Sights{}, err
 	}
