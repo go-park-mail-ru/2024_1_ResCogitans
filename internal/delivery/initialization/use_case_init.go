@@ -12,6 +12,7 @@ type UseCases struct {
 	JourneyUseCase  usecase.JourneyUseCaseInterface
 	CommentUseCase  usecase.CommentUseCaseInterface
 	QuestionUseCase usecase.QuestionUseCaseInterface
+	AlbumUseCase    usecase.AlbumUseCaseInterface
 }
 
 func UseCaseInit(storages *Storages) *UseCases {
@@ -23,5 +24,6 @@ func UseCaseInit(storages *Storages) *UseCases {
 		JourneyUseCase:  usecase.NewJourneyUseCase(storages.SightStorage),
 		CommentUseCase:  usecase.NewCommentUseCase(storages.SightStorage),
 		QuestionUseCase: usecase.NewQuestionUseCase(storages.QuestionStorage),
+		AlbumUseCase:    usecase.NewAlbumUseCase(storages.AlbumStorage),
 	}
 }

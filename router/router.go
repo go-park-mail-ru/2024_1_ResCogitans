@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/album"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/avatar"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
@@ -77,6 +78,11 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
+
+	// album
+	router.Mount("/api/profile/{id}/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/profile/{id}/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/profile/{id}/albums", GetAlbumsRoutes(handlers.AlbumHandler))
 
 	return router
 }
@@ -232,6 +238,27 @@ func CheckUserReviewRoutes(handler *quiz.QuizHandler) chi.Router {
 func GetStatistic(handler *quiz.QuizHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Statistic, []entities.Statistic]{ServeHTTP: handler.SetStat}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func CreateAlbumRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Album]{ServeHTTP: handler.CreateAlbum}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func DeleteAlbumRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Album]{ServeHTTP: handler.DeleteAlbum}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func GetAlbumsRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Albums]{ServeHTTP: handler.GetAlbums}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,7 +15,7 @@ type QuestionStorage struct {
 	db *pgxpool.Pool
 }
 
-func NewQuestionStorage(db *pgxpool.Pool) *QuestionStorage {
+func NewQuestionStorage(db *pgxpool.Pool) storage.QuestionStorageInterface {
 	return &QuestionStorage{
 		db: db,
 	}

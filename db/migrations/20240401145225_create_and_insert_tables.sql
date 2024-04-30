@@ -109,6 +109,23 @@ CREATE TABLE quiz
     created_at timestamptz
 );
 
+CREATE TABLE album 
+(
+    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id integer REFERENCES user_data(id),
+    name text NOT NULL,
+    description text,
+    UNIQUE(user_id, name)
+);
+
+CREATE TABLE album_photo
+(
+    id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    album_id integer REFERENCES album(id),
+    path text UNIQUE,
+    description text
+);
+
 INSERT INTO country(country)
 VALUES ('Россия'),
        ('Беларусь'),

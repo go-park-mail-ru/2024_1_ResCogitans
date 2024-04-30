@@ -13,10 +13,10 @@ type QuestionUseCaseInterface interface {
 }
 
 type QuestionUseCase struct {
-	QuestionStorage storage.QuestionInterface
+	QuestionStorage storage.QuestionStorageInterface
 }
 
-func NewQuestionUseCase(storage storage.QuestionInterface) QuestionUseCaseInterface {
+func NewQuestionUseCase(storage storage.QuestionStorageInterface) QuestionUseCaseInterface {
 	return &QuestionUseCase{
 		QuestionStorage: storage,
 	}
