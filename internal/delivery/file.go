@@ -37,7 +37,7 @@ func ValidateFileExtension(fileHeader multipart.FileHeader) bool {
 
 	fileType := strings.ToLower(http.DetectContentType(buff))
 
-	return fileType == "image/png" || fileType == "image/jpeg" || fileType == "image/jpg"
+	return fileType == "image/png" || fileType == "image/jpeg" || fileType == "image/jpg" || fileType == "image/webp"
 }
 
 func ValidateFileSize(handler *multipart.FileHeader) bool {
