@@ -39,6 +39,27 @@ func (qs *QuestionStorage) AddReview(userID int, review entities.ReviewRequest) 
 	return err
 }
 
+func (qs *QuestionStorage) SetStat(userID int) ([]entities.Statistic, error) {
+	var statistic []*entities.Statistic
+	ctx := context.Background()
+	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.text, r.rating AS user_grade, AVG(r.rating) AS average_grade
+	FROM quiz r  
+	INNER JOIN question q ON r.question_id = q.id 
+-- 	WHERE user_id = $1 
+	GROUP BY r.question_id, q.text, r.rating`, userID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return []entities.Statistic{}, err
+	}
+
+	var statisticList []entities.Statistic
+	for _, s := range statistic {
+		statisticList = append(statisticList, *s)
+	}
+
+	return statisticList, nil
+}
+
 func (qs *QuestionStorage) GetQuestions() ([]entities.QuestionResponse, error) {
 	var questions []*entities.QuestionResponse
 	ctx := context.Background()

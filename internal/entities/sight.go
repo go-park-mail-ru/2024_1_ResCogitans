@@ -1,19 +1,5 @@
 package entities
 
-type Sight struct {
-	ID          int      `json:"id"`
-	Rating      *float64 `json:"rating"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	CityID      int      `json:"cityID"`
-	CountryID   int      `json:"countryID"`
-	City        string   `json:"city"`
-	Country     string   `json:"country"`
-	Longitude   *float64 `json:"longitude"`
-	Latitude    *float64 `json:"latitude"`
-	Path        string   `json:"url"`
-	}
-
 type SightIDRequest struct {
 	ID string `json:"sightID"`
 }
@@ -30,24 +16,26 @@ func (h SightRequest) Validate() error {
 	return nil
 }
 
-type Sight struct {
-	ID          int
-	Rating      *float32
-	Name        string
-	Description string
-	CityID      int
-	CountryID   int
-	City        string
-	Country     string
-	Path        string
-}
-
 type SightsList struct {
 	ListID []int `json:"sightIDs"`
 }
 
 func (h SightsList) Validate() error {
 	return nil
+}
+
+type Sight struct {
+	ID          int      `json:"id"`
+	Rating      *float64 `json:"rating"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	CityID      int      `json:"cityID"`
+	CountryID   int      `json:"countryID"`
+	City        string   `json:"city"`
+	Country     string   `json:"country"`
+	Longitude   *float64 `json:"longitude"`
+	Latitude    *float64 `json:"latitude"`
+	Path        string   `json:"url"`
 }
 
 type Sights struct {

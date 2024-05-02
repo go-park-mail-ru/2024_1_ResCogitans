@@ -4,7 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 )
 
-type QuestionInterface interface {
+type QuestionStorageInterface interface {
 	AddReview(userID int, review entities.ReviewRequest) error
 	SetStat(userID int) ([]entities.Statistic, error)
 	GetQuestions() ([]entities.QuestionResponse, error)

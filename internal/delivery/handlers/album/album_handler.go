@@ -18,14 +18,15 @@ func NewAlbumHandler(usecase usecase.AlbumUseCaseInterface) *AlbumHandler {
 	}
 }
 
-// CreateAlbum godoc
-// @Summary Create new album
-// @Description create new album
-// @ID CreateAlbum
-// @Accept json
-// @Produce json
-// @Success 200 Album
-// @Router /sight [get]
+// CreateAlbum
+// @Summary Создание нового альбома для пользователя
+// @Tags Фотографии
+// @Accept  json
+// @Produce  json
+// @Param album body entities.Album true "Данные альбома"
+// @Success 200 {object} entities.Album "Успешное создание альбома"
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/album/create [post]
 func (h *AlbumHandler) CreateAlbum(ctx context.Context, album entities.Album) (entities.Album, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
@@ -41,14 +42,15 @@ func (h *AlbumHandler) CreateAlbum(ctx context.Context, album entities.Album) (e
 	return album, nil
 }
 
-// GetSights godoc
-// @Summary Get all sights
-// @Description get all sights
-// @ID get-sights
-// @Accept json
-// @Produce json
-// @Success 200 {array} sight.Sight
-// @Router /sights [get]
+// DeleteAlbum
+// @Summary Удаление альбома пользователя
+// @Tags Фотографии
+// @Accept  json
+// @Produce  json
+// @Param album body entities.Album true "Данные альбома"
+// @Success 200 {object} entities.Album "Успешное удаление альбома"
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/album/delete [post]
 func (h *AlbumHandler) DeleteAlbum(_ context.Context, album entities.Album) (entities.Album, error) {
 	_, err := h.AlbumUseCase.DeleteAlbum(album)
 	if err != nil {
@@ -57,6 +59,14 @@ func (h *AlbumHandler) DeleteAlbum(_ context.Context, album entities.Album) (ent
 	return entities.Album{}, nil
 }
 
+// GetAlbums
+// @Summary Получение альбома пользователя
+// @Tags Фотографии
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} entities.Album "Успешное удаление альбома"
+// @Failure 500 {object} httperrors.HttpError
+// @Router /api/profile/{id}/albums [get]
 func (h *AlbumHandler) GetAlbums(ctx context.Context, _ entities.Album) (entities.Albums, error) {
 	userID, err := httputils.GetUserFromCtx(ctx)
 	if err != nil {
