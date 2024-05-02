@@ -4,26 +4,25 @@ import (
 	"context"
 	"testing"
 
+	sight "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
+	utils "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetSights(t *testing.T) {
-	handler := &SightsHandler{}
+	h := &sight.SightHandler{}
+	h = sight.NewSightsHandler()
 
 	ctx := context.Background()
 
-	resp, err := handler.GetSights(ctx, entities.Sight{})
+	resp, err := h.GetSights(ctx, entities.Sight{})
 	if err != nil {
 		t.Fatalf("Failed to get sights: %v", err)
 	}
 
-	assert.NotEmpty(t, resp.Sight)
-
 	expectedFirstSight := entities.Sight{
 		ID:          1,
-		Rating:      2.1,
 		Name:        "У дяди Вани",
 		Description: "Ресторан с видом на Сталинскую высотку.",
 		CityID:      1,
@@ -35,16 +34,16 @@ func TestGetSights(t *testing.T) {
 
 func TestGetSightsByID(t *testing.T) {
 	comm := entities.Comments{}
-	handler := &SightsHandler{}
+	handler := &sight.SightHandler{}
 
 	comm.Validate()
 
 	ctx := context.Background()
 	param := make(map[string]string)
 	param["id"] = "1"
-	ctx = wrapper.SetPathParamsToCtx(ctx, param)
+	ctx = utils.SetPathParamsToCtx(ctx, param)
 
-	resp, err := handler.GetSightByID(ctx, entities.Sight{})
+	resp, err := handler.GetSight(ctx, entities.Sight{})
 	if err != nil {
 		t.Fatalf("Failed to get sights: %v", err)
 	}
@@ -53,7 +52,6 @@ func TestGetSightsByID(t *testing.T) {
 
 	expectedSight := entities.Sight{
 		ID:          1,
-		Rating:      2.1,
 		Name:        "У дяди Вани",
 		Description: "Ресторан с видом на Сталинскую высотку.",
 		CityID:      1,
@@ -66,14 +64,14 @@ func TestGetSightsByID(t *testing.T) {
 }
 
 func TestGetSightsByIDNotInt(t *testing.T) {
-	handler := &SightsHandler{}
+	handler := &sight.SightHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
 	param["id"] = "id"
-	ctx = wrapper.SetPathParamsToCtx(ctx, param)
+	ctx = utils.SetPathParamsToCtx(ctx, param)
 
-	_, err := handler.GetSightByID(ctx, entities.Sight{})
+	_, err := handler.GetSight(ctx, entities.Sight{})
 
 	assert.NotNil(t, err)
 }

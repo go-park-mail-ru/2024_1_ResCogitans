@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	comment "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/sight"
+	comment "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
 	"github.com/stretchr/testify/assert"
@@ -12,14 +12,14 @@ import (
 
 // Get comments
 func TestGetComments(t *testing.T) {
-	handler := &comment.SightsHandler{}
+	handler := &comment.CommentHandler{}
 
 	ctx := context.Background()
 	param := make(map[string]string)
 	param["id"] = "1"
 	ctx = wrapper.SetPathParamsToCtx(ctx, param)
 
-	resp, err := handler.GetSightByID(ctx, entities.Sight{})
+	resp, err := handler.GetCommentsBySightID(ctx, entities.Sight{})
 
 	assert.NotEmpty(t, resp.Comms)
 
