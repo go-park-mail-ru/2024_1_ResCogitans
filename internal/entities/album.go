@@ -11,10 +11,21 @@ type Albums struct {
 	Albums []Album `json:"albums"`
 }
 
+type AlbumPhoto struct {
+	ID          int    `json:"photoID`
+	AlbumID     int    `json:"albumID"`
+	Path        string `json:"path"`
+	Description string `json:"description"`
+}
+
 func (h Album) Validate() error {
 	return nil
 }
 
 func (h Albums) Validate() error {
+	return nil
+}
+
+func (h AlbumPhoto) Validate() error {
 	return nil
 }

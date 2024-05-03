@@ -16,6 +16,7 @@ type Config struct {
 	Dsn            `yaml:"dsn"`
 	Redis          `yaml:"redis"`
 	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
+	Drive          `yaml:"token"`
 }
 
 type HTTPServer struct {
@@ -39,6 +40,10 @@ type Redis struct {
 	Port     int    `yaml:"port" env:"DB_REDIS_PORT"`
 	DB       int    `yaml:"db" env:"DB_REDIS_DB"`
 	Password string `yaml:"password" env:"DB_REDIS_PASSWORD"`
+}
+
+type Drive struct {
+	Token string `yaml:"token" env:"YANDEX_TOKEN"`
 }
 
 func LoadConfig() (*Config, error) {

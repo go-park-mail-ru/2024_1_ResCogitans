@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/album"
+	album "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/album"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/avatar"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
@@ -38,6 +38,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 
 	// upload image
 	router.HandleFunc("/api/profile/{id}/upload", user.Upload)
+	router.HandleFunc("/api/album/{id}/upload", album.DoAll)
 
 	router.Mount("/api/sights", SightRoutes(handlers.SightHandler))
 
@@ -80,9 +81,10 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
 
 	// album
-	router.Mount("/api/profile/{id}/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
-	router.Mount("/api/profile/{id}/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
-	router.Mount("/api/profile/{id}/albums", GetAlbumsRoutes(handlers.AlbumHandler))
+	router.Mount("/api/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/albums", GetAlbumsRoutes(handlers.AlbumHandler))
+	router.Mount("/api/album/{albumID}/add", AddPhotoAlbumRoutes(handlers.AlbumHandler))
 
 	return router
 }
@@ -242,6 +244,7 @@ func GetStatistic(handler *quiz.QuizHandler) chi.Router {
 	return router
 }
 
+// album routes
 func CreateAlbumRoutes(handler *album.AlbumHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Album]{ServeHTTP: handler.CreateAlbum}
@@ -257,6 +260,13 @@ func DeleteAlbumRoutes(handler *album.AlbumHandler) chi.Router {
 }
 
 func GetAlbumsRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Albums]{ServeHTTP: handler.GetAlbums}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func AddPhotoAlbumRoutes(handler *album.AlbumHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Albums]{ServeHTTP: handler.GetAlbums}
 	router.Get("/", wrapperInstance.HandlerWrapper)

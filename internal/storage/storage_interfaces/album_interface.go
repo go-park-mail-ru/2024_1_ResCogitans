@@ -8,4 +8,5 @@ type AlbumStorageInterface interface {
 	CreateAlbum(album entities.Album) (entities.Album, error)
 	DeleteAlbum(albumID int) error
 	GetAlbums(userID int) (entities.Albums, error)
+	AddPhoto(albumID int, path string) error
 }

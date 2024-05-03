@@ -9,6 +9,7 @@ type AlbumUseCaseInterface interface {
 	CreateAlbum(album entities.Album) (entities.Album, error)
 	DeleteAlbum(album entities.Album) (entities.Album, error)
 	GetAlbums(userID int) (entities.Albums, error)
+	AddPhoto(albumID int, path string) error
 }
 
 type AlbumUseCase struct {
@@ -40,4 +41,9 @@ func (au *AlbumUseCase) GetAlbums(userID int) (entities.Albums, error) {
 		return entities.Albums{}, err
 	}
 	return albums, nil
+}
+
+func (au *AlbumUseCase) AddPhoto(albumID int, path string) error {
+	err := au.AlbumStorage.AddPhoto(albumID, path)
+	return err
 }
