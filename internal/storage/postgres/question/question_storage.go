@@ -119,7 +119,7 @@ func (qs *QuestionStorage) GetUserStat(userID int) ([]entities.Statistic, error)
 	var statistic []*entities.Statistic
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.question_id, q.text, r.rating 
+	err := pgxscan.Select(ctx, qs.db, &statistic, `SELECT q.id, q.text, r.rating 
 	FROM question q 
 	INNER JOIN quiz r ON q.id = r.question_id 
 	WHERE user_id = $1
