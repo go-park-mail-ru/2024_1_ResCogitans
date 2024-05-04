@@ -81,9 +81,9 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
 
 	// album
-	router.Mount("/api/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
-	router.Mount("/api/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
-	router.Mount("/api/albums", GetAlbumsRoutes(handlers.AlbumHandler))
+	router.Mount("/api/profile/{id}/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/profile/{id}/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/profile/{id}/albums", GetAlbumsRoutes(handlers.AlbumHandler))
 	router.Mount("/api/album/{albumID}/add", AddPhotoAlbumRoutes(handlers.AlbumHandler))
 	router.Mount("/api/album/{albumID}/delete", DeletePhotoAlbumRoutes(handlers.AlbumHandler))
 	router.Mount("/api/album/{albumID}", GetAlbumPhotosRoutes(handlers.AlbumHandler))
