@@ -38,7 +38,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 
 	// upload image
 	router.HandleFunc("/api/profile/{id}/upload", user.Upload)
-	router.HandleFunc("/api/album/{id}/upload", album.DoAll)
+	router.HandleFunc("/api/album/{albumID}/upload", album.UploadImageAndInsert)
 
 	router.Mount("/api/sights", SightRoutes(handlers.SightHandler))
 
@@ -85,6 +85,8 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/album/delete", DeleteAlbumRoutes(handlers.AlbumHandler))
 	router.Mount("/api/albums", GetAlbumsRoutes(handlers.AlbumHandler))
 	router.Mount("/api/album/{albumID}/add", AddPhotoAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/album/{albumID}/delete", DeletePhotoAlbumRoutes(handlers.AlbumHandler))
+	router.Mount("/api/album/{albumID}", GetAlbumPhotosRoutes(handlers.AlbumHandler))
 
 	return router
 }
@@ -268,7 +270,21 @@ func GetAlbumsRoutes(handler *album.AlbumHandler) chi.Router {
 
 func AddPhotoAlbumRoutes(handler *album.AlbumHandler) chi.Router {
 	router := chi.NewRouter()
-	wrapperInstance := &wrapper.Wrapper[entities.Album, entities.Albums]{ServeHTTP: handler.GetAlbums}
+	wrapperInstance := &wrapper.Wrapper[entities.AlbumPhoto, entities.AlbumPhoto]{ServeHTTP: handler.AddPhoto}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func DeletePhotoAlbumRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.AlbumPhoto, entities.AlbumPhoto]{ServeHTTP: handler.DeletePhoto}
+	router.Post("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func GetAlbumPhotosRoutes(handler *album.AlbumHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.AlbumAndPhoto, entities.AlbumAndPhoto]{ServeHTTP: handler.GetAlbumByID}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }

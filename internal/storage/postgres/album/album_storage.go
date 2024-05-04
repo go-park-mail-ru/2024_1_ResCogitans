@@ -78,3 +78,61 @@ func (as *AlbumStorage) AddPhoto(albumID int, path string) error {
 
 	return nil
 }
+
+func (as *AlbumStorage) DeletePhoto(photoID int) (entities.AlbumPhoto, error) {
+	var photo []*entities.AlbumPhoto
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, as.db, &photo, `SELECT path   
+	FROM album_photo
+	WHERE id = $1`, photoID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.AlbumPhoto{}, err
+	}
+
+	_, err = as.db.Exec(ctx, `DELETE album_photo WHERE id = $1`, photoID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.AlbumPhoto{}, err
+	}
+
+	return *photo[0], nil
+}
+
+func (as *AlbumStorage) GetAlbumInfo(albumID int) (entities.Album, error) {
+	var albums []*entities.Album
+
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, as.db, &albums, `SELECT id, name, description  
+	FROM album
+	WHERE id = $1`, albumID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return entities.Album{}, err
+	}
+
+	return *albums[0], nil
+}
+
+func (as *AlbumStorage) GetAlbumPhotos(albumID int) ([]entities.AlbumPhoto, error) {
+	var albumPhotos []*entities.AlbumPhoto
+
+	ctx := context.Background()
+
+	err := pgxscan.Select(ctx, as.db, &albumPhotos, `SELECT id, path, description  
+	FROM album_photo
+	WHERE album_id = $1`, albumID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	var photoList []entities.AlbumPhoto
+	for _, p := range albumPhotos {
+		photoList = append(photoList, *p)
+	}
+
+	return photoList, nil
+}

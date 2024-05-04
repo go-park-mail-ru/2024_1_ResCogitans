@@ -12,10 +12,15 @@ type Albums struct {
 }
 
 type AlbumPhoto struct {
-	ID          int    `json:"photoID`
+	ID          int    `json:"photoID"`
 	AlbumID     int    `json:"albumID"`
 	Path        string `json:"path"`
 	Description string `json:"description"`
+}
+
+type AlbumAndPhoto struct {
+	Info   Album        `json:"albumInfo"`
+	Photos []AlbumPhoto `json:"albumPhotos"`
 }
 
 func (h Album) Validate() error {
@@ -27,5 +32,9 @@ func (h Albums) Validate() error {
 }
 
 func (h AlbumPhoto) Validate() error {
+	return nil
+}
+
+func (h AlbumAndPhoto) Validate() error {
 	return nil
 }

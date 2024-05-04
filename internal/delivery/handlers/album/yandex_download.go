@@ -163,7 +163,7 @@ func insertDataToDB(albumID int, path string) error {
 	return nil
 }
 
-func DoAll(w http.ResponseWriter, r *http.Request) {
+func UploadImageAndInsert(w http.ResponseWriter, r *http.Request) {
 	logger := logger.Logger()
 
 	r.ParseMultipartForm(10 << 20)
@@ -175,7 +175,7 @@ func DoAll(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	albumID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	albumID, err := strconv.Atoi(chi.URLParam(r, "albumID"))
 	if err != nil {
 		logger.Error("Cannot convert to int", err)
 		http.Error(w, "Cannot convert to int", http.StatusBadRequest)

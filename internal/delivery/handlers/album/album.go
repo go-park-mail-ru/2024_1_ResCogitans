@@ -77,10 +77,31 @@ func (h *AlbumHandler) AddPhoto(ctx context.Context, photo entities.AlbumPhoto) 
 	if err != nil {
 		return entities.AlbumPhoto{}, err
 	}
-	path := photo.Path
-	err = h.AlbumUseCase.AddPhoto(albumID, path)
+
+	err = h.AlbumUseCase.AddPhoto(albumID, photo.Path)
 	if err != nil {
 		return entities.AlbumPhoto{}, err
 	}
 	return entities.AlbumPhoto{}, nil
+}
+
+func (h *AlbumHandler) DeletePhoto(ctx context.Context, photo entities.AlbumPhoto) (entities.AlbumPhoto, error) {
+	err := h.AlbumUseCase.DeletePhoto(photo.ID)
+	if err != nil {
+		return entities.AlbumPhoto{}, err
+	}
+	return entities.AlbumPhoto{}, nil
+}
+
+func (h *AlbumHandler) GetAlbumByID(ctx context.Context, photo entities.AlbumAndPhoto) (entities.AlbumAndPhoto, error) {
+	params := httputils.GetPathParamsFromCtx(ctx)
+	albumID, err := strconv.Atoi(params["albumID"])
+	if err != nil {
+		return entities.AlbumAndPhoto{}, err
+	}
+	albumAndPhotos, err := h.AlbumUseCase.GetAlbumByID(albumID)
+	if err != nil {
+		return entities.AlbumAndPhoto{}, err
+	}
+	return albumAndPhotos, nil
 }

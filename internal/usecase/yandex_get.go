@@ -1,41 +1,45 @@
-package album
+package usecase
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 )
 
 type DownloadResponse struct {
 	Href string `json:"href"`
 }
 
-func getDownloadLink(filePath, token string) (DownloadResponse, error) {
+func GetDownloadLink(filePath string) (string, error) {
 	path := "jantugan/album/" + filePath
 	url := "https://cloud-api.yandex.net/v1/disk/resources/download?path=" + path
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 
-		return DownloadResponse{}, err
+		return "", err
 	}
-	request.Header.Set("Authorization", "OAuth "+token)
+	cfg, _ := config.LoadConfig()
+
+	request.Header.Set("Authorization", "OAuth "+cfg.Drive.Token)
 
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		return DownloadResponse{}, err
+		return "", err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return DownloadResponse{}, fmt.Errorf("download link request failed with status: %d", response.StatusCode)
+		return "", fmt.Errorf("download link request failed with status: %d", response.StatusCode)
 	}
 
 	var downloadResponse DownloadResponse
 	if err := json.NewDecoder(response.Body).Decode(&downloadResponse); err != nil {
-		return downloadResponse, err
+		return "", err
 	}
 
-	return downloadResponse, nil
+	return downloadResponse.Href, nil
 }
