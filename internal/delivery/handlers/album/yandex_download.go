@@ -24,7 +24,7 @@ type UploadResponse struct {
 }
 
 var (
-	maxFileSizeMB    = 1
+	maxFileSizeMB    = 8
 	maxFileSizeBytes = int64(maxFileSizeMB) * 1024 * 1024
 )
 

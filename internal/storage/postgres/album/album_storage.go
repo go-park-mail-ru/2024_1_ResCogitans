@@ -59,7 +59,13 @@ func (as *AlbumStorage) GetAlbums(userID int) (entities.Albums, error) {
 func (as *AlbumStorage) DeleteAlbum(albumID int) error {
 	ctx := context.Background()
 
-	_, err := as.db.Exec(ctx, `DELETE FROM album WHERE id = $1;`, albumID)
+	_, err := as.db.Exec(ctx, `DELETE FROM album_photo WHERE album_id = $1`, albumID)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return err
+	}
+
+	_, err = as.db.Exec(ctx, `DELETE FROM album WHERE id = $1;`, albumID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
