@@ -2,7 +2,6 @@ package album
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
@@ -76,12 +75,11 @@ func (h *AlbumHandler) GetAlbums(ctx context.Context, _ entities.Album) (entitie
 func (h *AlbumHandler) AddPhoto(ctx context.Context, photo entities.AlbumPhoto) (entities.AlbumPhoto, error) {
 	params := httputils.GetPathParamsFromCtx(ctx)
 	albumID, err := strconv.Atoi(params["albumID"])
-	fmt.Println(photo)
 	if err != nil {
 		return entities.AlbumPhoto{}, err
 	}
 
-	err = h.AlbumUseCase.AddPhoto(albumID, photo.Path)
+	err = h.AlbumUseCase.AddPhoto(albumID, photo.Path, photo.Description)
 	if err != nil {
 		return entities.AlbumPhoto{}, err
 	}

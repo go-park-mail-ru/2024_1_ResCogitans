@@ -11,7 +11,7 @@ type AlbumUseCaseInterface interface {
 	CreateAlbum(album entities.Album) (entities.Album, error)
 	DeleteAlbum(album entities.Album) (entities.Album, error)
 	GetAlbums(userID int) (entities.Albums, error)
-	AddPhoto(albumID int, path string) error
+	AddPhoto(albumID int, path, description string) error
 	DeletePhoto(photoID int) error
 	GetAlbumByID(albumID int) (entities.AlbumAndPhoto, error)
 }
@@ -47,8 +47,8 @@ func (au *AlbumUseCase) GetAlbums(userID int) (entities.Albums, error) {
 	return albums, nil
 }
 
-func (au *AlbumUseCase) AddPhoto(albumID int, path string) error {
-	err := au.AlbumStorage.AddPhoto(albumID, path)
+func (au *AlbumUseCase) AddPhoto(albumID int, path, description string) error {
+	err := au.AlbumStorage.AddPhoto(albumID, path, description)
 	return err
 }
 

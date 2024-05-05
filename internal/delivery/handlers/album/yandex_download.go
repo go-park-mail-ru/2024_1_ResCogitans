@@ -69,8 +69,8 @@ func getURL(path, token string) (string, error) {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("getting URL failed with status: %d", response.StatusCode)
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("получение URL не удалось со статусом: %d", response.StatusCode)
 	}
 
 	var uploadResponse UploadResponse
@@ -87,14 +87,14 @@ func uploadFile(file multipart.File, handler *multipart.FileHeader) (string, err
 	// Валидация
 	flag := ValidateFileExtension(*handler)
 	if !flag {
-		logger.Error("Not valid format!")
-		return "", errors.New("Not valid format!")
+		logger.Error("Неправильное расширение!")
+		return "", errors.New("Неправильное расширение!")
 	}
 
 	flag = ValidateFileSize(handler)
 	if !flag {
-		logger.Error("Error while checking file size:", "error")
-		return "", errors.New("Error while checking file size!")
+		logger.Error("Ошибка при проверки размера файла:", "error")
+		return "", errors.New("Ошибка при проверки размера файла!")
 	}
 
 	// Берем хэш из названия файла
@@ -126,20 +126,21 @@ func uploadFile(file multipart.File, handler *multipart.FileHeader) (string, err
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusCreated {
-		logger.Error("upload failed with status: %d", response.StatusCode)
+		logger.Error("Загрузка не удалась со статусом: %d", response.StatusCode)
 	}
 
-	logger.Info("File uploaded successfully!")
+	logger.Info("Загрузка успешна!")
 
 	return newPath, nil
 }
 
-func insertDataToDB(albumID int, path string) error {
+func insertDataToDB(albumID int, path, description string) error {
 	log := logger.Logger()
 	url := fmt.Sprintf("http://localhost:8080/api/album/%d/add", albumID)
 
 	var data entities.AlbumPhoto
 	data.Path = path
+	data.Description = description
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -175,41 +176,57 @@ func UploadImageAndInsert(w http.ResponseWriter, r *http.Request) {
 	// Получение списка имен файлов
 	fileMap := r.MultipartForm.File
 
+	// Получение списка описаний к фото
+	descr := r.FormValue("descriptions")
+
+	var descriptions []map[string]string
+	err := json.Unmarshal([]byte(descr), &descriptions)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding descriptions JSON: %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	// Обработка каждого файла
 	for fieldName, files := range fileMap {
 		for _, fileHeader := range files {
 			file, err := fileHeader.Open()
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error opening uploaded file: %s", err), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Ошибка при открытии файла: %s", err), http.StatusInternalServerError)
 				return
 			}
 			defer file.Close()
 
 			file, handler, err := r.FormFile(fieldName)
 			if err != nil {
-				logger.Error("Error while retrieving file:", "error", err)
-				http.Error(w, "Error while retrieving file", http.StatusBadRequest)
+				logger.Error("Ошибка получения файла:", "error", err)
+				http.Error(w, "Ошибка получения файла", http.StatusBadRequest)
 				return
 			}
 			defer file.Close()
 
 			albumID, err := strconv.Atoi(chi.URLParam(r, "albumID"))
 			if err != nil {
-				logger.Error("Cannot convert to int", err)
-				http.Error(w, "Cannot convert to int", http.StatusBadRequest)
+				logger.Error("Ошибка перевода в число", err)
+				http.Error(w, "Ошибка перевода в число", http.StatusBadRequest)
 				return
 			}
 
 			path, err := uploadFile(file, handler)
 			if err != nil {
-				logger.Error("Error while uploading file:", "error", err)
-				http.Error(w, "Error while uploading file", http.StatusBadRequest)
+				logger.Error("Ошибка загрузки файла:", "error", err)
+				http.Error(w, "Ошибка загрузки файла", http.StatusBadRequest)
 				return
 			}
-			err = insertDataToDB(albumID, path)
+
+			index, _ := strconv.Atoi(fieldName)
+
+			description := descriptions[index-1][fieldName]
+
+			err = insertDataToDB(albumID, path, description)
 			if err != nil {
-				logger.Error("Error updating DB", "error", err)
-				http.Error(w, "Error updating DB", http.StatusBadRequest)
+				logger.Error("Ошибка обновления базы данных", "error", err)
+				http.Error(w, "Ошибка обновления базы данных", http.StatusBadRequest)
 				return
 			}
 		}

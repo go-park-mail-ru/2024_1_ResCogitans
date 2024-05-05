@@ -68,9 +68,9 @@ func (as *AlbumStorage) DeleteAlbum(albumID int) error {
 	return nil
 }
 
-func (as *AlbumStorage) AddPhoto(albumID int, path string) error {
+func (as *AlbumStorage) AddPhoto(albumID int, path, description string) error {
 	ctx := context.Background()
-	_, err := as.db.Exec(ctx, `INSERT INTO album_photo(album_id, path) VALUES ($1, $2)`, albumID, path)
+	_, err := as.db.Exec(ctx, `INSERT INTO album_photo(album_id, path, description) VALUES ($1, $2, $3)`, albumID, path, description)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return err
