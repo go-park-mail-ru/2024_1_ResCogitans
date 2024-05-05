@@ -8,7 +8,8 @@ import (
 )
 
 func deleteResource(path string) error {
-	url := fmt.Sprintf("https://cloud-api.yandex.net/v1/disk/resources?path=%s&permanently=true", path)
+	uploadPath := "jantugan/album/" + path
+	url := "https://cloud-api.yandex.net/v1/disk/resources?path=" + uploadPath + "&permanently=true"
 
 	request, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -25,7 +26,7 @@ func deleteResource(path string) error {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("delete resource request failed with status: %d", response.StatusCode)
 	}
 
