@@ -40,6 +40,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.HandleFunc("/upload", user.Upload)
 
 	router.Mount("/api/sights", SightRoutes(handlers.SightHandler))
+	router.Mount("/api/sights/search", SearchSightsRoutes(handlers.SightHandler))
 
 	// user authorization and registration
 	router.Mount("/api/signup", SignUpRoutes(handlers.RegHandler))
@@ -62,7 +63,6 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/sight/{id}/create", CreateCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/edit/{cid}", EditCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/delete/{cid}", DeleteCommentRoutes(handlers.CommentHandler))
-	router.Mount("/api/sight/quiz", SearchSightsRoutes(handlers.SightHandler))
 
 	//journeys
 	router.Mount("/api/trip/{id}/delete", DeleteJourneyRoutes(handlers.JourneyHandler))
