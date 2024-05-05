@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/pkg/errors"
 )
@@ -68,7 +69,7 @@ func getURL(path, token string) (string, error) {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusCreated {
 		return "", fmt.Errorf("getting URL failed with status: %d", response.StatusCode)
 	}
 
@@ -135,9 +136,12 @@ func uploadFile(file multipart.File, handler *multipart.FileHeader) (string, err
 
 func insertDataToDB(albumID int, path string) error {
 	log := logger.Logger()
-	url := fmt.Sprintf("http://localhost:8080/album/%d/add", albumID) // Предполагаем, что ваше приложение слушает на порту 8080
+	url := fmt.Sprintf("http://localhost:8080/api/album/%d/add", albumID)
 
-	jsonData, err := json.Marshal(path)
+	var data entities.AlbumPhoto
+	data.Path = path
+
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Error("Ошибка при преобразовании в JSON:", err)
 		return err
@@ -166,33 +170,49 @@ func insertDataToDB(albumID int, path string) error {
 func UploadImageAndInsert(w http.ResponseWriter, r *http.Request) {
 	logger := logger.Logger()
 
-	r.ParseMultipartForm(10 << 20)
-	file, handler, err := r.FormFile("file")
-	if err != nil {
-		logger.Error("Error while retrieving file:", "error", err)
-		http.Error(w, "Error while retrieving file", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
+	r.ParseMultipartForm(100 << 20)
 
-	albumID, err := strconv.Atoi(chi.URLParam(r, "albumID"))
-	if err != nil {
-		logger.Error("Cannot convert to int", err)
-		http.Error(w, "Cannot convert to int", http.StatusBadRequest)
-		return
+	// Получение списка имен файлов
+	fileMap := r.MultipartForm.File
+
+	// Обработка каждого файла
+	for fieldName, files := range fileMap {
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error opening uploaded file: %s", err), http.StatusInternalServerError)
+				return
+			}
+			defer file.Close()
+
+			file, handler, err := r.FormFile(fieldName)
+			if err != nil {
+				logger.Error("Error while retrieving file:", "error", err)
+				http.Error(w, "Error while retrieving file", http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
+
+			albumID, err := strconv.Atoi(chi.URLParam(r, "albumID"))
+			if err != nil {
+				logger.Error("Cannot convert to int", err)
+				http.Error(w, "Cannot convert to int", http.StatusBadRequest)
+				return
+			}
+
+			path, err := uploadFile(file, handler)
+			if err != nil {
+				logger.Error("Error while uploading file:", "error", err)
+				http.Error(w, "Error while uploading file", http.StatusBadRequest)
+				return
+			}
+			err = insertDataToDB(albumID, path)
+			if err != nil {
+				logger.Error("Error updating DB", "error", err)
+				http.Error(w, "Error updating DB", http.StatusBadRequest)
+				return
+			}
+		}
 	}
 
-	path, err := uploadFile(file, handler)
-	if err != nil {
-		logger.Error("Error while uploading file:", "error", err)
-		http.Error(w, "Error while uploading file", http.StatusBadRequest)
-		return
-	}
-
-	err = insertDataToDB(albumID, path)
-	if err != nil {
-		logger.Error("Error updating DB", "error", err)
-		http.Error(w, "Error updating DB", http.StatusBadRequest)
-		return
-	}
 }

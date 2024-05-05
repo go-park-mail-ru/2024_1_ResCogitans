@@ -105,7 +105,7 @@ func (as *AlbumStorage) GetAlbumInfo(albumID int) (entities.Album, error) {
 
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, as.db, &albums, `SELECT id, name, description  
+	err := pgxscan.Select(ctx, as.db, &albums, `SELECT id, user_id, name, description  
 	FROM album
 	WHERE id = $1`, albumID)
 	if err != nil {
