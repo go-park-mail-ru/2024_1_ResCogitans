@@ -97,7 +97,7 @@ func (as *AlbumStorage) DeletePhoto(photoID int) (entities.AlbumPhoto, error) {
 		return entities.AlbumPhoto{}, err
 	}
 
-	_, err = as.db.Exec(ctx, `DELETE album_photo WHERE id = $1`, photoID)
+	_, err = as.db.Exec(ctx, `DELETE FROM album_photo WHERE id = $1`, photoID)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return entities.AlbumPhoto{}, err
