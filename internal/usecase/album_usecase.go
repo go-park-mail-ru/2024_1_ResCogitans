@@ -78,8 +78,8 @@ func (au *AlbumUseCase) GetAlbumByID(albumID int) (entities.AlbumAndPhoto, error
 		return entities.AlbumAndPhoto{}, err
 	}
 
-	for _, photo := range albumPhotos {
-		photo.Path, err = GetDownloadLink(photo.Path)
+	for index, photo := range albumPhotos {
+		albumPhotos[index].Path, err = GetDownloadLink(photo.Path)
 		if err != nil {
 			return entities.AlbumAndPhoto{}, err
 		}
