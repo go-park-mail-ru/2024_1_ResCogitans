@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package service;
+
+service SessionService {
+  rpc SaveSession (SaveSessionRequest) returns (SaveSessionResponse);
+  rpc GetSession (GetSessionRequest) returns (GetSessionResponse);
+  rpc DeleteSession (DeleteSessionRequest) returns (DeleteSessionResponse);
+}
+
+message SaveSessionRequest {
+  string sessionID = 1;
+  int32 userID = 2;
+}
+
+message SaveSessionResponse {
+  bool success = 1;
+}
+
+message GetSessionRequest {
+  string sessionID = 1;
+}
+
+message GetSessionResponse {
+  int32 userID = 1;
+}
+
+message DeleteSessionRequest {
+  string sessionID = 1;
+}
+
+message DeleteSessionResponse {
+  bool success = 1;
+}
