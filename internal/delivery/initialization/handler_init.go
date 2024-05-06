@@ -3,6 +3,7 @@ package initialization
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/album"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/category"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
@@ -22,6 +23,7 @@ type Handlers struct {
 	JourneyHandler      *journey.JourneyHandler
 	CommentHandler      *comment.CommentHandler
 	QuizHandler         *quiz.QuizHandler
+	CategoryHandler     *category.CategoryHandler
 	AlbumHandler        *album.AlbumHandler
 
 	AuthMiddleware *middle.AuthMiddleware
@@ -37,8 +39,8 @@ func HandlerInit(cases *UseCases) *Handlers {
 		JourneyHandler:      journey.NewJourneyHandler(cases.JourneyUseCase),
 		CommentHandler:      comment.NewCommentHandler(cases.CommentUseCase),
 		QuizHandler:         quiz.NewQuizHandler(cases.QuestionUseCase, cases.CommentUseCase, cases.JourneyUseCase),
+		CategoryHandler:     category.NewCategoryHandler(cases.CategoryUseCase),
+		AuthMiddleware:      middle.NewAuthMiddleware(cases.SessionUseCase),
 		AlbumHandler:        album.NewAlbumHandler(cases.AlbumUseCase),
-
-		AuthMiddleware: middle.NewAuthMiddleware(cases.SessionUseCase),
 	}
 }

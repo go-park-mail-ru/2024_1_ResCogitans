@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	ResponseWriterKey    = "responseWriter"
-	HttpRequestKey       = "HttpRequest"
-	RequestPathParamsKey = "requestPathParams"
+	ResponseWriterKey     = "responseWriter"
+	HttpRequestKey        = "HttpRequest"
+	RequestPathParamsKey  = "requestPathParams"
+	RequestQueryParamsKey = "requestQueryParams"
 )
 
 func SetRequestToCtx(ctx context.Context, r *http.Request) context.Context {
@@ -56,4 +57,16 @@ func GetUserFromCtx(ctx context.Context) (int, error) {
 		return 0, errors.New("Failed getting user from context")
 	}
 	return userID, nil
+}
+
+func SetQueryParamToCtx(ctx context.Context, queryParams map[string]string) context.Context {
+	return context.WithValue(ctx, RequestQueryParamsKey, queryParams)
+}
+
+func GetQueryParamsFromCtx(ctx context.Context) map[string]string {
+	queryParams, ok := ctx.Value(RequestQueryParamsKey).(map[string]string)
+	if !ok {
+		return nil
+	}
+	return queryParams
 }

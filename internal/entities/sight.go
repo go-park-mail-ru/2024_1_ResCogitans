@@ -12,6 +12,8 @@ type Sight struct {
 	Longitude   *float64 `json:"longitude"`
 	Latitude    *float64 `json:"latitude"`
 	Path        string   `json:"url"`
+	CategoryID  int      `json:"categoryID"`
+	Category    string   `json:"category"`
 }
 
 func (h Sight) Validate() error {

@@ -27,9 +27,11 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	logger := logger.Logger()
 
 	pathParams := GetPathParams(httpReq)
+	queryParams := GetQueryParams(httpReq)
 	ctx = httputils.SetPathParamsToCtx(ctx, pathParams)
 	ctx = httputils.SetResponseWriterToCtx(ctx, resWriter)
 	ctx = httputils.SetRequestToCtx(ctx, httpReq)
+	ctx = httputils.SetQueryParamToCtx(ctx, queryParams)
 
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
@@ -77,4 +79,13 @@ func GetPathParams(r *http.Request) map[string]string {
 		pathParams[key] = value
 	}
 	return pathParams
+}
+
+func GetQueryParams(r *http.Request) map[string]string {
+	queryParams := r.URL.Query()
+	result := make(map[string]string)
+	for key, value := range queryParams {
+		result[key] = value[0]
+	}
+	return result
 }

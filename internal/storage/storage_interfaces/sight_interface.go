@@ -7,7 +7,7 @@ import (
 type SightStorageInterface interface {
 	GetSightsList() ([]entities.Sight, error)
 	GetSight(sightID int) (entities.Sight, error)
-	SearchSights(str string) (entities.Sights, error)
+	SearchSights(searchParams map[string]string) (entities.Sights, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
 	GetCommentsByUserID(userID int) ([]entities.Comment, error)
 	CreateCommentBySightID(sightID int, comment entities.Comment) error

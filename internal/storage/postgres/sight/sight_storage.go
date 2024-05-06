@@ -3,6 +3,7 @@ package sight
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
@@ -28,10 +29,19 @@ func (ss *SightStorage) GetSightsList() ([]entities.Sight, error) {
 	var sights []*entities.Sight
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &sights, `SELECT sight.id, COALESCE(rating, 0) AS rating, name, description, city_id, country_id, im.path 
-	FROM sight 
-	INNER JOIN image_data AS im 
-		ON sight.id = im.sight_id `)
+	query := `SELECT sight.id,
+			COALESCE(rating, 0) AS rating,
+			name,
+			description,
+			city_id,
+			country_id,
+			category_id,
+			im.path 
+		FROM sight 
+		INNER JOIN image_data AS im 
+			ON sight.id = im.sight_id`
+
+	err := pgxscan.Select(ctx, ss.db, &sights, query)
 	if err != nil {
 		logger.Logger().Error(err.Error())
 		return nil, err
@@ -48,15 +58,30 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 	var sight []*entities.Sight
 	ctx := context.Background()
 
-	err := pgxscan.Select(ctx, ss.db, &sight, `SELECT sight.id, COALESCE(rating, 0) AS rating, sight.name, description, city_id, sight.country_id, im.path, city.city, country.country, longitude, latitude 
-	FROM sight 
-	INNER JOIN image_data AS im 
-		ON sight.id = im.sight_id 
-	INNER JOIN city 
-		ON sight.city_id = city.id 
-	INNER JOIN country 
-		ON sight.country_id = country.id 
-	WHERE sight.id = $1`, id)
+	err := pgxscan.Select(ctx, ss.db, &sight,
+		`SELECT sight.id,
+			COALESCE(rating, 0) AS rating,
+			sight.name,
+			description,
+			city_id,
+			sight.country_id,
+			im.path,
+			city.city,
+			country.country,
+			category_id,
+			category.name AS category,
+			longitude,
+			latitude
+		FROM sight 
+		INNER JOIN image_data AS im 
+			ON sight.id = im.sight_id 
+		INNER JOIN city 
+			ON sight.city_id = city.id 
+		INNER JOIN country 
+			ON sight.country_id = country.id
+		INNER JOIN category 
+			ON sight.category_id = category.id
+		WHERE sight.id = $1`, id)
 	if err != nil {
 		return entities.Sight{}, err
 	}
@@ -64,33 +89,61 @@ func (ss *SightStorage) GetSight(id int) (entities.Sight, error) {
 	return *sight[0], nil
 }
 
-func (ss *SightStorage) SearchSights(str string) (entities.Sights, error) {
-	query := `
-        SELECT id, rating, name, description, city_id, country_id
-        FROM sight
-        WHERE LOWER(name) LIKE LOWER($1)
-    `
-	rows, err := ss.db.Query(context.Background(), query, "%"+str+"%")
-	if err != nil {
-		return entities.Sights{}, err
-	}
-	defer rows.Close()
-
-	var sights entities.Sights
-	for rows.Next() {
-		var sight entities.Sight
-		err := rows.Scan(&sight.ID, &sight.Rating, &sight.Name, &sight.Description, &sight.CityID, &sight.CountryID)
-		if err != nil {
-			return entities.Sights{}, err
+func (ss *SightStorage) SearchSights(searchParams map[string]string) (entities.Sights, error) {
+	cleanParams := make(map[string]string)
+	for key, value := range searchParams {
+		if value != "" {
+			cleanParams[key] = value
 		}
-		sights.Sight = append(sights.Sight, sight)
 	}
 
-	if err := rows.Err(); err != nil {
+	if len(cleanParams) == 0 {
+		res, err := ss.GetSightsList()
+		return entities.Sights{Sight: res}, err
+	}
+
+	var query strings.Builder
+	var sights []*entities.Sight
+	ctx := context.Background()
+
+	query.WriteString(`SELECT sight.id,
+	COALESCE(rating, 0) AS rating,
+	name,
+	description,
+	city_id,
+	country_id,
+	category_id,
+	im.path 
+	FROM sight 
+	INNER JOIN image_data AS im 
+	ON sight.id = im.sight_id
+	WHERE `)
+
+	first := true
+	for key, value := range searchParams {
+		if !first {
+			query.WriteString(" AND ")
+		} else {
+			first = false
+		}
+		if key == "rating" || key == "city_id" || key == "country_id" || key == "category_id" {
+			query.WriteString(fmt.Sprintf("%s = %s", key, value))
+		} else {
+			query.WriteString(fmt.Sprintf("LOWER(%s) LIKE LOWER('%%%s%%')", key, value))
+		}
+	}
+
+	err := pgxscan.Select(ctx, ss.db, &sights, query.String())
+	if err != nil {
+		logger.Logger().Error(err.Error())
 		return entities.Sights{}, err
 	}
 
-	return sights, nil
+	var sightList []entities.Sight
+	for _, s := range sights {
+		sightList = append(sightList, *s)
+	}
+	return entities.Sights{Sight: sightList}, nil
 }
 
 func (ss *SightStorage) GetCommentsBySightID(id int) ([]entities.Comment, error) {

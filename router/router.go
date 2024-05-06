@@ -9,6 +9,7 @@ import (
 	album "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/album"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	user "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/avatar"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/category"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/comment"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/deactivation"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/journey"
@@ -41,6 +42,7 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.HandleFunc("/api/album/{albumID}/upload", album.UploadImageAndInsert)
 
 	router.Mount("/api/sights", SightRoutes(handlers.SightHandler))
+	router.Mount("/api/sights/search", SearchSightsRoutes(handlers.SightHandler))
 
 	// user authorization and registration
 	router.Mount("/api/signup", SignUpRoutes(handlers.RegHandler))
@@ -63,7 +65,6 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/sight/{id}/create", CreateCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/edit/{cid}", EditCommentRoutes(handlers.CommentHandler))
 	router.Mount("/api/sight/{sid}/delete/{cid}", DeleteCommentRoutes(handlers.CommentHandler))
-	router.Mount("/api/sight/quiz", SearchSightsRoutes(handlers.SightHandler))
 
 	//journeys
 	router.Mount("/api/trip/{id}/delete", DeleteJourneyRoutes(handlers.JourneyHandler))
@@ -79,6 +80,9 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Mount("/api/review/create", CreateReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/check", CheckUserReviewRoutes(handlers.QuizHandler))
 	router.Mount("/api/review/get", GetStatistic(handlers.QuizHandler))
+
+	// categories
+	router.Mount("/api/categories", GetCategories(handlers.CategoryHandler))
 
 	// album
 	router.Mount("/api/profile/{id}/album/create", CreateAlbumRoutes(handlers.AlbumHandler))
@@ -242,6 +246,13 @@ func CheckUserReviewRoutes(handler *quiz.QuizHandler) chi.Router {
 func GetStatistic(handler *quiz.QuizHandler) chi.Router {
 	router := chi.NewRouter()
 	wrapperInstance := &wrapper.Wrapper[entities.Statistic, []entities.Statistic]{ServeHTTP: handler.SetStat}
+	router.Get("/", wrapperInstance.HandlerWrapper)
+	return router
+}
+
+func GetCategories(handler *category.CategoryHandler) chi.Router {
+	router := chi.NewRouter()
+	wrapperInstance := &wrapper.Wrapper[entities.Category, entities.Categories]{ServeHTTP: handler.GetCategories}
 	router.Get("/", wrapperInstance.HandlerWrapper)
 	return router
 }
