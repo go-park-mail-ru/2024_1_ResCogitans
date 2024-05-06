@@ -1,8 +1,6 @@
 package usecase
 
 import (
-	"fmt"
-
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 )
@@ -53,16 +51,16 @@ func (au *AlbumUseCase) AddPhoto(albumID int, path, description string) error {
 }
 
 func (au *AlbumUseCase) DeletePhoto(photoID int) error {
-	photo, err := au.AlbumStorage.DeletePhoto(photoID)
+	_, err := au.AlbumStorage.DeletePhoto(photoID)
 	if err != nil {
 		return err
 	}
 
-	err = deleteResource(photo.Path)
-	if err != nil {
-		fmt.Printf("Error deleting resource: %s\n", err)
-		return err
-	}
+	// err = deleteResource(photo.Path)
+	// if err != nil {
+	// 	fmt.Printf("Error deleting resource: %s\n", err)
+	// 	return err
+	// }
 	return nil
 }
 
@@ -79,7 +77,7 @@ func (au *AlbumUseCase) GetAlbumByID(albumID int) (entities.AlbumAndPhoto, error
 	}
 
 	for index, photo := range albumPhotos {
-		albumPhotos[index].Path, err = GetDownloadLink(photo.Path)
+		albumPhotos[index].Path = "/album/" + photo.Path
 		if err != nil {
 			return entities.AlbumAndPhoto{}, err
 		}

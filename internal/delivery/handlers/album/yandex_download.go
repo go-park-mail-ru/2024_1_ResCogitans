@@ -9,6 +9,8 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -105,29 +107,42 @@ func uploadFile(file multipart.File, handler *multipart.FileHeader) (string, err
 
 	cfg, _ := config.LoadConfig()
 
-	uploadURL, err := getURL(newPath, cfg.Drive.Token)
+	uploadPath := filepath.Join(cfg.FileUploadPathAlbum, newPath)
+
+	out, err := os.Create(uploadPath)
 	if err != nil {
 		return "", err
 	}
+	defer out.Close()
+
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return "", err
+	}
+
+	// uploadURL, err := getURL(newPath, cfg.Drive.Token)
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	// Создаем HTTP запрос для загрузки файла
-	request, err := http.NewRequest("PUT", uploadURL, file)
-	if err != nil {
-		return "", err
-	}
-	request.ContentLength = handler.Size
+	// request, err := http.NewRequest("PUT", uploadURL, file)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// request.ContentLength = handler.Size
 
 	// Отправляем запрос
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
+	// client := &http.Client{}
+	// response, err := client.Do(request)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// defer response.Body.Close()
 
-	if response.StatusCode != http.StatusCreated {
-		logger.Error("Загрузка не удалась со статусом: %d", response.StatusCode)
-	}
+	// if response.StatusCode != http.StatusCreated {
+	// 	logger.Error("Загрузка не удалась со статусом: %d", response.StatusCode)
+	// }
 
 	logger.Info("Загрузка успешна!")
 

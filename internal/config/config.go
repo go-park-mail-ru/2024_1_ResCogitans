@@ -10,13 +10,14 @@ import (
 )
 
 type Config struct {
-	Env            string `yaml:"env" env:"ENV" env-required:"true"`
-	StoragePath    string `yaml:"storage_path" env-required:"true"`
-	HTTPServer     `yaml:"http_server"`
-	Dsn            `yaml:"dsn"`
-	Redis          `yaml:"redis"`
-	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
-	Drive          `yaml:"token"`
+	Env                 string `yaml:"env" env:"ENV" env-required:"true"`
+	StoragePath         string `yaml:"storage_path" env-required:"true"`
+	HTTPServer          `yaml:"http_server"`
+	Dsn                 `yaml:"dsn"`
+	Redis               `yaml:"redis"`
+	FileUploadPath      string `env:"FILE_UPLOAD_PATH"`
+	FileUploadPathAlbum string `env:"FILE_UPLOAD_PATH_ALBUM"`
+	Drive               `yaml:"token"`
 }
 
 type HTTPServer struct {
