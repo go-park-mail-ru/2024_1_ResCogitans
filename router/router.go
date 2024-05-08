@@ -37,6 +37,8 @@ func SetupRouter(_ *config.Config, handlers *initialization.Handlers) *chi.Mux {
 	router.Use(handlers.AuthMiddleware.Auth)
 	router.Use(middle.XSSMiddleware)
 
+	// prometheus
+
 	// upload image
 	router.HandleFunc("/api/profile/{id}/upload", user.Upload)
 	router.HandleFunc("/api/album/{albumID}/upload", album.UploadImageAndInsert)

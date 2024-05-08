@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
@@ -22,7 +24,32 @@ type Validator interface {
 	Validate() error
 }
 
+var (
+	RequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+	RequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds",
+			Help: "Duration of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+)
+
 func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq *http.Request) {
+	start := time.Now()
+	defer func() {
+		method := httpReq.Method
+		elapsed := time.Since(start).Seconds()
+		RequestsTotal.WithLabelValues(method).Inc()
+		RequestDuration.WithLabelValues(method).Observe(elapsed)
+	}()
+
 	ctx := httpReq.Context()
 	logger := logger.Logger()
 
