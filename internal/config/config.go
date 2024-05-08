@@ -10,17 +10,41 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env:"ENV" env-required:"true"`
-	StoragePath string `yaml:"storage_path" env-requiered:"true"`
-	HTTPServer  `yaml:"http_server"`
+	Env                 string `yaml:"env" env:"ENV" env-required:"true"`
+	StoragePath         string `yaml:"storage_path" env-required:"true"`
+	HTTPServer          `yaml:"http_server"`
+	Dsn                 `yaml:"dsn"`
+	Redis               `yaml:"redis"`
+	FileUploadPath      string `env:"FILE_UPLOAD_PATH"`
+	FileUploadPathAlbum string `env:"FILE_UPLOAD_PATH_ALBUM"`
+	Drive               `yaml:"token"`
 }
 
 type HTTPServer struct {
 	Address     string        `yaml:"address" env-default:"localhost:8080"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
-	User        string        `yaml:"user" env-requiered:"true"`
-	Password    string        `yaml:"password" env-requiered:"true" env:"HTTP_SERVER_PASSWORD"`
+	User        string        `yaml:"user" env-required:"true"`
+	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
+}
+
+type Dsn struct {
+	Host     string `env:"DB_POSTGRES_HOST"`
+	Port     int    `env:"DB_POSTGRES_PORT"`
+	User     string `env:"DB_POSTGRES_USER"`
+	Password string `env:"DB_POSTGRES_PASSWORD"`
+	DBName   string `env:"DB_POSTGRES_NAME"`
+}
+
+type Redis struct {
+	Host     string `yaml:"host" env:"DB_REDIS_HOST"`
+	Port     int    `yaml:"port" env:"DB_REDIS_PORT"`
+	DB       int    `yaml:"db" env:"DB_REDIS_DB"`
+	Password string `yaml:"password" env:"DB_REDIS_PASSWORD"`
+}
+
+type Drive struct {
+	Token string `yaml:"token" env:"YANDEX_TOKEN"`
 }
 
 func LoadConfig() (*Config, error) {

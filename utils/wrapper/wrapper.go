@@ -5,46 +5,61 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	validationErr = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "invalid request data",
-	}
-
-	decodingErr = errors.HttpError{
-		Code:    http.StatusBadRequest,
-		Message: "json decoding error",
-	}
-
-	encodingErr = errors.HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "json encoding error",
-	}
-)
+type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
 
 type Wrapper[T Validator, Resp any] struct {
-	ServeHTTP func(ctx context.Context, parsedRequest T) (Resp, error)
+	ServeHTTP ServeHTTPFunc[T, Resp]
 }
 
 type Validator interface {
 	Validate() error
 }
 
+var (
+	RequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+	RequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds",
+			Help: "Duration of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+)
+
 func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq *http.Request) {
+	start := time.Now()
+	defer func() {
+		method := httpReq.Method
+		elapsed := time.Since(start).Seconds()
+		RequestsTotal.WithLabelValues(method).Inc()
+		RequestDuration.WithLabelValues(method).Observe(elapsed)
+	}()
+
 	ctx := httpReq.Context()
 	logger := logger.Logger()
 
 	pathParams := GetPathParams(httpReq)
-	ctx = SetPathParamsToCtx(ctx, pathParams)
-	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, resWriter)
-	ctx = context.WithValue(ctx, httputils.HttpRequestKey, *httpReq)
+	queryParams := GetQueryParams(httpReq)
+	ctx = httputils.SetPathParamsToCtx(ctx, pathParams)
+	ctx = httputils.SetResponseWriterToCtx(ctx, resWriter)
+	ctx = httputils.SetRequestToCtx(ctx, httpReq)
+	ctx = httputils.SetQueryParamToCtx(ctx, queryParams)
+
 	limitedReader := io.LimitReader(httpReq.Body, 1_000_000)
 
 	var requestData T
@@ -52,28 +67,28 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 		err := json.NewDecoder(limitedReader).Decode(&requestData)
 		if err != nil {
 			logger.Error("Error decoding request body", "error", err)
-			errors.WriteHttpError(decodingErr, resWriter)
+			httperrors.WriteHttpError(err, resWriter)
 			return
 		}
 
 		if err = requestData.Validate(); err != nil {
 			logger.Error("Validation error", "error", err)
-			errors.WriteHttpError(validationErr, resWriter)
+			httperrors.WriteHttpError(err, resWriter)
 			return
 		}
 	}
 
 	response, err := w.ServeHTTP(ctx, requestData)
 	if err != nil {
-		logger.Error("Handler error", "error", err)
-		errors.WriteHttpError(errors.HttpError{Code: http.StatusInternalServerError, Message: err.Error()}, resWriter)
+		logger.Error("Handler error", "error", err.Error())
+		httperrors.WriteHttpError(err, resWriter)
 		return
 	}
 
 	rawJSON, err := json.Marshal(response)
 	if err != nil {
 		logger.Error("Error encoding response", "error", err)
-		errors.WriteHttpError(encodingErr, resWriter)
+		httperrors.WriteHttpError(err, resWriter)
 		return
 	}
 
@@ -93,14 +108,11 @@ func GetPathParams(r *http.Request) map[string]string {
 	return pathParams
 }
 
-func SetPathParamsToCtx(ctx context.Context, pathParams map[string]string) context.Context {
-	return context.WithValue(ctx, httputils.RequestPathParamsKey, pathParams)
-}
-
-func GetPathParamsFromCtx(ctx context.Context) map[string]string {
-	pathParams, ok := ctx.Value(httputils.RequestPathParamsKey).(map[string]string)
-	if !ok {
-		return nil
+func GetQueryParams(r *http.Request) map[string]string {
+	queryParams := r.URL.Query()
+	result := make(map[string]string)
+	for key, value := range queryParams {
+		result[key] = value[0]
 	}
-	return pathParams
+	return result
 }
