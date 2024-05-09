@@ -1,11 +1,13 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 )
 
 type SightStorageInterface interface {
-	GetSightsList() ([]entities.Sight, error)
+	GetSightsList(ctx context.Context) ([]entities.Sight, error)
 	GetSight(sightID int) (entities.Sight, error)
 	SearchSights(searchParams map[string]string) (entities.Sights, error)
 	GetCommentsBySightID(commentID int) ([]entities.Comment, error)

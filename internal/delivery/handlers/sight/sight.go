@@ -28,7 +28,7 @@ func NewSightsHandler(usecase usecase.SightUseCaseInterface) *SightHandler {
 // @Success 200 {array} sight.Sight
 // @Router /sights [get]
 func (h *SightHandler) GetSights(ctx context.Context, _ entities.Sight) (entities.Sights, error) {
-	sights, err := h.SightUseCase.GetSightsList()
+	sights, err := h.SightUseCase.GetSightsList(ctx)
 	if err != nil {
 		return entities.Sights{}, err
 	}
