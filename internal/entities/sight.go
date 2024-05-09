@@ -10,6 +10,8 @@ type Sight struct {
 	City        string   `json:"city"`
 	Country     string   `json:"country"`
 	Path        string   `json:"url"`
+	CategoryID  int      `json:"categoryID"`
+	Category    string   `json:"category"`
 }
 
 func (h Sight) Validate() error {
