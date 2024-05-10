@@ -22,35 +22,22 @@ type FileResponse struct {
 var (
 	maxFileSizeMB    = 1
 	maxFileSizeBytes = int64(maxFileSizeMB) * 1024 * 1024
-	magicTable       = map[string]string{
-		"\xff\xd8\xff":      "image/jpeg",
-		"\x89PNG\r\n\x1a\n": "image/png",
-		"GIF87a":            "image/gif",
-		"GIF89a":            "image/gif",
-	}
 )
 
-func DetectType(b []byte) bool {
-	flag := false
-	s := string(b)
-	for key, val := range magicTable {
-		if strings.HasPrefix(s, key) {
-			fmt.Println(val)
-			flag = true
-		}
-	}
-	return flag
-}
-
-func ValidateFileExtension(file multipart.File) bool {
+func ValidateFileExtension(fileHeader multipart.FileHeader) bool {
 	buff := make([]byte, 512)
+	file, err := fileHeader.Open()
+	if err != nil {
+		return false
+	}
+	defer file.Close()
 	if _, err := file.Read(buff); err != nil {
 		return false
 	}
 
-	val := DetectType(buff)
+	fileType := strings.ToLower(http.DetectContentType(buff))
 
-	return val
+	return fileType == "image/png" || fileType == "image/jpeg" || fileType == "image/jpg" || fileType == "image/webp"
 }
 
 func ValidateFileSize(handler *multipart.FileHeader) bool {
@@ -70,10 +57,11 @@ func SaveFile(r *http.Request) (string, error) {
 		logger.Error("Error while retrieving file:", "error", err)
 		return string(""), err
 	}
+	fmt.Println("No")
 	defer file.Close()
 
 	// Validate
-	flag := ValidateFileExtension(file)
+	flag := ValidateFileExtension(*handler)
 	if !flag {
 		logger.Error("Not valid format!")
 		return string(""), errors.New("Not valid format!")

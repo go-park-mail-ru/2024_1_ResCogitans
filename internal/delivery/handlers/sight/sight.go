@@ -35,7 +35,7 @@ func (h *SightHandler) GetSights(_ context.Context, _ entities.Sight) (entities.
 	return entities.Sights{Sight: sights}, nil
 }
 
-// GetSights godoc
+// GetSight godoc
 // @Summary Get sight by id
 // @Description get sight by id
 // @Accept json

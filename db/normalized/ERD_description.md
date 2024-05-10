@@ -53,15 +53,29 @@
             integer rating
             text feedback
         }
+        ALBUM {
+            integer id PK
+            integer user_id FK
+            text name UK
+            text description
+        }
+        ALBUM_PHOTO {
+            integer id PK
+            integer album_id FK
+            text path UK
+            text description
+        }
 
         PROFILE ||--|| USER : has
         SIGHT }o--|| CITY: includes
-        CITY }0--|| COUNTRY: includes
+        CITY }o--|| COUNTRY: includes
         JOURNEY }o--|| USER : creates
         JOURNEY_SIGHT }|--|| JOURNEY: has
         JOURNEY_SIGHT }|--|| SIGHT : contains
         FEEDBACK }o--|| USER : writes
         FEEDBACK }o--|| SIGHT : belongs_to
         IMAGE }|--|| SIGHT : belongs_to
+        ALBUM }o--|| USER : creates
+        ALBUM_PHOTO }|--|| ALBUM : has
 
 ```
