@@ -106,7 +106,7 @@ CREATE TABLE quiz
     user_id integer REFERENCES user_data (id),
     rating integer NOT NULL CHECK (rating > 0 AND rating <= 5),
     question_id integer REFERENCES question (id),
-    created_at timestamptz
+    created_at timestamptz DEFAULT NOW()
 );
 
 CREATE TABLE album 
