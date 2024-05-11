@@ -9,4 +9,5 @@ type grpcServer struct {
 }
 
 func (s *grpcServer) SaveSession(ctx context.Context, req *SaveSessionRequest) (*proto.SaveSessionResponse, error) {
+	err := s.sessionService.SaveSession()
 }
