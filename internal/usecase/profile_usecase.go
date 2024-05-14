@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/user"
 )
 
 type ProfileUseCaseInterface interface {
@@ -12,10 +12,10 @@ type ProfileUseCaseInterface interface {
 }
 
 type ProfileUseCase struct {
-	ProfileStorage storage.UserProfileStorageInterface
+	ProfileStorage *user.UserProfileStorage
 }
 
-func NewProfileUseCase(storage storage.UserProfileStorageInterface) ProfileUseCaseInterface {
+func NewProfileUseCase(storage *user.UserProfileStorage) *ProfileUseCase {
 	return &ProfileUseCase{
 		ProfileStorage: storage,
 	}

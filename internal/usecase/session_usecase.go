@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -27,7 +28,7 @@ type SessionUseCase struct {
 	SessionStorage storage.SessionStorageInterface
 }
 
-func NewSessionUseCase(storage storage.SessionStorageInterface) SessionInterface {
+func NewSessionUseCase(storage storage.SessionStorageInterface) *SessionUseCase {
 	return &SessionUseCase{
 		SessionStorage: storage,
 	}
@@ -66,7 +67,7 @@ func (a *SessionUseCase) GetSession(r *http.Request) (int, error) {
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
 		return a.SessionStorage.GetSession(sessionID)
 	}
-	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
+	return 0, fmt.Errorf("error decoding cookie: %w", err)
 }
 
 func (a *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {

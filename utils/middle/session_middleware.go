@@ -9,22 +9,44 @@ import (
 )
 
 type AuthMiddleware struct {
-	useCase usecase.SessionInterface
+	s *usecase.SessionUseCase
+	c *usecase.CSRFUseCase
 }
 
-func NewAuthMiddleware(useCase usecase.SessionInterface) *AuthMiddleware {
+func NewAuthMiddleware(session *usecase.SessionUseCase, csrf *usecase.CSRFUseCase) *AuthMiddleware {
 	return &AuthMiddleware{
-		useCase: useCase,
+		s: session,
+		c: csrf,
 	}
 }
 
 func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := m.useCase.GetSession(r)
+		userID, err := m.s.GetSession(r)
 		if !httperrors.IsHttpError(err) && err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
+		if userID != 0 && r.Method == http.MethodPost {
+			token := r.Header.Get("X-CSRF-Token")
+			if token == "" {
+				newToken, err := m.c.CreateToken(userID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+				m.c.SetToken(newToken, w)
+			} else {
+				err = m.c.CompareToken(token, userID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusUnauthorized)
+				}
+				newToken, err := m.c.UpdateToken(userID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+				m.c.SetToken(newToken, w)
+			}
+		}
 		ctx := context.WithValue(r.Context(), "userID", userID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)

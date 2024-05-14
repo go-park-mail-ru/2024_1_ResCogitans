@@ -15,6 +15,7 @@ type Config struct {
 	HTTPServer     `yaml:"http_server"`
 	Dsn            `yaml:"dsn"`
 	Redis          `yaml:"redis"`
+	CSRF           `yaml:"csrf"`
 	FileUploadPath string `env:"FILE_UPLOAD_PATH"`
 }
 
@@ -39,6 +40,13 @@ type Redis struct {
 	Port     int    `yaml:"port" env:"DB_REDIS_PORT"`
 	DB       int    `yaml:"db" env:"DB_REDIS_DB"`
 	Password string `yaml:"password" env:"DB_REDIS_PASSWORD"`
+}
+
+type CSRF struct {
+	Host     string `yaml:"host" env:"CSRF_HOST"`
+	Port     int    `yaml:"port" env:"CSRF_PORT"`
+	DB       int    `yaml:"db" env:"CSRF_DB"`
+	Password string `yaml:"password" env:"CSRF_PASSWORD"`
 }
 
 func LoadConfig() (*Config, error) {

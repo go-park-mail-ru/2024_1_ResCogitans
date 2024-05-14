@@ -35,6 +35,6 @@ func HandlerInit(cases *UseCases) *Handlers {
 		JourneyHandler:      journey.NewJourneyHandler(cases.JourneyUseCase),
 		CommentHandler:      comment.NewCommentHandler(cases.CommentUseCase),
 		QuizHandler:         quiz.NewQuizHandler(cases.QuestionUseCase, cases.CommentUseCase, cases.JourneyUseCase),
-		AuthMiddleware:      middle.NewAuthMiddleware(cases.SessionUseCase),
+		AuthMiddleware:      middle.NewAuthMiddleware(cases.SessionUseCase, cases.CSRFUseCase),
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/user"
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -24,10 +24,10 @@ type UserUseCaseInterface interface {
 }
 
 type UserUseCase struct {
-	UserStorage storage.UserStorageInterface
+	UserStorage *user.UserStorage
 }
 
-func NewUserUseCase(storage storage.UserStorageInterface) UserUseCaseInterface {
+func NewUserUseCase(storage *user.UserStorage) *UserUseCase {
 	return &UserUseCase{
 		UserStorage: storage,
 	}

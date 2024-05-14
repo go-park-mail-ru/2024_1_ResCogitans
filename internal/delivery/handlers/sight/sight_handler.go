@@ -10,10 +10,10 @@ import (
 )
 
 type SightHandler struct {
-	SightUseCase usecase.SightUseCaseInterface
+	SightUseCase *usecase.SightUseCase
 }
 
-func NewSightsHandler(usecase usecase.SightUseCaseInterface) *SightHandler {
+func NewSightsHandler(usecase *usecase.SightUseCase) *SightHandler {
 	return &SightHandler{
 		SightUseCase: usecase,
 	}

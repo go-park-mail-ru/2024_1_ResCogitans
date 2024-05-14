@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 )
 
 type JourneyUseCaseInterface interface {
@@ -18,10 +18,10 @@ type JourneyUseCaseInterface interface {
 }
 
 type JourneyUseCase struct {
-	SightStorage storage.SightStorageInterface
+	SightStorage *sight.SightStorage
 }
 
-func NewJourneyUseCase(storage storage.SightStorageInterface) JourneyUseCaseInterface {
+func NewJourneyUseCase(storage *sight.SightStorage) *JourneyUseCase {
 	return &JourneyUseCase{
 		SightStorage: storage,
 	}

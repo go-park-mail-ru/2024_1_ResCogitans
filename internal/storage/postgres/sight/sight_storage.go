@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -18,7 +17,7 @@ type SightStorage struct {
 }
 
 // NewSightRepo creates sight repo
-func NewSightStorage(db *pgxpool.Pool) storage.SightStorageInterface {
+func NewSightStorage(db *pgxpool.Pool) *SightStorage {
 	return &SightStorage{
 		db: db,
 	}
@@ -131,26 +130,14 @@ func (ss *SightStorage) GetCommentsByUserID(userID int) ([]entities.Comment, err
 
 func (ss *SightStorage) CreateCommentBySightID(sightID int, comment entities.Comment) error {
 	ctx := context.Background()
-
 	_, err := ss.db.Exec(ctx, `INSERT INTO feedback(user_id, sight_id, rating, feedback) VALUES($1, $2, $3, $4)`, comment.UserID, sightID, comment.Rating, comment.Feedback)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (ss *SightStorage) EditComment(commentID int, comment entities.Comment) error {
 	ctx := context.Background()
-
 	_, err := ss.db.Exec(ctx, `UPDATE feedback SET rating = $1, feedback = $2 WHERE id = $3`, comment.Rating, comment.Feedback, commentID)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (ss *SightStorage) DeleteComment(commentID int) error {

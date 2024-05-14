@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 )
 
 type CommentUseCaseInterface interface {
@@ -13,10 +13,10 @@ type CommentUseCaseInterface interface {
 }
 
 type CommentUseCase struct {
-	SightStorage storage.SightStorageInterface
+	SightStorage *sight.SightStorage
 }
 
-func NewCommentUseCase(storage storage.SightStorageInterface) CommentUseCaseInterface {
+func NewCommentUseCase(storage *sight.SightStorage) *CommentUseCase {
 	return &CommentUseCase{
 		SightStorage: storage,
 	}

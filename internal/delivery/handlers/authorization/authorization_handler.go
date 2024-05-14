@@ -11,11 +11,11 @@ import (
 )
 
 type AuthorizationHandler struct {
-	sessionUseCase usecase.SessionInterface
-	userUseCase    usecase.UserUseCaseInterface
+	sessionUseCase *usecase.SessionUseCase
+	userUseCase    *usecase.UserUseCase
 }
 
-func NewAuthorizationHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserUseCaseInterface) *AuthorizationHandler {
+func NewAuthorizationHandler(sessionUseCase *usecase.SessionUseCase, userUseCase *usecase.UserUseCase) *AuthorizationHandler {
 	return &AuthorizationHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,

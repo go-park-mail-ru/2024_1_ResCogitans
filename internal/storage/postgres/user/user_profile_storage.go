@@ -6,7 +6,6 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -19,7 +18,7 @@ type UserProfileStorage struct {
 }
 
 // NewUserProfileStorage creates postgres storage
-func NewUserProfileStorage(db *pgxpool.Pool) storage.UserProfileStorageInterface {
+func NewUserProfileStorage(db *pgxpool.Pool) *UserProfileStorage {
 	ctx, cancel := context.WithCancel(context.Background())
 	// Обеспечение освобождения ресурсов контекста при завершении работы
 	go func() {

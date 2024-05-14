@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
@@ -17,7 +16,7 @@ type RedisStorage struct {
 	mu     sync.Mutex
 }
 
-func NewSessionStorage(client *redis.Client) storage.SessionStorageInterface {
+func NewSessionStorage(client *redis.Client) *RedisStorage {
 	ctx, cancel := context.WithCancel(context.Background())
 	// Обеспечение освобождения ресурсов контекста при завершении работы
 	go func() {

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 )
 
 type SightUseCaseInterface interface {
@@ -14,10 +14,10 @@ type SightUseCaseInterface interface {
 }
 
 type SightUseCase struct {
-	SightStorage storage.SightStorageInterface
+	SightStorage *sight.SightStorage
 }
 
-func NewSightUseCase(storage storage.SightStorageInterface) SightUseCaseInterface {
+func NewSightUseCase(storage *sight.SightStorage) *SightUseCase {
 	return &SightUseCase{
 		SightStorage: storage,
 	}

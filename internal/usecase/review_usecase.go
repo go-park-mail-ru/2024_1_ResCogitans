@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/question"
 )
 
 type QuestionUseCaseInterface interface {
@@ -13,10 +13,10 @@ type QuestionUseCaseInterface interface {
 }
 
 type QuestionUseCase struct {
-	QuestionStorage storage.QuestionInterface
+	QuestionStorage *question.QuestionStorage
 }
 
-func NewQuestionUseCase(storage storage.QuestionInterface) QuestionUseCaseInterface {
+func NewQuestionUseCase(storage *question.QuestionStorage) *QuestionUseCase {
 	return &QuestionUseCase{
 		QuestionStorage: storage,
 	}

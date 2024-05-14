@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -17,7 +16,7 @@ type UserStorage struct {
 }
 
 // NewUserStorage creates postgres storage
-func NewUserStorage(db *pgxpool.Pool) storage.UserStorageInterface {
+func NewUserStorage(db *pgxpool.Pool) *UserStorage {
 	ctx, cancel := context.WithCancel(context.Background())
 	// Обеспечение освобождения ресурсов контекста при завершении работы
 	go func() {

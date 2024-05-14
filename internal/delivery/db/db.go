@@ -65,3 +65,23 @@ func GetRedis() (*redis.Client, error) {
 
 	return rdb, nil
 }
+
+func GetCSRFRedis() (*redis.Client, error) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.CSRF.Host, cfg.CSRF.Port),
+		Password: cfg.CSRF.Password,
+		DB:       cfg.CSRF.DB,
+	})
+
+	// Проверяем соединение с Redis
+	_, err = rdb.Ping(rdb.Context()).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return rdb, nil
+}
