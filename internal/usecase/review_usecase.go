@@ -1,15 +1,17 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/question"
 )
 
 type QuestionUseCaseInterface interface {
-	CreateReview(userID int, review entities.Review) error
-	GetQuestions() ([]entities.QuestionResponse, error)
-	CheckReview(userID int) (bool, error)
-	SetStat(userID int) ([]entities.Statistic, error)
+	CreateReview(ctx context.Context, userID int, review entities.Review) error
+	GetQuestions(ctx context.Context) ([]entities.QuestionResponse, error)
+	CheckReview(ctx context.Context, userID int) (bool, error)
+	SetStat(ctx context.Context, userID int) ([]entities.Statistic, error)
 }
 
 type QuestionUseCase struct {
@@ -22,17 +24,17 @@ func NewQuestionUseCase(storage *question.QuestionStorage) *QuestionUseCase {
 	}
 }
 
-func (uc *QuestionUseCase) CreateReview(userID int, review entities.Review) error {
-	return uc.QuestionStorage.AddReview(userID, review)
+func (uc *QuestionUseCase) CreateReview(ctx context.Context, userID int, review entities.Review) error {
+	return uc.QuestionStorage.AddReview(ctx, userID, review)
 }
 
-func (uc *QuestionUseCase) SetStat(userID int) ([]entities.Statistic, error) {
-	AVGStat, err := uc.QuestionStorage.GetAvgStat()
+func (uc *QuestionUseCase) SetStat(ctx context.Context, userID int) ([]entities.Statistic, error) {
+	AVGStat, err := uc.QuestionStorage.GetAvgStat(ctx)
 	if err != nil {
 		return []entities.Statistic{}, err
 	}
 
-	UserStat, err := uc.QuestionStorage.GetUserStat(userID)
+	UserStat, err := uc.QuestionStorage.GetUserStat(ctx, userID)
 	if err != nil {
 		return []entities.Statistic{}, err
 	}
@@ -53,12 +55,12 @@ func (uc *QuestionUseCase) SetStat(userID int) ([]entities.Statistic, error) {
 	return AVGStat, nil
 }
 
-func (uc *QuestionUseCase) GetQuestions() ([]entities.QuestionResponse, error) {
-	return uc.QuestionStorage.GetQuestions()
+func (uc *QuestionUseCase) GetQuestions(ctx context.Context) ([]entities.QuestionResponse, error) {
+	return uc.QuestionStorage.GetQuestions(ctx)
 }
 
-func (uc *QuestionUseCase) CheckReview(userID int) (bool, error) {
-	reviews, err := uc.QuestionStorage.GetReview(userID)
+func (uc *QuestionUseCase) CheckReview(ctx context.Context, userID int) (bool, error) {
+	reviews, err := uc.QuestionStorage.GetReview(ctx, userID)
 	if err != nil {
 		return false, err
 	}

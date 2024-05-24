@@ -1,44 +1,49 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/comment"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 )
 
 type SightUseCaseInterface interface {
-	GetSightByID(sightID int) (entities.Sight, error)
-	GetCommentsBySightID(commentID int) ([]entities.Comment, error)
-	GetCommentsByUserID(userID int) ([]entities.Comment, error)
-	GetSightsList() ([]entities.Sight, error)
-	SearchSights(str string) (entities.Sights, error)
+	GetSightByID(ctx context.Context, sightID int) (entities.Sight, error)
+	GetCommentsBySightID(ctx context.Context, commentID int) ([]entities.Comment, error)
+	GetCommentsByUserID(ctx context.Context, userID int) ([]entities.Comment, error)
+	GetSightsList(ctx context.Context) ([]entities.Sight, error)
+	SearchSights(ctx context.Context, str string) (entities.Sights, error)
 }
 
 type SightUseCase struct {
-	SightStorage *sight.SightStorage
+	sightStorage   *sight.SightStorage
+	commentStorage *comment.CommentStorage
 }
 
-func NewSightUseCase(storage *sight.SightStorage) *SightUseCase {
+func NewSightUseCase(sightStorage *sight.SightStorage, commentStorage *comment.CommentStorage) *SightUseCase {
 	return &SightUseCase{
-		SightStorage: storage,
+		sightStorage:   sightStorage,
+		commentStorage: commentStorage,
 	}
 }
 
-func (su *SightUseCase) GetSightByID(sightID int) (entities.Sight, error) {
-	return su.SightStorage.GetSight(sightID)
+func (su *SightUseCase) GetSightByID(ctx context.Context, sightID int) (entities.Sight, error) {
+	return su.sightStorage.GetSight(ctx, sightID)
 }
 
-func (su *SightUseCase) GetCommentsBySightID(commentID int) ([]entities.Comment, error) {
-	return su.SightStorage.GetCommentsBySightID(commentID)
+func (su *SightUseCase) GetCommentsBySightID(ctx context.Context, commentID int) ([]entities.Comment, error) {
+	return su.commentStorage.GetCommentsBySightID(ctx, commentID)
 }
 
-func (su *SightUseCase) GetCommentsByUserID(userID int) ([]entities.Comment, error) {
-	return su.SightStorage.GetCommentsByUserID(userID)
+func (su *SightUseCase) GetCommentsByUserID(ctx context.Context, userID int) ([]entities.Comment, error) {
+	return su.commentStorage.GetCommentsByUserID(ctx, userID)
 }
 
-func (su *SightUseCase) GetSightsList() ([]entities.Sight, error) {
-	return su.SightStorage.GetSightsList()
+func (su *SightUseCase) GetSightsList(ctx context.Context) ([]entities.Sight, error) {
+	return su.sightStorage.GetSightsList(ctx)
 }
 
-func (su *SightUseCase) SearchSights(str string) (entities.Sights, error) {
-	return su.SightStorage.SearchSights(str)
+func (su *SightUseCase) SearchSights(ctx context.Context, str string) (entities.Sights, error) {
+	return su.sightStorage.SearchSights(ctx, str)
 }

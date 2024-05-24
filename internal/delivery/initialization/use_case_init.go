@@ -19,9 +19,9 @@ func UseCaseInit(storages *Storages) *UseCases {
 	return &UseCases{
 		UserUseCase:     usecase.NewUserUseCase(storages.UserStorage),
 		ProfileUseCase:  usecase.NewProfileUseCase(storages.ProfileStorage),
-		SightUseCase:    usecase.NewSightUseCase(storages.SightStorage),
-		JourneyUseCase:  usecase.NewJourneyUseCase(storages.SightStorage),
-		CommentUseCase:  usecase.NewCommentUseCase(storages.SightStorage),
+		SightUseCase:    usecase.NewSightUseCase(storages.SightStorage, storages.CommentStorage),
+		JourneyUseCase:  usecase.NewJourneyUseCase(storages.JourneyStorage),
+		CommentUseCase:  usecase.NewCommentUseCase(storages.CommentStorage),
 		QuestionUseCase: usecase.NewQuestionUseCase(storages.QuestionStorage),
 		SessionUseCase:  usecase.NewSessionUseCase(storages.SessionStorage),
 		CSRFUseCase:     usecase.NewCSRFUseCase(storages.CSRFStorage),

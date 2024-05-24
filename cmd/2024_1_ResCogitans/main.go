@@ -35,6 +35,7 @@ func main() {
 	pdb, rdb, cdb, err := initialization.DataBaseInitialization()
 	if err != nil {
 		logger.Error("DataBase initialization error", "error", err)
+		return
 	}
 
 	storages := initialization.StorageInit(pdb, rdb, cdb)

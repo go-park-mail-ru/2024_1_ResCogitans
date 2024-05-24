@@ -31,7 +31,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return entities.UserResponse{}, err
 	}
 
-	sessionID, err := h.sessionUseCase.GetSession(request)
+	sessionID, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		httpError := httperrors.UnwrapHttpError(err)
 		if httpError.Message != "Session not found" && httpError.Message != "Cookie not found" && httpError.Message != "Error decoding cookie" {
@@ -43,7 +43,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "User is already authorized")
 	}
 
-	taken, err := h.userUseCase.IsEmailTaken(username)
+	taken, err := h.userUseCase.IsEmailTaken(ctx, username)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -55,7 +55,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return entities.UserResponse{}, err
 	}
 
-	err = h.userUseCase.CreateUser(username, password)
+	err = h.userUseCase.CreateUser(ctx, username, password)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -65,12 +65,12 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return entities.UserResponse{}, err
 	}
 
-	user, err := h.userUseCase.GetUserByEmail(username)
+	user, err := h.userUseCase.GetUserByEmail(ctx, username)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
 
-	err = h.sessionUseCase.CreateSession(responseWriter, user.ID)
+	err = h.sessionUseCase.CreateSession(ctx, responseWriter, user.ID)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}

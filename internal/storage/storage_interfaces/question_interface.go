@@ -1,14 +1,16 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 )
 
 type QuestionInterface interface {
-	AddReview(userID int, review entities.Review) error
-	SetStat(userID int) ([]entities.Statistic, error)
-	GetQuestions() ([]entities.QuestionResponse, error)
-	GetReview(userID int) ([]entities.Review, error)
-	GetAvgStat() ([]entities.Statistic, error)
-	GetUserStat(userID int) ([]entities.Statistic, error)
+	AddReview(ctx context.Context, userID int, review entities.Review) error
+	SetStat(ctx context.Context, userID int) ([]entities.Statistic, error)
+	GetQuestions(ctx context.Context) ([]entities.QuestionResponse, error)
+	GetReview(ctx context.Context, userID int) ([]entities.Review, error)
+	GetAvgStat(ctx context.Context) ([]entities.Statistic, error)
+	GetUserStat(ctx context.Context, userID int) ([]entities.Statistic, error)
 }

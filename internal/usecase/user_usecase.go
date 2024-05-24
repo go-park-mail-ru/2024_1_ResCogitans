@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 
@@ -13,14 +14,14 @@ import (
 )
 
 type UserUseCaseInterface interface {
-	CreateUser(email string, password string) error
-	GetUserByEmail(email string) (entities.User, error)
-	GetUserByID(userID int) (entities.User, error)
-	DeleteUser(userID int) error
-	UserDataVerification(email, password string) error
-	ChangePassword(userID int, password string) (entities.User, error)
-	UserExists(email, password string) error
-	IsEmailTaken(email string) (bool, error)
+	CreateUser(ctx context.Context, email string, password string) error
+	GetUserByEmail(ctx context.Context, email string) (entities.User, error)
+	GetUserByID(ctx context.Context, userID int) (entities.User, error)
+	DeleteUser(ctx context.Context, userID int) error
+	UserDataVerification(ctx context.Context, email, password string) error
+	ChangePassword(ctx context.Context, userID int, password string) (entities.User, error)
+	UserExists(ctx context.Context, email, password string) error
+	IsEmailTaken(ctx context.Context, email string) (bool, error)
 }
 
 type UserUseCase struct {
@@ -33,7 +34,7 @@ func NewUserUseCase(storage *user.UserStorage) *UserUseCase {
 	}
 }
 
-func (u *UserUseCase) CreateUser(email, password string) error {
+func (u *UserUseCase) CreateUser(ctx context.Context, email, password string) error {
 	salt := uuid.New().String()
 	saltedPassword := password + salt
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), bcrypt.DefaultCost)
@@ -41,20 +42,20 @@ func (u *UserUseCase) CreateUser(email, password string) error {
 		return errors.New("Failed creating hash password")
 	}
 
-	err = u.UserStorage.SaveUser(email, string(hashPassword), salt)
+	err = u.UserStorage.SaveUser(ctx, email, string(hashPassword), salt)
 	return err
 }
 
-func (u *UserUseCase) GetUserByEmail(email string) (entities.User, error) {
-	return u.UserStorage.GetUserByEmail(email)
+func (u *UserUseCase) GetUserByEmail(ctx context.Context, email string) (entities.User, error) {
+	return u.UserStorage.GetUserByEmail(ctx, email)
 }
 
-func (u *UserUseCase) GetUserByID(userID int) (entities.User, error) {
-	return u.UserStorage.GetUserByID(userID)
+func (u *UserUseCase) GetUserByID(ctx context.Context, userID int) (entities.User, error) {
+	return u.UserStorage.GetUserByID(ctx, userID)
 }
 
-func (u *UserUseCase) DeleteUser(userID int) error {
-	return u.UserStorage.DeleteUser(userID)
+func (u *UserUseCase) DeleteUser(ctx context.Context, userID int) error {
+	return u.UserStorage.DeleteUser(ctx, userID)
 }
 
 func (u *UserUseCase) UserDataVerification(email, password string) error {
@@ -83,22 +84,22 @@ func ValidatePassword(password string) bool {
 	return hasDigit && hasUppercase && hasLowercase && hasMinLength && hasMaxLength
 }
 
-func (u *UserUseCase) ChangePassword(userID int, password string) (entities.User, error) {
+func (u *UserUseCase) ChangePassword(ctx context.Context, userID int, password string) (entities.User, error) {
 	salt := uuid.New().String()
 	saltedPassword := password + salt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return entities.User{}, errors.Wrap(err, "failed creating hash password")
 	}
-	err = u.UserStorage.ChangePassword(userID, string(hashedPassword), salt)
+	err = u.UserStorage.ChangePassword(ctx, userID, string(hashedPassword), salt)
 	if err != nil {
 		return entities.User{}, err
 	}
-	return u.UserStorage.GetUserByID(userID)
+	return u.UserStorage.GetUserByID(ctx, userID)
 }
 
-func (u *UserUseCase) UserExists(email, password string) error {
-	user, err := u.UserStorage.GetUserByEmail(email)
+func (u *UserUseCase) UserExists(ctx context.Context, email, password string) error {
+	user, err := u.UserStorage.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -111,6 +112,6 @@ func (u *UserUseCase) UserExists(email, password string) error {
 	return nil
 }
 
-func (u *UserUseCase) IsEmailTaken(email string) (bool, error) {
-	return u.UserStorage.IsEmailTaken(email)
+func (u *UserUseCase) IsEmailTaken(ctx context.Context, email string) (bool, error) {
+	return u.UserStorage.IsEmailTaken(ctx, email)
 }

@@ -19,49 +19,33 @@ func NewSightsHandler(usecase *usecase.SightUseCase) *SightHandler {
 	}
 }
 
-// GetSights godoc
-// @Summary Get all sights
-// @Description get all sights
-// @ID get-sights
-// @Accept json
-// @Produce json
-// @Success 200 {array} sight.Sight
-// @Router /sights [get]
-func (h *SightHandler) GetSights(_ context.Context, _ entities.Sight) (entities.Sights, error) {
-	sights, err := h.SightUseCase.GetSightsList()
+func (h *SightHandler) GetSights(ctx context.Context, _ entities.Sight) (entities.Sights, error) {
+	sights, err := h.SightUseCase.GetSightsList(ctx)
 	if err != nil {
 		return entities.Sights{}, err
 	}
 	return entities.Sights{Sight: sights}, nil
 }
 
-// GetSights godoc
-// @Summary Get sight by id
-// @Description get sight by id
-// @Accept json
-// @Produce json
-// @Success 200 SightComments
-// @Failure 404 "Not found"
-// @Router /sight/{id} [get]
 func (h *SightHandler) GetSight(ctx context.Context, _ entities.Sight) (entities.SightComments, error) {
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	id, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
 		return entities.SightComments{}, err
 	}
-	sight, err := h.SightUseCase.GetSightByID(id)
+	sight, err := h.SightUseCase.GetSightByID(ctx, id)
 	if err != nil {
 		return entities.SightComments{}, err
 	}
-	comments, err := h.SightUseCase.GetCommentsBySightID(id)
+	comments, err := h.SightUseCase.GetCommentsBySightID(ctx, id)
 	if err != nil {
 		return entities.SightComments{}, err
 	}
 	return entities.SightComments{Sight: sight, Comms: comments}, nil
 }
 
-func (h *SightHandler) SearchSights(_ context.Context, requestData entities.Sight) (entities.Sights, error) {
-	sights, err := h.SightUseCase.SearchSights(requestData.Name)
+func (h *SightHandler) SearchSights(ctx context.Context, requestData entities.Sight) (entities.Sights, error) {
+	sights, err := h.SightUseCase.SearchSights(ctx, requestData.Name)
 	if err != nil {
 		return entities.Sights{}, err
 	}

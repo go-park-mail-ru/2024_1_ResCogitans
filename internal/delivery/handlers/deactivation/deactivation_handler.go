@@ -26,12 +26,12 @@ func (h *DeactivationHandler) Deactivate(ctx context.Context, _ entities.User) (
 		return entities.UserResponse{}, err
 	}
 
-	session, err := h.sessionUseCase.GetSession(request)
+	session, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
 
-	err = h.userUseCase.DeleteUser(session)
+	err = h.userUseCase.DeleteUser(ctx, session)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -41,7 +41,7 @@ func (h *DeactivationHandler) Deactivate(ctx context.Context, _ entities.User) (
 		return entities.UserResponse{}, err
 	}
 
-	err = h.sessionUseCase.ClearSession(responseWriter, request)
+	err = h.sessionUseCase.ClearSession(ctx, responseWriter, request)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}

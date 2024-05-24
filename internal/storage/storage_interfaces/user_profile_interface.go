@@ -1,12 +1,14 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 )
 
 type UserProfileStorageInterface interface {
-	GetUserProfileByID(userID int) (entities.UserProfile, error)
-	EditUsername(userID int, username string) error
-	EditUserBio(userID int, bio string) error
-	EditUserAvatar(userID int, avatar string) error
+	GetUserProfileByID(ctx context.Context, userID int) (entities.UserProfile, error)
+	EditUsername(ctx context.Context, userID int, username string) error
+	EditUserBio(ctx context.Context, userID int, bio string) error
+	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 }

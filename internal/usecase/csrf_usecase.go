@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -16,11 +17,11 @@ import (
 )
 
 type CSRFInterface interface {
-	CreateToken(userID int) (string, error)
-	UpdateToken(userID int) (string, error)
+	CreateToken(ctx context.Context, userID int) (string, error)
+	UpdateToken(ctx context.Context, userID int) (string, error)
 	SetToken(token string, w http.ResponseWriter)
-	CompareToken(encoded string, userID int) error
-	ClearToken(userID int) error
+	CompareToken(ctx context.Context, encoded string, userID int) error
+	ClearToken(ctx context.Context, userID int) error
 }
 
 type CSRFUseCase struct {
@@ -33,13 +34,13 @@ func NewCSRFUseCase(storage *csrf.CSRFStorage) *CSRFUseCase {
 	}
 }
 
-func (a *CSRFUseCase) CreateToken(userID int) (string, error) {
+func (a *CSRFUseCase) CreateToken(ctx context.Context, userID int) (string, error) {
 	token := uuid.New().String()
 	key, err := generateRandomKey()
 	if err != nil {
 		return "", err
 	}
-	err = a.CSRFStorage.SaveToken(token, key, userID)
+	err = a.CSRFStorage.SaveToken(ctx, token, key, userID)
 
 	encryptedToken, err := encrypt(key, []byte(token))
 	if err != nil {
@@ -49,13 +50,13 @@ func (a *CSRFUseCase) CreateToken(userID int) (string, error) {
 	return base64Token, nil
 }
 
-func (a *CSRFUseCase) UpdateToken(userID int) (string, error) {
+func (a *CSRFUseCase) UpdateToken(ctx context.Context, userID int) (string, error) {
 	token := uuid.New().String()
-	key, err := a.CSRFStorage.GetKey(userID)
+	key, err := a.CSRFStorage.GetKey(ctx, userID)
 	if err != nil {
 		return "", fmt.Errorf("error getting key: %w", err)
 	}
-	err = a.CSRFStorage.SaveToken(token, key, userID)
+	err = a.CSRFStorage.SaveToken(ctx, token, key, userID)
 	encryptedToken, err := encrypt(key, []byte(token))
 	if err != nil {
 		return "", fmt.Errorf("error encrypting token: %w", err)
@@ -73,8 +74,8 @@ func (a *CSRFUseCase) SetToken(token string, w http.ResponseWriter) {
 	})
 }
 
-func (a *CSRFUseCase) CompareToken(base64Token string, userID int) error {
-	key, err := a.CSRFStorage.GetKey(userID)
+func (a *CSRFUseCase) CompareToken(ctx context.Context, base64Token string, userID int) error {
+	key, err := a.CSRFStorage.GetKey(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("error getting key: %w", err)
 	}
@@ -88,7 +89,7 @@ func (a *CSRFUseCase) CompareToken(base64Token string, userID int) error {
 		return fmt.Errorf("error encrypting token: %w", err)
 	}
 
-	currentToken, err := a.CSRFStorage.GetToken(key)
+	currentToken, err := a.CSRFStorage.GetToken(ctx, key)
 	if err != nil {
 		return fmt.Errorf("error getting token: %w", err)
 	}
@@ -99,12 +100,12 @@ func (a *CSRFUseCase) CompareToken(base64Token string, userID int) error {
 	return nil
 }
 
-func (a *CSRFUseCase) ClearToken(userID int) error {
-	key, err := a.CSRFStorage.GetKey(userID)
+func (a *CSRFUseCase) ClearToken(ctx context.Context, userID int) error {
+	key, err := a.CSRFStorage.GetKey(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("error getting key: %w", err)
 	}
-	return a.CSRFStorage.DeleteToken(key)
+	return a.CSRFStorage.DeleteToken(ctx, key)
 }
 
 // generateRandomKey создает случайный ключ шифрования AES.

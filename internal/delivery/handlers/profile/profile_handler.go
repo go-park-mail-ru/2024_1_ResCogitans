@@ -31,7 +31,7 @@ func (h *ProfileHandler) Get(ctx context.Context, _ entities.UserProfile) (entit
 	if err != nil {
 		return entities.UserProfile{}, err
 	}
-	return h.userProfileUseCase.GetUserProfile(userID)
+	return h.userProfileUseCase.GetUserProfile(ctx, userID)
 }
 
 func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.UserProfile) (entities.UserProfile, error) {
@@ -52,14 +52,14 @@ func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.UserProf
 		Bio:      bio,
 		Avatar:   avatar,
 	}
-	err = h.userProfileUseCase.EditUserProfile(newData)
+	err = h.userProfileUseCase.EditUserProfile(ctx, newData)
 	if err != nil {
 		return entities.UserProfile{}, err
 	}
-	return h.userProfileUseCase.GetUserProfile(userID)
+	return h.userProfileUseCase.GetUserProfile(ctx, userID)
 }
 
-// TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
+// UploadFile TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
 func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	logger := logger.Logger()
 
@@ -77,7 +77,8 @@ func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := h.userProfileUseCase.EditUserProfileAvatar(userID, path)
+	// TODO: избавиться от context.Background()
+	profile, err := h.userProfileUseCase.EditUserProfileAvatar(context.Background(), userID, path)
 	if err != nil {
 		logger.Error("Handler error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

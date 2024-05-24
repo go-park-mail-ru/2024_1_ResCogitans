@@ -35,7 +35,7 @@ func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Rev
 		return false, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
 	}
 
-	err = h.questionUseCase.CreateReview(userID, requestData)
+	err = h.questionUseCase.CreateReview(ctx, userID, requestData)
 	if err != nil {
 		return false, err
 	}
@@ -52,12 +52,12 @@ func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entitie
 		return entities.DataCheck{Flag: false}, nil
 	}
 
-	questions, err := h.questionUseCase.GetQuestions()
+	questions, err := h.questionUseCase.GetQuestions(ctx)
 	if err != nil {
 		return entities.DataCheck{}, err
 	}
 
-	ok, err := h.questionUseCase.CheckReview(userID)
+	ok, err := h.questionUseCase.CheckReview(ctx, userID)
 	if err != nil {
 		return entities.DataCheck{}, err
 	}
@@ -65,7 +65,7 @@ func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entitie
 		return entities.DataCheck{Flag: false}, nil
 	}
 
-	ok, err = h.journeyUseCase.CheckJourney(userID)
+	ok, err = h.journeyUseCase.CheckJourney(ctx, userID)
 	if err != nil {
 		return entities.DataCheck{}, err
 	}
@@ -73,7 +73,7 @@ func (h *QuizHandler) CheckData(ctx context.Context, _ entities.Review) (entitie
 		return entities.DataCheck{Flag: true, Questions: questions}, nil
 	}
 
-	ok, err = h.commentUseCase.CheckCommentByUserID(userID)
+	ok, err = h.commentUseCase.CheckCommentByUserID(ctx, userID)
 	if err != nil {
 		return entities.DataCheck{}, err
 	}
@@ -92,7 +92,7 @@ func (h *QuizHandler) SetStat(ctx context.Context, _ entities.Statistic) ([]enti
 		return []entities.Statistic{}, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
 	}
 
-	stat, err := h.questionUseCase.SetStat(userID)
+	stat, err := h.questionUseCase.SetStat(ctx, userID)
 	if err != nil {
 		return []entities.Statistic{}, err
 	}

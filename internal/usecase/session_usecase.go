@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -19,9 +20,9 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32))
 
 type SessionInterface interface {
-	CreateSession(w http.ResponseWriter, userID int) error
-	GetSession(r *http.Request) (int, error)
-	ClearSession(w http.ResponseWriter, r *http.Request) error
+	CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error
+	GetSession(ctx context.Context, r *http.Request) (int, error)
+	ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 }
 
 type SessionUseCase struct {
@@ -34,9 +35,9 @@ func NewSessionUseCase(storage storage.SessionStorageInterface) *SessionUseCase 
 	}
 }
 
-func (a *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error {
+func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
-	err := a.SessionStorage.SaveSession(sessionID, userID)
+	err := a.SessionStorage.SaveSession(ctx, sessionID, userID)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (a *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error 
 	return nil
 }
 
-func (a *SessionUseCase) GetSession(r *http.Request) (int, error) {
+func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
@@ -65,12 +66,12 @@ func (a *SessionUseCase) GetSession(r *http.Request) (int, error) {
 
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		return a.SessionStorage.GetSession(sessionID)
+		return a.SessionStorage.GetSession(ctx, sessionID)
 	}
 	return 0, fmt.Errorf("error decoding cookie: %w", err)
 }
 
-func (a *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
+func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err
@@ -81,7 +82,7 @@ func (a *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) er
 	if err != nil {
 		return err
 	}
-	err = a.SessionStorage.DeleteSession(sessionID)
+	err = a.SessionStorage.DeleteSession(ctx, sessionID)
 	if err != nil {
 		return err
 	}

@@ -1,66 +1,83 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/journey"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
 )
 
 type JourneyUseCaseInterface interface {
-	CreateJourney(journey entities.Journey) (entities.Journey, error)
-	DeleteJourneyByID(journeyID int) error
-	GetJourneys(userID int) ([]entities.Journey, error)
-	AddJourneySight(journeyID int, ids []int) error
-	EditJourney(journeyID int, name, description string) error
-	DeleteJourneySight(journeyID int, sight entities.JourneySight) error
-	GetJourneySights(journeyID int) ([]entities.Sight, error)
-	GetJourney(journeyID int) (entities.Journey, error)
-	CheckJourney(userID int) (bool, error)
+	CreateJourney(ctx context.Context, journey entities.Journey) (entities.Journey, error)
+	DeleteJourneyByID(ctx context.Context, journeyID int) error
+	GetJourneys(ctx context.Context, userID int) ([]entities.Journey, error)
+	AddJourneySight(ctx context.Context, journeyID int, ids []int) error
+	EditJourney(ctx context.Context, journeyID int, name, description string) error
+	DeleteJourneySight(ctx context.Context, journeyID int, sight entities.JourneySight) error
+	GetJourneySights(ctx context.Context, journeyID int) ([]entities.Sight, error)
+	GetJourney(ctx context.Context, journeyID int) (entities.Journey, error)
+	CheckJourney(ctx context.Context, userID int) (bool, error)
 }
 
 type JourneyUseCase struct {
-	SightStorage *sight.SightStorage
+	journeyStorage *journey.JourneyStorage
+	sightStorage   *sight.SightStorage
 }
 
-func NewJourneyUseCase(storage *sight.SightStorage) *JourneyUseCase {
+func NewJourneyUseCase(storage *journey.JourneyStorage) *JourneyUseCase {
 	return &JourneyUseCase{
-		SightStorage: storage,
+		journeyStorage: storage,
 	}
 }
 
-func (ju *JourneyUseCase) CreateJourney(journey entities.Journey) (entities.Journey, error) {
-	return ju.SightStorage.CreateJourney(journey)
+func (ju *JourneyUseCase) CreateJourney(ctx context.Context, journey entities.Journey) (entities.Journey, error) {
+	return ju.journeyStorage.CreateJourney(ctx, journey)
 }
 
-func (ju *JourneyUseCase) DeleteJourneyByID(journeyID int) error {
-	return ju.SightStorage.DeleteJourney(journeyID)
+func (ju *JourneyUseCase) DeleteJourneyByID(ctx context.Context, journeyID int) error {
+	return ju.journeyStorage.DeleteJourney(ctx, journeyID)
 }
 
-func (ju *JourneyUseCase) GetJourneys(userID int) ([]entities.Journey, error) {
-	return ju.SightStorage.GetJourneys(userID)
+func (ju *JourneyUseCase) GetJourneys(ctx context.Context, userID int) ([]entities.Journey, error) {
+	return ju.journeyStorage.GetJourneys(ctx, userID)
 }
 
-func (ju *JourneyUseCase) AddJourneySight(journeyID int, ids []int) error {
-	return ju.SightStorage.AddJourneySight(journeyID, ids)
+func (ju *JourneyUseCase) AddJourneySight(ctx context.Context, journeyID int, ids []int) error {
+	return ju.journeyStorage.AddJourneySight(ctx, journeyID, ids)
 }
 
-func (ju *JourneyUseCase) EditJourney(journeyID int, name, description string) error {
-	return ju.SightStorage.EditJourney(journeyID, name, description)
+func (ju *JourneyUseCase) EditJourney(ctx context.Context, journeyID int, name, description string) error {
+	return ju.journeyStorage.EditJourney(ctx, journeyID, name, description)
 }
 
-func (ju *JourneyUseCase) DeleteJourneySight(journeyID int, sight entities.JourneySight) error {
-	return ju.SightStorage.DeleteJourneySight(journeyID, sight)
+func (ju *JourneyUseCase) DeleteJourneySight(ctx context.Context, journeyID int, sight entities.JourneySight) error {
+	return ju.journeyStorage.DeleteJourneySight(ctx, journeyID, sight)
 }
 
-func (ju *JourneyUseCase) GetJourneySights(journeyID int) ([]entities.Sight, error) {
-	return ju.SightStorage.GetJourneySights(journeyID)
+func (ju *JourneyUseCase) GetJourneySights(ctx context.Context, journeyID int) ([]entities.Sight, error) {
+	idList, err := ju.journeyStorage.GetJourneySights(ctx, journeyID)
+	if err != nil {
+		return []entities.Sight{}, err
+	}
+	var sights []entities.Sight
+	for _, id := range idList {
+		getSight, err := ju.sightStorage.GetSight(ctx, *id)
+		if err != nil {
+			return nil, err
+		}
+		sights = append(sights, getSight)
+	}
+
+	return sights, nil
 }
 
-func (ju *JourneyUseCase) GetJourney(journeyID int) (entities.Journey, error) {
-	return ju.SightStorage.GetJourney(journeyID)
+func (ju *JourneyUseCase) GetJourney(ctx context.Context, journeyID int) (entities.Journey, error) {
+	return ju.journeyStorage.GetJourney(ctx, journeyID)
 }
 
-func (ju *JourneyUseCase) CheckJourney(userID int) (bool, error) {
-	journeys, err := ju.SightStorage.GetJourneys(userID)
+func (ju *JourneyUseCase) CheckJourney(ctx context.Context, userID int) (bool, error) {
+	journeys, err := ju.journeyStorage.GetJourneys(ctx, userID)
 	if err != nil {
 		return false, err
 	}

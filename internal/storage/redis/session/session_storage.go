@@ -3,7 +3,6 @@ package session
 import (
 	"context"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -12,40 +11,24 @@ import (
 
 type RedisStorage struct {
 	client *redis.Client
-	ctx    context.Context
-	mu     sync.Mutex
 }
 
 func NewSessionStorage(client *redis.Client) *RedisStorage {
-	ctx, cancel := context.WithCancel(context.Background())
-	// Обеспечение освобождения ресурсов контекста при завершении работы
-	go func() {
-		<-ctx.Done()
-		cancel()
-	}()
 	return &RedisStorage{
 		client: client,
-		ctx:    ctx,
-		mu:     sync.Mutex{},
 	}
 }
 
-func (rs *RedisStorage) SaveSession(sessionID string, userID int) error {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-
-	err := rs.client.Set(rs.ctx, sessionID, userID, 24*time.Hour).Err()
+func (rs *RedisStorage) SaveSession(ctx context.Context, sessionID string, userID int) error {
+	err := rs.client.Set(ctx, sessionID, userID, 24*time.Hour).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rs *RedisStorage) GetSession(sessionID string) (int, error) {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-
-	userIDStr, err := rs.client.Get(rs.ctx, sessionID).Result()
+func (rs *RedisStorage) GetSession(ctx context.Context, sessionID string) (int, error) {
+	userIDStr, err := rs.client.Get(ctx, sessionID).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return 0, errors.New("Session not found")
@@ -59,11 +42,8 @@ func (rs *RedisStorage) GetSession(sessionID string) (int, error) {
 	return userID, nil
 }
 
-func (rs *RedisStorage) DeleteSession(sessionID string) error {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-
-	err := rs.client.Del(rs.ctx, sessionID).Err()
+func (rs *RedisStorage) DeleteSession(ctx context.Context, sessionID string) error {
+	err := rs.client.Del(ctx, sessionID).Err()
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"sync"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
@@ -12,34 +11,20 @@ import (
 
 // UserProfileStorage struct
 type UserProfileStorage struct {
-	db  *pgxpool.Pool
-	mu  sync.Mutex
-	ctx context.Context
+	db *pgxpool.Pool
 }
 
 // NewUserProfileStorage creates postgres storage
 func NewUserProfileStorage(db *pgxpool.Pool) *UserProfileStorage {
-	ctx, cancel := context.WithCancel(context.Background())
-	// Обеспечение освобождения ресурсов контекста при завершении работы
-	go func() {
-		<-ctx.Done()
-		cancel()
-	}()
-
 	return &UserProfileStorage{
-		db:  db,
-		ctx: ctx,
-		mu:  sync.Mutex{},
+		db: db,
 	}
 }
 
-func (up *UserProfileStorage) GetUserProfileByID(userID int) (entities.UserProfile, error) {
+func (up *UserProfileStorage) GetUserProfileByID(ctx context.Context, userID int) (entities.UserProfile, error) {
 	var user []entities.UserProfile
-	up.mu.Lock()
-	defer up.mu.Unlock()
-	up.ctx = context.Background()
 
-	err := pgxscan.Select(up.ctx, up.db, &user, `SELECT user_id, username, bio, avatar FROM profile_data WHERE user_id = $1`, userID)
+	err := pgxscan.Select(ctx, up.db, &user, `SELECT user_id, username, bio, avatar FROM profile_data WHERE user_id = $1`, userID)
 	if err != nil {
 		return entities.UserProfile{}, err
 	}
@@ -50,24 +35,17 @@ func (up *UserProfileStorage) GetUserProfileByID(userID int) (entities.UserProfi
 	return user[0], nil
 }
 
-func (up *UserProfileStorage) EditUsername(userID int, username string) error {
-	up.mu.Lock()
-	defer up.mu.Unlock()
-	up.ctx = context.Background()
-	_, err := up.db.Exec(up.ctx, `UPDATE profile_data SET username = $1 WHERE user_id = $2`, username, userID)
+func (up *UserProfileStorage) EditUsername(ctx context.Context, userID int, username string) error {
+	_, err := up.db.Exec(ctx, `UPDATE profile_data SET username = $1 WHERE user_id = $2`, username, userID)
 	return err
 }
 
-func (up *UserProfileStorage) EditUserBio(userID int, bio string) error {
-	up.mu.Lock()
-	defer up.mu.Unlock()
-	up.ctx = context.Background()
-	_, err := up.db.Exec(up.ctx, `UPDATE profile_data SET bio = $1 WHERE user_id = $2`, bio, userID)
+func (up *UserProfileStorage) EditUserBio(ctx context.Context, userID int, bio string) error {
+	_, err := up.db.Exec(ctx, `UPDATE profile_data SET bio = $1 WHERE user_id = $2`, bio, userID)
 	return err
 }
 
-func (up *UserProfileStorage) EditUserAvatar(userID int, avatar string) error {
-	ctx := context.Background()
+func (up *UserProfileStorage) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
 	_, err := up.db.Exec(ctx, "UPDATE profile_data SET avatar = $1 WHERE user_id = $2", avatar, userID)
 	return err
 }

@@ -31,7 +31,7 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return entities.UserResponse{}, err
 	}
 
-	sessionID, err := h.sessionUseCase.GetSession(request)
+	sessionID, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		if !httperrors.IsHttpError(err) {
 			return entities.UserResponse{}, err
@@ -51,12 +51,12 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return entities.UserResponse{}, err
 	}
 
-	err = h.userUseCase.UserExists(username, password)
+	err = h.userUseCase.UserExists(ctx, username, password)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
 
-	user, err := h.userUseCase.GetUserByEmail(username)
+	user, err := h.userUseCase.GetUserByEmail(ctx, username)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -66,7 +66,7 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 		return entities.UserResponse{}, err
 	}
 
-	err = h.sessionUseCase.CreateSession(responseWriter, user.ID)
+	err = h.sessionUseCase.CreateSession(ctx, responseWriter, user.ID)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -85,7 +85,7 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (ent
 		return entities.UserResponse{}, err
 	}
 
-	_, err = h.sessionUseCase.GetSession(request)
+	_, err = h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -95,7 +95,7 @@ func (h *AuthorizationHandler) LogOut(ctx context.Context, _ entities.User) (ent
 		return entities.UserResponse{}, err
 	}
 
-	err = h.sessionUseCase.ClearSession(responseWriter, request)
+	err = h.sessionUseCase.ClearSession(ctx, responseWriter, request)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -112,7 +112,7 @@ func (h *AuthorizationHandler) UpdatePassword(ctx context.Context, requestData e
 		return entities.UserResponse{}, err
 	}
 
-	userID, err := h.sessionUseCase.GetSession(request)
+	userID, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}
@@ -122,7 +122,7 @@ func (h *AuthorizationHandler) UpdatePassword(ctx context.Context, requestData e
 		return entities.UserResponse{}, err
 	}
 
-	user, err := h.userUseCase.ChangePassword(userID, password)
+	user, err := h.userUseCase.ChangePassword(ctx, userID, password)
 	if err != nil {
 		return entities.UserResponse{}, err
 	}

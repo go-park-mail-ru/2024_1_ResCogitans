@@ -1,41 +1,43 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/comment"
 )
 
 type CommentUseCaseInterface interface {
-	CreateCommentBySightID(sightID int, comment entities.Comment) error
-	EditCommentByCommentID(commentID int, comment entities.Comment) error
-	DeleteCommentByCommentID(commentID int) error
-	CheckCommentByUserID(userID int) (bool, error)
+	CreateCommentBySightID(ctx context.Context, sightID int, comment entities.Comment) error
+	EditCommentByCommentID(ctx context.Context, commentID int, comment entities.Comment) error
+	DeleteCommentByCommentID(ctx context.Context, commentID int) error
+	CheckCommentByUserID(ctx context.Context, userID int) (bool, error)
 }
 
 type CommentUseCase struct {
-	SightStorage *sight.SightStorage
+	storage *comment.CommentStorage
 }
 
-func NewCommentUseCase(storage *sight.SightStorage) *CommentUseCase {
+func NewCommentUseCase(storage *comment.CommentStorage) *CommentUseCase {
 	return &CommentUseCase{
-		SightStorage: storage,
+		storage: storage,
 	}
 }
 
-func (cu *CommentUseCase) CreateCommentBySightID(sightID int, comment entities.Comment) error {
-	return cu.SightStorage.CreateCommentBySightID(sightID, comment)
+func (cu *CommentUseCase) CreateCommentBySightID(ctx context.Context, sightID int, comment entities.Comment) error {
+	return cu.storage.CreateCommentBySightID(ctx, sightID, comment)
 }
 
-func (cu *CommentUseCase) EditCommentByCommentID(commentID int, comment entities.Comment) error {
-	return cu.SightStorage.EditComment(commentID, comment)
+func (cu *CommentUseCase) EditCommentByCommentID(ctx context.Context, commentID int, comment entities.Comment) error {
+	return cu.storage.EditComment(ctx, commentID, comment)
 }
 
-func (cu *CommentUseCase) DeleteCommentByCommentID(commentID int) error {
-	return cu.SightStorage.DeleteComment(commentID)
+func (cu *CommentUseCase) DeleteCommentByCommentID(ctx context.Context, commentID int) error {
+	return cu.storage.DeleteComment(ctx, commentID)
 }
 
-func (cu *CommentUseCase) CheckCommentByUserID(userID int) (bool, error) {
-	comments, err := cu.SightStorage.GetCommentsByUserID(userID)
+func (cu *CommentUseCase) CheckCommentByUserID(ctx context.Context, userID int) (bool, error) {
+	comments, err := cu.storage.GetCommentsByUserID(ctx, userID)
 	if err != nil {
 		return false, err
 	}

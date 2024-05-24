@@ -19,8 +19,8 @@ func NewJourneyHandler(usecase *usecase.JourneyUseCase) *JourneyHandler {
 	}
 }
 
-func (h *JourneyHandler) CreateJourney(_ context.Context, requestData entities.Journey) (entities.Journey, error) {
-	journey, err := h.JourneyUseCase.CreateJourney(requestData)
+func (h *JourneyHandler) CreateJourney(ctx context.Context, requestData entities.Journey) (entities.Journey, error) {
+	journey, err := h.JourneyUseCase.CreateJourney(ctx, requestData)
 	if err != nil {
 		return entities.Journey{}, err
 	}
@@ -36,11 +36,11 @@ func (h *JourneyHandler) EditJourney(ctx context.Context, requestData entities.J
 	}
 	name := requestData.Name
 	description := requestData.Description
-	err = h.JourneyUseCase.EditJourney(journeyID, name, description)
+	err = h.JourneyUseCase.EditJourney(ctx, journeyID, name, description)
 	if err != nil {
 		return entities.Journey{}, err
 	}
-	return h.JourneyUseCase.GetJourney(journeyID)
+	return h.JourneyUseCase.GetJourney(ctx, journeyID)
 }
 
 func (h *JourneyHandler) DeleteJourney(ctx context.Context, _ entities.Journey) (entities.Journey, error) {
@@ -50,7 +50,7 @@ func (h *JourneyHandler) DeleteJourney(ctx context.Context, _ entities.Journey) 
 		return entities.Journey{}, err
 	}
 
-	err = h.JourneyUseCase.DeleteJourneyByID(journeyID)
+	err = h.JourneyUseCase.DeleteJourneyByID(ctx, journeyID)
 	if err != nil {
 		return entities.Journey{}, err
 	}
@@ -65,7 +65,7 @@ func (h *JourneyHandler) GetJourneys(ctx context.Context, _ entities.Journey) (e
 		return entities.Journeys{}, err
 	}
 
-	journeys, err := h.JourneyUseCase.GetJourneys(userID)
+	journeys, err := h.JourneyUseCase.GetJourneys(ctx, userID)
 	if err != nil {
 		return entities.Journeys{}, err
 	}
@@ -79,7 +79,7 @@ func (h *JourneyHandler) AddJourneySight(ctx context.Context, requestData entiti
 		return entities.JourneySight{}, err
 	}
 
-	err = h.JourneyUseCase.AddJourneySight(journeyID, requestData.ListID)
+	err = h.JourneyUseCase.AddJourneySight(ctx, journeyID, requestData.ListID)
 	if err != nil {
 		return entities.JourneySight{}, err
 	}
@@ -94,7 +94,7 @@ func (h *JourneyHandler) DeleteJourneySight(ctx context.Context, requestData ent
 		return entities.JourneySight{}, err
 	}
 
-	err = h.JourneyUseCase.DeleteJourneySight(journeyID, requestData)
+	err = h.JourneyUseCase.DeleteJourneySight(ctx, journeyID, requestData)
 	if err != nil {
 		return entities.JourneySight{}, err
 	}
@@ -109,12 +109,12 @@ func (h *JourneyHandler) GetJourneySights(ctx context.Context, _ entities.Journe
 		return entities.JourneySights{}, err
 	}
 
-	sights, err := h.JourneyUseCase.GetJourneySights(journeyID)
+	sights, err := h.JourneyUseCase.GetJourneySights(ctx, journeyID)
 	if err != nil {
 		return entities.JourneySights{}, err
 	}
 
-	journey, err := h.JourneyUseCase.GetJourney(journeyID)
+	journey, err := h.JourneyUseCase.GetJourney(ctx, journeyID)
 	if err != nil {
 		return entities.JourneySights{}, err
 	}

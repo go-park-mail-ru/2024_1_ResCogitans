@@ -31,7 +31,7 @@ func (h *CommentHandler) CreateComment(ctx context.Context, requestData entities
 		return entities.Comment{}, errors.New("Rating must be greater than zero")
 	}
 
-	err = h.CommentUseCase.CreateCommentBySightID(sightID, requestData)
+	err = h.CommentUseCase.CreateCommentBySightID(ctx, sightID, requestData)
 	if err != nil {
 		return entities.Comment{}, err
 	}
@@ -46,7 +46,7 @@ func (h *CommentHandler) EditComment(ctx context.Context, requestData entities.C
 		return entities.Comment{}, err
 	}
 
-	err = h.CommentUseCase.EditCommentByCommentID(commentID, requestData)
+	err = h.CommentUseCase.EditCommentByCommentID(ctx, commentID, requestData)
 	if err != nil {
 		return entities.Comment{}, err
 	}
@@ -61,7 +61,7 @@ func (h *CommentHandler) DeleteComment(ctx context.Context, _ entities.Comment) 
 		return entities.Comment{}, err
 	}
 
-	err = h.CommentUseCase.DeleteCommentByCommentID(commentID)
+	err = h.CommentUseCase.DeleteCommentByCommentID(ctx, commentID)
 	if err != nil {
 		return entities.Comment{}, err
 	}
