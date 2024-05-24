@@ -2,10 +2,13 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/journey"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/postgres/sight"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 )
 
 type JourneyUseCaseInterface interface {
@@ -44,6 +47,13 @@ func (ju *JourneyUseCase) GetJourneys(ctx context.Context, userID int) ([]entiti
 }
 
 func (ju *JourneyUseCase) AddJourneySight(ctx context.Context, journeyID int, ids []int) error {
+	journeyExists, err := ju.journeyStorage.JourneyExists(ctx, journeyID)
+	if err != nil {
+		return fmt.Errorf("error while checking if journey exists: %w", err)
+	}
+	if !journeyExists {
+		return httperrors.NewHttpError(http.StatusBadRequest, "journey does not exist")
+	}
 	return ju.journeyStorage.AddJourneySight(ctx, journeyID, ids)
 }
 

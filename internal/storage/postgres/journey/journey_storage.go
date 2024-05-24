@@ -68,18 +68,6 @@ func (js *JourneyStorage) GetJourneys(ctx context.Context, userID int) ([]entiti
 
 // AddJourneySight добавляет достопримечательности в существующую поездку.
 func (js *JourneyStorage) AddJourneySight(ctx context.Context, journeyID int, sightIDs []int) error {
-	// Проверяем, существует ли journeyID в таблице journey
-	var journeyExists bool
-	err := js.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM journey WHERE id = $1)`, journeyID).Scan(&journeyExists)
-	if err != nil {
-		logger.Logger().Error(err.Error())
-		return err
-	}
-
-	if !journeyExists {
-		return fmt.Errorf("journey with id %d does not exist", journeyID)
-	}
-
 	// Добавляем достопримечательности в journey_sight
 	for _, sightID := range sightIDs {
 		_, err := js.db.Exec(ctx, `INSERT INTO journey_sight(journey_id, sight_id, priority) VALUES ($1, $2, $3)`, journeyID, sightID, 0)
@@ -90,6 +78,16 @@ func (js *JourneyStorage) AddJourneySight(ctx context.Context, journeyID int, si
 	}
 
 	return nil
+}
+
+func (js *JourneyStorage) JourneyExists(ctx context.Context, journeyID int) (bool, error) {
+	var journeyExists bool
+	err := js.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM journey WHERE id = $1)`, journeyID).Scan(&journeyExists)
+	if err != nil {
+		logger.Logger().Error(err.Error())
+		return false, err
+	}
+	return journeyExists, nil
 }
 
 func (js *JourneyStorage) EditJourney(ctx context.Context, journeyID int, name, description string) error {

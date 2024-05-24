@@ -11,6 +11,7 @@ type JourneyStorageInterface interface {
 	DeleteJourney(ctx context.Context, journeyID int) error
 	GetJourneys(ctx context.Context, userID int) ([]entities.Journey, error)
 	AddJourneySight(ctx context.Context, journeyID int, ids []int) error
+	JourneyExists(ctx context.Context, journeyID int) (bool, error)
 	EditJourney(ctx context.Context, journeyID int, name, description string) error
 	DeleteJourneySight(ctx context.Context, journeyID int, sight entities.JourneySight) error
 	GetJourneySights(ctx context.Context, journeyID int) ([]*int, error)
