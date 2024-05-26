@@ -1,25 +1,34 @@
-package cmd
+package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/service/gen"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/database"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/session"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalln("can't listen port", err)
 	}
 
-	grpcServer := grpc.NewServer()
-	sessionService := gen.NewSessionService()
+	server := grpc.NewServer()
 
-	gen.RegisterSessionServiceServer(grpcServer, sessionService)
+	pdb, err := database.GetSessionRedis()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	gen.RegisterSessionServiceServer(server, session.NewSessionManager(pdb))
+
+	fmt.Println("starting server at :8081")
+	err = server.Serve(lis)
+	if err != nil {
+		return
 	}
 }

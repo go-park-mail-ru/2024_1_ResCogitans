@@ -64,6 +64,7 @@ func (s *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error 
 }
 
 func (s *SessionUseCase) GetSession(r *http.Request) (int, error) {
+	ctx := context.Background()
 	cookie, err := r.Cookie(sessionId)
 	if errors.Is(err, http.ErrNoCookie) {
 		return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Cookie not found")
@@ -75,12 +76,17 @@ func (s *SessionUseCase) GetSession(r *http.Request) (int, error) {
 
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		return a.SessionStorage.GetSession(sessionID)
+		ans, err := s.client.GetSession(ctx, &gen.GetSessionRequest{SessionID: sessionID})
+		if err != nil {
+			return 0, err
+		}
+		return int(ans.UserID), nil
 	}
 	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
 }
 
 func (s *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
+	ctx := context.Background()
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err
@@ -91,7 +97,7 @@ func (s *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) er
 	if err != nil {
 		return err
 	}
-	err = a.SessionStorage.DeleteSession(sessionID)
+	_, err = s.client.DeleteSession(ctx, &gen.DeleteSessionRequest{SessionID: sessionID})
 	if err != nil {
 		return err
 	}

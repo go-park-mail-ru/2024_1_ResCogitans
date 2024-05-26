@@ -2,31 +2,53 @@ package session
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/service/gen"
+	"github.com/go-redis/redis/v8"
+	"github.com/pkg/errors"
 )
 
-type SessionService struct {
-	// Поля, необходимые для сервиса сессий
+type SessionManager struct {
+	gen.UnimplementedSessionServiceServer
+	storage *redis.Client
 }
 
-func NewSessionService() *SessionService {
-	return &SessionService{
-		// Инициализация полей
+func NewSessionManager(client *redis.Client) *SessionManager {
+	return &SessionManager{
+		storage: client,
 	}
 }
 
-func (s *SessionService) CreateSession(ctx context.Context, req *gen.SaveSessionRequest) (*gen.SaveSessionResponse, error) {
-	// Логика создания сессии
-	// Возвращает SaveSessionResponse и ошибку
+func (sm *SessionManager) CreateSession(ctx context.Context, req *gen.SaveSessionRequest) (*gen.SaveSessionResponse, error) {
+	err := sm.storage.Set(ctx, req.SessionID, req.UserID, 24*time.Hour).Err()
+	if err != nil {
+		return nil, err
+	}
+	println("created session")
+	return &gen.SaveSessionResponse{}, nil
 }
 
-func (s *SessionService) GetSession(ctx context.Context, req *gen.GetSessionRequest) (*gen.GetSessionResponse, error) {
-	// Логика получения сессии
-	// Возвращает GetSessionResponse и ошибку
+func (sm *SessionManager) GetSession(ctx context.Context, req *gen.GetSessionRequest) (*gen.GetSessionResponse, error) {
+	userIDStr, err := sm.storage.Get(ctx, req.SessionID).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, errors.New("session not found")
+		}
+		return nil, err
+	}
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+	return &gen.GetSessionResponse{UserID: int32(userID)}, nil
 }
 
-func (s *SessionService) DeleteSession(ctx context.Context, req *gen.DeleteSessionRequest) (*gen.DeleteSessionResponse, error) {
-	// Логика удаления сессии
-	// Возвращает DeleteSessionResponse и ошибку
+func (sm *SessionManager) DeleteSession(ctx context.Context, req *gen.DeleteSessionRequest) (*gen.DeleteSessionResponse, error) {
+	err := sm.storage.Del(ctx, req.SessionID).Err()
+	if err != nil {
+		return nil, err
+	}
+	return &gen.DeleteSessionResponse{}, nil
 }
