@@ -18,7 +18,7 @@ type UserUseCaseInterface interface {
 	GetUserByEmail(ctx context.Context, email string) (entities.User, error)
 	GetUserByID(ctx context.Context, userID int) (entities.User, error)
 	DeleteUser(ctx context.Context, userID int) error
-	UserDataVerification(ctx context.Context, email, password string) error
+	UserDataVerification(email, password string) error
 	ChangePassword(ctx context.Context, userID int, password string) (entities.User, error)
 	UserExists(ctx context.Context, email, password string) error
 	IsEmailTaken(ctx context.Context, email string) (bool, error)
