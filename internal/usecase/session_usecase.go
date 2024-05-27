@@ -21,9 +21,9 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32))
 
 type SessionInterface interface {
-	CreateSession(w http.ResponseWriter, userID int) error
-	GetSession(r *http.Request) (int, error)
-	ClearSession(w http.ResponseWriter, r *http.Request) error
+	CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error
+	GetSession(ctx context.Context, r *http.Request) (int, error)
+	ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 }
 
 type SessionUseCase struct {
@@ -36,7 +36,7 @@ func NewSessionUseCase(conn *grpc.ClientConn) *SessionUseCase {
 	}
 }
 
-func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
+func (s *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
 	response, err := s.client.CreateSession(ctx, &gen.SaveSessionRequest{
 		SessionID: sessionID,
@@ -62,7 +62,7 @@ func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
+func (s *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
@@ -82,7 +82,7 @@ func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
 }
 
-func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (s *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err

@@ -11,11 +11,11 @@ import (
 )
 
 type RegistrationHandler struct {
-	sessionUseCase *usecase.SessionUseCase
-	userUseCase    *usecase.UserUseCase
+	sessionUseCase usecase.SessionInterface
+	userUseCase    usecase.UserUseCaseInterface
 }
 
-func NewRegistrationHandler(sessionUseCase *usecase.SessionUseCase, userUseCase *usecase.UserUseCase) *RegistrationHandler {
+func NewRegistrationHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserUseCaseInterface) *RegistrationHandler {
 	return &RegistrationHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,

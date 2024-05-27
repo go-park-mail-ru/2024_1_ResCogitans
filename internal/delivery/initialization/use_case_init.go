@@ -13,7 +13,7 @@ type UseCases struct {
 	JourneyUseCase  usecase.JourneyUseCaseInterface
 	CommentUseCase  usecase.CommentUseCaseInterface
 	QuestionUseCase usecase.QuestionUseCaseInterface
-	AlbumUseCase    usecase.AlbumUseCaseInterface
+	CSRFUseCase     usecase.CSRFInterface
 }
 
 func UseCaseInit(storages *Storages, conn *grpc.ClientConn) *UseCases {
@@ -24,10 +24,7 @@ func UseCaseInit(storages *Storages, conn *grpc.ClientConn) *UseCases {
 		SightUseCase:    usecase.NewSightUseCase(storages.SightStorage, storages.CommentStorage),
 		JourneyUseCase:  usecase.NewJourneyUseCase(storages.JourneyStorage),
 		CommentUseCase:  usecase.NewCommentUseCase(storages.CommentStorage),
-		SightUseCase:    usecase.NewSightUseCase(storages.SightStorage),
-		JourneyUseCase:  usecase.NewJourneyUseCase(storages.SightStorage),
-		CommentUseCase:  usecase.NewCommentUseCase(storages.SightStorage),
 		QuestionUseCase: usecase.NewQuestionUseCase(storages.QuestionStorage),
-		AlbumUseCase:    usecase.NewAlbumUseCase(storages.AlbumStorage),
+		CSRFUseCase:     usecase.NewCSRFUseCase(storages.CSRFStorage),
 	}
 }

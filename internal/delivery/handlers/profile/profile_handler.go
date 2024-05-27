@@ -15,10 +15,10 @@ import (
 )
 
 type ProfileHandler struct {
-	userProfileUseCase *usecase.ProfileUseCase
+	userProfileUseCase usecase.ProfileUseCaseInterface
 }
 
-func NewProfileHandler(userProfileUseCase *usecase.ProfileUseCase) *ProfileHandler {
+func NewProfileHandler(userProfileUseCase usecase.ProfileUseCaseInterface) *ProfileHandler {
 	return &ProfileHandler{
 		userProfileUseCase: userProfileUseCase,
 	}

@@ -32,12 +32,12 @@ func main() {
 		}
 	}(conn)
 
-	pdb, rdb, err := initialization.DataBaseInitialization()
+	pdb, rdb, cdb, err := initialization.DataBaseInitialization()
 	if err != nil {
 		logger.Error("DataBase initialization error", "error", err)
 	}
 
-	storages := initialization.StorageInit(pdb, rdb)
+	storages := initialization.StorageInit(pdb, rdb, cdb)
 	usecases := initialization.UseCaseInit(storages, conn)
 	handlers := initialization.HandlerInit(usecases)
 
