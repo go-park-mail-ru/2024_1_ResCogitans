@@ -1,28 +1,17 @@
 package main
 
 import (
+	"log"
+
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/server"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
-	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server seller server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost:8080
-// @BasePath /api/v1
 func main() {
 	logger := logger.Logger()
 	cfg, err := config.LoadConfig()
@@ -32,14 +21,24 @@ func main() {
 	}
 	logger.Info("Start config")
 
+	conn, err := grpc.Dial("localhost:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("could not close connection: %v", err)
+		}
+	}(conn)
+
 	pdb, rdb, cdb, err := initialization.DataBaseInitialization()
 	if err != nil {
 		logger.Error("DataBase initialization error", "error", err)
-		return
 	}
 
 	storages := initialization.StorageInit(pdb, rdb, cdb)
-	usecases := initialization.UseCaseInit(storages)
+	usecases := initialization.UseCaseInit(storages, conn)
 	handlers := initialization.HandlerInit(usecases)
 
 	router := router.SetupRouter(cfg, handlers)

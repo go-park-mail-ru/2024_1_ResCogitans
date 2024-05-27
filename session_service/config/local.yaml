@@ -1,0 +1,6 @@
+env: "local"
+http_server:
+  timeout: 4s
+  idle_timeout: 60s
+  user: "user"
+  password: "password"

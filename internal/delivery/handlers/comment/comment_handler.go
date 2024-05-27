@@ -11,10 +11,10 @@ import (
 )
 
 type CommentHandler struct {
-	CommentUseCase *usecase.CommentUseCase
+	CommentUseCase usecase.CommentUseCaseInterface
 }
 
-func NewCommentHandler(usecase *usecase.CommentUseCase) *CommentHandler {
+func NewCommentHandler(usecase usecase.CommentUseCaseInterface) *CommentHandler {
 	return &CommentHandler{
 		CommentUseCase: usecase,
 	}
