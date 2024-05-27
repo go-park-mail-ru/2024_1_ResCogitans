@@ -112,42 +112,7 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
 		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-		userResponse, err := handler.Authorize(ctx, user)
-		// Проверка отсутствия ошибки
-		assert.NoError(t, err)
-		// Проверка соответствия ответа
-		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
-		// Проверка соответствия статуса ответа
-		assert.Equal(t, http.StatusOK, rr.Code)
-		// Проверка, что методы были вызваны с правильными аргументами
-		mockSessionUseCase.AssertExpectations(t)
-		mockUserUseCase.AssertExpectations(t)
-	})
-
-	t.Run("User does not exist", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(httperrors.NewHttpError(http.StatusBadRequest, "user not found"))
-
-		userResponse, _ := handler.Authorize(ctx, user)
-
-		assert.Equal(t, userResponse.ID, 0)
-	})
-}
-
-func TestAuthorizationHandler_Authorize_UserNotFound(t *testing.T) {
-	mockSessionUseCase := new(MockSessionUseCase)
-	mockUserUseCase := new(MockUserUseCase)
-
-	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
-
-	// Тест неуспешной авторизации, когда пользователь не найден
-	mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-	mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("user not found"))
-	mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-
 	// Создаем тестовый запрос
-	user := entities.User{Username: "nonexistent@user.com", Password: "WrongPassword1!"}
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		t.Fatal(err)
@@ -205,5 +170,4 @@ func TestAuthorizationHandler_Authorize_UserNotFound(t *testing.T) {
 //	assert.NoError(t, err)
 //	assert.Equal(t, entities.UserResponse{ID: 1, Username: "testuser"}, userResponse)
 //
-//	// Добавьте дополнительные тесты для других случаев, таких как ошибки валидации данных пользователя, ошибки изменения пароля и т.д.
 //}

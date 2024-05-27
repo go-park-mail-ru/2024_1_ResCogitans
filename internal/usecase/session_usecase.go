@@ -36,8 +36,7 @@ func NewSessionUseCase(conn *grpc.ClientConn) *SessionUseCase {
 	}
 }
 
-func (s *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error {
-	ctx := context.Background()
+func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
 	sessionID := uuid.New().String()
 	response, err := s.client.CreateSession(ctx, &gen.SaveSessionRequest{
 		SessionID: sessionID,
@@ -63,14 +62,12 @@ func (s *SessionUseCase) CreateSession(w http.ResponseWriter, userID int) error 
 	return nil
 }
 
-func (s *SessionUseCase) GetSession(r *http.Request) (int, error) {
-	ctx := context.Background()
+func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
-	if errors.Is(err, http.ErrNoCookie) {
-		return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Cookie not found")
-	}
-
 	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return 0, httperrors.NewHttpError(http.StatusUnauthorized, "Cookie not found")
+		}
 		return 0, err
 	}
 
@@ -85,8 +82,7 @@ func (s *SessionUseCase) GetSession(r *http.Request) (int, error) {
 	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
 }
 
-func (s *SessionUseCase) ClearSession(w http.ResponseWriter, r *http.Request) error {
-	ctx := context.Background()
+func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err

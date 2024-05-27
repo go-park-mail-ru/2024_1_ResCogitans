@@ -1,4 +1,4 @@
-package errors
+package httperrors
 
 import (
 	"encoding/json"
@@ -9,43 +9,55 @@ import (
 )
 
 type HttpError struct {
-	Code    int
+	Code    int    `json:"code"`
 	Message string `json:"error"`
 }
-
-var (
-	errFallBack = HttpError{
-		Code:    http.StatusInternalServerError,
-		Message: "internal error",
-	}
-	errInternalBytes = []byte(`{"error": "internal error"}`)
-)
 
 func (e HttpError) Error() string {
 	return e.Message
 }
 
-func WriteHttpError(errIn error, w http.ResponseWriter) error {
-	var httpErr HttpError
-	if !errors.As(errIn, &httpErr) {
-		httpErr = errFallBack
+func NewHttpError(code int, message string) HttpError {
+	return HttpError{
+		Code:    code,
+		Message: message,
 	}
+}
 
+func UnwrapHttpError(err error) HttpError {
+	var httpError HttpError
+	if errors.As(err, &httpError) {
+		return NewHttpError(httpError.Code, httpError.Message)
+	}
+	return NewHttpError(http.StatusInternalServerError, err.Error())
+}
+
+func IsHttpError(err error) bool {
+	var httpError HttpError
+	if errors.As(err, &httpError) {
+		return true
+	}
+	return false
+}
+
+var errInternalBytes = []byte(`{"error": "internal error"}`)
+
+func WriteHttpError(errIn error, w http.ResponseWriter) {
+	httpError := UnwrapHttpError(errIn)
 	w.Header().Add("Content-Type", "application/json")
-	bytes, err := json.Marshal(httpErr)
+	bytes, err := json.Marshal(httpError)
 	if err != nil {
-		logger.Logger().Error("error marshal err", "error", errIn)
+		logger.Logger().Error("error marshal err", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, writeErr := w.Write(errInternalBytes); writeErr != nil {
-			logger.Logger().Error("error writing fallback error", "error", writeErr)
+			logger.Logger().Error("error writing fallback error", "error", writeErr.Error())
 		}
-		return err
+		return
 	}
 
-	w.WriteHeader(httpErr.Code)
+	w.WriteHeader(httpError.Code)
 	if _, writeErr := w.Write(bytes); writeErr != nil {
 		logger.Logger().Error("error writing http error", "error", writeErr)
-		return writeErr
+		return
 	}
-	return nil
 }

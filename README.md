@@ -47,6 +47,6 @@ TODO - _UX_
 * [Сайт](http://jantugan.ru)
 Тестовый юзер
 {
-"username": "testuser",
-"password": "testpassword"
+"username": "san@boy.ru",
+"password": "ABC123abc123!"
 }
