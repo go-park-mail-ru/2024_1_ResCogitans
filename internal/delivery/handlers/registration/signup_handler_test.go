@@ -1,79 +1,254 @@
 package registration_test
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"strings"
-// 	"testing"
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-// 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/http-server/handlers/registration"
-// 	"github.com/stretchr/testify/assert"
-// )
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/registration"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/mocks"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+)
 
-// func TestSignUp(t *testing.T) {
-// 	regHandler := registration.Registration{}
+func TestRegistrationHandler_SignUp(t *testing.T) {
+	mockSessionUseCase := new(mocks.MockSessionUseCase)
+	mockUserUseCase := new(mocks.MockUserUseCase)
 
-// 	testCases := []struct {
-// 		name           string
-// 		inputJSON      string
-// 		expectedStatus int
-// 		expectedError  string
-// 	}{
-// 		{
-// 			name:           "Successful registration",
-// 			inputJSON:      `{"username": "testuser", "password": "testpassword"}`,
-// 			expectedStatus: http.StatusCreated,
-// 			expectedError:  "",
-// 		},
-// 		{
-// 			name:           "Empty username",
-// 			inputJSON:      `{"username": "", "password": "testpassword"}`,
-// 			expectedStatus: http.StatusBadRequest,
-// 			expectedError:  "username and password must not be empty",
-// 		},
-// 		{
-// 			name:           "Empty password",
-// 			inputJSON:      `{"username": "testuser", "password": ""}`,
-// 			expectedStatus: http.StatusBadRequest,
-// 			expectedError:  "username and password must not be empty",
-// 		},
-// 		{
-// 			name:           "User already exists",
-// 			inputJSON:      `{"username": "testuser", "password": "testpassword"}`,
-// 			expectedStatus: http.StatusBadRequest,
-// 			expectedError:  "username already exists",
-// 		},
-// 	}
+	handler := registration.NewRegistrationHandler(mockSessionUseCase, mockUserUseCase)
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
+	user := entities.User{Username: "san@boy.ru", Password: "ABC123abc123!"}
+	jsonUser, err := json.Marshal(user)
+	if err != nil {
+		assert.NoError(t, err)
+	}
 
-// 			req, err := http.NewRequest("POST", "/signup", strings.NewReader(tc.inputJSON))
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-// 			req.Header.Set("Content-Type", "application/json")
+	// Создание запроса для добавления в контекст
+	req, err := http.NewRequest("POST", "/api/signup", bytes.NewBuffer(jsonUser))
+	if err != nil {
+		assert.NoError(t, err)
+	}
 
-// 			var user entities.User
-// 			err = json.NewDecoder(req.Body).Decode(&user)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+	// Создание ResponseRecorder для записи ответа
+	rr := httptest.NewRecorder()
 
-// 			ctx := context.WithValue(req.Context(), "requestData", user)
+	t.Run("Request without request key", func(t *testing.T) {
+		userResponse, err := handler.SignUp(context.Background(), user)
 
-// 			response, err := regHandler.SignUp(ctx)
-// 			if err != nil && tc.expectedError == "" {
-// 				t.Errorf("Ошибка при вызове SignUp: %v", err)
-// 			}
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting request", err.Error())
+	})
 
-// 			assert.Equal(t, tc.expectedStatus, response.Status, "handler returned wrong status code")
+	// Добавление запроса в контекст
+	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
 
-// 			if tc.expectedError != "" {
-// 				assert.EqualError(t, err, tc.expectedError, "handler returned unexpected error message")
-// 			}
-// 		})
-// 	}
-// }
+	t.Run("Request without response writer key", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting response writer", err.Error())
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	// добавление ключа ответа в контекст
+	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, rr)
+
+	t.Run("Successful registration", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Cookie not found", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"}).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error decoding cookie", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, httperrors.HttpError{Code: http.StatusInternalServerError, Message: "error decoding cookie"}).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error getting session", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, errors.New("unexpected error")).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.Error(t, err)
+		assert.Equal(t, "unexpected error", err.Error())
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Authorized user", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, "user is already authorized", err.Error())
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Email is taken", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(true, nil).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+
+		assert.Error(t, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "username is taken", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Wrong username", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"}).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.Error(t, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "email doesn't meet requirements", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error creating user", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(errors.New("unexpected error")).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.Error(t, err)
+		assert.Equal(t, "unexpected error", err.Error())
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error getting user by email", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{}, errors.New("unexpected error")).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.Error(t, err)
+		assert.Equal(t, "unexpected error", err.Error())
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error creating session", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("IsEmailTaken", ctx, "san@boy.ru").Return(false, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("CreateUser", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(errors.New("unexpected error")).Once()
+
+		userResponse, err := handler.SignUp(ctx, user)
+		assert.Error(t, err)
+		assert.Equal(t, "unexpected error", err.Error())
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+}

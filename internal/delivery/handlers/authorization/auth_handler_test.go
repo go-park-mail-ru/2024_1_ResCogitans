@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/mocks"
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
 	"github.com/pkg/errors"
@@ -17,73 +18,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockSessionUseCase struct {
-	mock.Mock
-}
-
-func (m *MockSessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
-	args := m.Called(ctx, w, userID)
-	return args.Error(0)
-}
-
-func (m *MockSessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
-	args := m.Called(ctx, r)
-	return args.Int(0), args.Error(1)
-}
-
-func (m *MockSessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	args := m.Called(ctx, w, r)
-	return args.Error(0)
-}
-
-type MockUserUseCase struct {
-	mock.Mock
-}
-
-func (m *MockUserUseCase) CreateUser(ctx context.Context, email string, password string) error {
-	args := m.Called(ctx, email, password)
-	return args.Error(0)
-}
-
-func (m *MockUserUseCase) GetUserByEmail(ctx context.Context, email string) (entities.User, error) {
-	args := m.Called(ctx, email)
-	return args.Get(0).(entities.User), args.Error(1)
-}
-
-func (m *MockUserUseCase) GetUserByID(ctx context.Context, userID int) (entities.User, error) {
-	args := m.Called(ctx, userID)
-	return args.Get(0).(entities.User), args.Error(1)
-}
-
-func (m *MockUserUseCase) DeleteUser(ctx context.Context, userID int) error {
-	args := m.Called(ctx, userID)
-	return args.Error(0)
-}
-
-func (m *MockUserUseCase) UserDataVerification(email, password string) error {
-	args := m.Called(email, password)
-	return args.Error(0)
-}
-
-func (m *MockUserUseCase) ChangePassword(ctx context.Context, userID int, password string) (entities.User, error) {
-	args := m.Called(ctx, userID, password)
-	return args.Get(0).(entities.User), args.Error(1)
-}
-
-func (m *MockUserUseCase) UserExists(ctx context.Context, email, password string) error {
-	args := m.Called(ctx, email, password)
-	return args.Error(0)
-}
-
-func (m *MockUserUseCase) IsEmailTaken(ctx context.Context, email string) (bool, error) {
-	args := m.Called(ctx, email)
-	return args.Bool(0), args.Error(1)
-}
-
 // Тесты для авторизации
 func TestAuthorizationHandler_Authorize(t *testing.T) {
-	mockSessionUseCase := new(MockSessionUseCase)
-	mockUserUseCase := new(MockUserUseCase)
+	mockSessionUseCase := new(mocks.MockSessionUseCase)
+	mockUserUseCase := new(mocks.MockUserUseCase)
 
 	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
 
@@ -93,6 +31,7 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
+	// Создание запроса для добавления в контекст
 	req, err := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonUser))
 	if err != nil {
 		assert.NoError(t, err)
@@ -329,8 +268,8 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 
 // Тесты для выхода из аккаунта
 func TestAuthorizationHandler_LogOut(t *testing.T) {
-	mockSessionUseCase := new(MockSessionUseCase)
-	mockUserUseCase := new(MockUserUseCase)
+	mockSessionUseCase := new(mocks.MockSessionUseCase)
+	mockUserUseCase := new(mocks.MockUserUseCase)
 
 	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
 
@@ -432,8 +371,8 @@ func TestAuthorizationHandler_LogOut(t *testing.T) {
 
 // Тесты для обновления пароля
 func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
-	mockSessionUseCase := new(MockSessionUseCase)
-	mockUserUseCase := new(MockUserUseCase)
+	mockSessionUseCase := new(mocks.MockSessionUseCase)
+	mockUserUseCase := new(mocks.MockUserUseCase)
 
 	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
 
