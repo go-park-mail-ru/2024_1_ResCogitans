@@ -10,7 +10,9 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/handlers/authorization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -78,82 +80,465 @@ func (m *MockUserUseCase) IsEmailTaken(ctx context.Context, email string) (bool,
 	return args.Bool(0), args.Error(1)
 }
 
+// Тесты для авторизации
 func TestAuthorizationHandler_Authorize(t *testing.T) {
-	println("________________________________________________________________________")
 	mockSessionUseCase := new(MockSessionUseCase)
 	mockUserUseCase := new(MockUserUseCase)
 
 	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
 
-	// Тест успешной авторизации
-	mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-	mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-	mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-	mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	// Создаем тестовый запрос
 	user := entities.User{Username: "san@boy.ru", Password: "ABC123abc123!"}
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
-		t.Fatal(err)
+		assert.NoError(t, err)
 	}
 
 	req, err := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonUser))
 	if err != nil {
-		t.Fatal(err)
+		assert.NoError(t, err)
 	}
 
-	// Создаем ResponseRecorder для записи ответа
+	// Создание ResponseRecorder для записи ответа
 	rr := httptest.NewRecorder()
 
-	// Добавляем запрос в контекст
+	t.Run("Request without request key", func(t *testing.T) {
+		userResponse, err := handler.Authorize(context.Background(), user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting request", err.Error())
+	})
+
+	// Добавление запроса в контекст
 	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
+
+	t.Run("Request without response writer key", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting response writer", err.Error())
+	})
+
+	// добавление ключа ответа в контекст
 	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, rr)
 
-	userResponse, err := handler.Authorize(ctx, user)
-	assert.NoError(t, err)
-	assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
-	// Проверяем код ответа
-	assert.Equal(t, http.StatusOK, rr.Code)
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
 
-	// Проверяем, что методы были вызваны с правильными аргументами
-	mockSessionUseCase.AssertExpectations(t)
-	mockUserUseCase.AssertExpectations(t)
+	t.Run("Successful authorization", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Wrong username", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"})
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		assert.IsType(t, httperrors.HttpError{}, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "user not found", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Incorrect username", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"})
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		assert.IsType(t, httperrors.HttpError{}, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "email doesn't meet requirements", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Incorrect password", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "password doesn't meet requirements"})
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		assert.IsType(t, httperrors.HttpError{}, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "password doesn't meet requirements", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Failed getting user by username", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{}, httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"})
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		assert.IsType(t, httperrors.HttpError{}, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "user not found", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Failed creating session", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("unexpected error"))
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "unexpected error", httpError.Message)
+		assert.Equal(t, http.StatusInternalServerError, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Cookie not found", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"})
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error decoding cookie", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, errors.New("error decoding cookie"))
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boy.ru"}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Unexpected error getting session", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, errors.New("unexpected error"))
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "unexpected error", httpError.Message)
+		assert.Equal(t, http.StatusInternalServerError, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("User is already authorised", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
+		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		userResponse, err := handler.Authorize(ctx, user)
+
+		assert.Error(t, err)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "user is already authorized", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
 }
 
-// Тесты для LogOut
-//func TestAuthorizationHandler_LogOut(t *testing.T) {
-//	mockSessionUseCase := new(MockSessionUseCase)
-//	mockUserUseCase := new(MockUserUseCase)
-//
-//	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
-//
-//	// Тест успешного выхода из системы
-//	mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
-//	mockSessionUseCase.On("ClearSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-//
-//	_, err := handler.LogOut(context.Background(), entities.User{})
-//	assert.NoError(t, err)
-//
-//	// Добавьте дополнительные тесты для других случаев, таких как ошибки получения сессии и ошибки очистки сессии
-//}
-//
-//// Тесты для UpdatePassword
-//func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
-//	mockSessionUseCase := new(MockSessionUseCase)
-//	mockUserUseCase := new(MockUserUseCase)
-//
-//	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
-//
-//	// Тест успешного обновления пароля
-//	mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
-//	mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-//	mockUserUseCase.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "testuser"}, nil)
-//
-//	userResponse, err := handler.UpdatePassword(context.Background(), entities.User{Username: "testuser", Password: "newpassword"})
-//	assert.NoError(t, err)
-//	assert.Equal(t, entities.UserResponse{ID: 1, Username: "testuser"}, userResponse)
-//
-//	// Добавьте дополнительные тесты для других случаев, таких как ошибки валидации данных пользователя, ошибки изменения пароля и т.д.
-//}
+// Тесты для выхода из аккаунта
+func TestAuthorizationHandler_LogOut(t *testing.T) {
+	mockSessionUseCase := new(MockSessionUseCase)
+	mockUserUseCase := new(MockUserUseCase)
+
+	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
+
+	user := entities.User{}
+	jsonUser, err := json.Marshal(user)
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
+	// Создание запроса
+	req, err := http.NewRequest("POST", "/api/logout", bytes.NewBuffer(jsonUser))
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
+	// Создание ResponseRecorder для записи ответа
+	rr := httptest.NewRecorder()
+
+	t.Run("Request without request key", func(t *testing.T) {
+		userResponse, err := handler.LogOut(context.Background(), user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting request", err.Error())
+	})
+
+	// Добавление запроса в контекст
+	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
+
+	t.Run("Request without response writer key", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+
+		userResponse, err := handler.LogOut(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting response writer", err.Error())
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	// добавление ключа ответа в контекст
+	ctx = context.WithValue(ctx, httputils.ResponseWriterKey, rr)
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Cookie not found", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusUnauthorized, Message: "cookie not found"})
+
+		userResponse, err := handler.LogOut(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "cookie not found", httpError.Message)
+		assert.Equal(t, http.StatusUnauthorized, httpError.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error clearing session", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
+		mockSessionUseCase.On("ClearSession", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error clearing session"))
+
+		userResponse, err := handler.LogOut(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "error clearing session", httpError.Message)
+		assert.Equal(t, http.StatusInternalServerError, httpError.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Success log out", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
+		mockSessionUseCase.On("ClearSession", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		userResponse, err := handler.LogOut(ctx, user)
+
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+}
+
+// Тесты для обновления пароля
+func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
+	mockSessionUseCase := new(MockSessionUseCase)
+	mockUserUseCase := new(MockUserUseCase)
+
+	handler := authorization.NewAuthorizationHandler(mockSessionUseCase, mockUserUseCase)
+
+	user := entities.User{Username: "san@boys.ru", Password: "ABC123abc1234!"}
+	jsonUser, err := json.Marshal(user)
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
+	req, err := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonUser))
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
+	t.Run("Request without request key", func(t *testing.T) {
+		userResponse, err := handler.UpdatePassword(context.Background(), user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		assert.Equal(t, "failed getting request", err.Error())
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	// Добавление запроса в контекст
+	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
+
+	t.Run("Cookie nit found", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"}).Once()
+
+		userResponse, err := handler.UpdatePassword(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "cookie not found", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Incorrect username", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"}).Once()
+
+		userResponse, err := handler.UpdatePassword(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "email doesn't meet requirements", httpError.Message)
+		assert.Equal(t, http.StatusBadRequest, httpError.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Error changing password", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
+		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil).Once()
+		mockUserUseCase.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(entities.User{}, errors.New("failed changing password")).Once()
+
+		userResponse, err := handler.UpdatePassword(ctx, user)
+
+		assert.Error(t, err)
+		assert.Equal(t, entities.UserResponse{}, userResponse)
+		httpError := httperrors.UnwrapHttpError(err)
+		assert.Equal(t, "failed changing password", httpError.Message)
+		assert.Equal(t, http.StatusInternalServerError, httpError.Code)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+
+	mockUserUseCase.Mock.ExpectedCalls = nil
+	mockSessionUseCase.Mock.ExpectedCalls = nil
+
+	t.Run("Success changing password", func(t *testing.T) {
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boys.ru", "ABC123abc1234!").Return(nil).Once()
+		mockUserUseCase.On("ChangePassword", ctx, 1, "ABC123abc1234!").Return(entities.User{ID: 1, Username: "san@boys.ru"}, nil).Once()
+
+		userResponse, err := handler.UpdatePassword(ctx, user)
+
+		assert.NoError(t, err)
+		assert.Equal(t, entities.UserResponse{ID: 1, Username: "san@boys.ru"}, userResponse)
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
+	})
+}

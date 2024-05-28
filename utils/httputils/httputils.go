@@ -20,7 +20,7 @@ func SetRequestToCtx(ctx context.Context, r *http.Request) context.Context {
 func GetRequestFromCtx(ctx context.Context) (*http.Request, error) {
 	r, ok := ctx.Value(HttpRequestKey).(*http.Request)
 	if !ok {
-		return nil, errors.New("Failed getting request")
+		return nil, errors.New("failed getting request")
 	}
 	return r, nil
 }
@@ -44,7 +44,7 @@ func SetResponseWriterToCtx(ctx context.Context, w http.ResponseWriter) context.
 func GetResponseWriterFromCtx(ctx context.Context) (http.ResponseWriter, error) {
 	w, ok := ctx.Value(ResponseWriterKey).(http.ResponseWriter)
 	if !ok {
-		return nil, errors.New("Failed getting response writer")
+		return nil, errors.New("failed getting response writer")
 	}
 	return w, nil
 }
@@ -53,7 +53,7 @@ func GetUserFromCtx(ctx context.Context) (int, error) {
 	user := ctx.Value("userID")
 	userID, ok := user.(int)
 	if !ok {
-		return 0, errors.New("Failed getting user from context")
+		return 0, errors.New("failed getting user from context")
 	}
 	return userID, nil
 }

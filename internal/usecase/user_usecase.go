@@ -39,7 +39,7 @@ func (u *UserUseCase) CreateUser(ctx context.Context, email, password string) er
 	saltedPassword := password + salt
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("Failed creating hash password")
+		return errors.New("failed creating hash password")
 	}
 
 	err = u.UserStorage.SaveUser(ctx, email, string(hashPassword), salt)
@@ -60,10 +60,10 @@ func (u *UserUseCase) DeleteUser(ctx context.Context, userID int) error {
 
 func (u *UserUseCase) UserDataVerification(email, password string) error {
 	if !ValidateEmail(email) {
-		return httperrors.NewHttpError(http.StatusBadRequest, "Email doesn't meet requirements")
+		return httperrors.NewHttpError(http.StatusBadRequest, "email doesn't meet requirements")
 	}
 	if !ValidatePassword(password) {
-		return httperrors.NewHttpError(http.StatusBadRequest, "Password doesn't meet requirements")
+		return httperrors.NewHttpError(http.StatusBadRequest, "password doesn't meet requirements")
 	}
 
 	return nil
