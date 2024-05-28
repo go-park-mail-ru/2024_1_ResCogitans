@@ -113,11 +113,10 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
 
 	t.Run("Request without response writer key", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -133,11 +132,11 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Successful authorization", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 		assert.NoError(t, err)
@@ -152,9 +151,9 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Wrong username", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"})
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"}).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -173,8 +172,8 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Incorrect username", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"})
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"}).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -193,8 +192,8 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Incorrect password", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "password doesn't meet requirements"})
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "password doesn't meet requirements"}).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -213,10 +212,10 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Failed getting user by username", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{}, httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"})
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{}, httperrors.HttpError{Code: http.StatusBadRequest, Message: "user not found"}).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -235,11 +234,11 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Failed creating session", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("unexpected error"))
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(errors.New("unexpected error")).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -257,11 +256,11 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Cookie not found", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"})
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"}).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -276,11 +275,11 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Error decoding cookie", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, errors.New("error decoding cookie"))
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, errors.New("error decoding cookie")).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("UserExists", ctx, "san@boy.ru", "ABC123abc123!").Return(nil).Once()
+		mockUserUseCase.On("GetUserByEmail", ctx, "san@boy.ru").Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil).Once()
+		mockSessionUseCase.On("CreateSession", ctx, rr, 1).Return(nil).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -295,11 +294,7 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Unexpected error getting session", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, errors.New("unexpected error"))
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, errors.New("unexpected error")).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -317,11 +312,7 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("User is already authorised", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("UserExists", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockUserUseCase.On("GetUserByEmail", mock.Anything, mock.Anything).Return(entities.User{ID: 1, Username: "san@boy.ru"}, nil)
-		mockSessionUseCase.On("CreateSession", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
 
 		userResponse, err := handler.Authorize(ctx, user)
 
@@ -370,7 +361,7 @@ func TestAuthorizationHandler_LogOut(t *testing.T) {
 	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
 
 	t.Run("Request without response writer key", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, nil)
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, nil).Once()
 
 		userResponse, err := handler.LogOut(ctx, user)
 
@@ -389,7 +380,7 @@ func TestAuthorizationHandler_LogOut(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Cookie not found", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusUnauthorized, Message: "cookie not found"})
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, httperrors.HttpError{Code: http.StatusUnauthorized, Message: "cookie not found"}).Once()
 
 		userResponse, err := handler.LogOut(ctx, user)
 
@@ -407,8 +398,8 @@ func TestAuthorizationHandler_LogOut(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Error clearing session", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil)
-		mockSessionUseCase.On("ClearSession", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error clearing session"))
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+		mockSessionUseCase.On("ClearSession", ctx, rr, req).Return(errors.New("error clearing session")).Once()
 
 		userResponse, err := handler.LogOut(ctx, user)
 
@@ -426,8 +417,8 @@ func TestAuthorizationHandler_LogOut(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Success log out", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
-		mockSessionUseCase.On("ClearSession", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+		mockSessionUseCase.On("ClearSession", ctx, rr, req).Return(nil).Once()
 
 		userResponse, err := handler.LogOut(ctx, user)
 
@@ -472,7 +463,7 @@ func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
 	ctx := context.WithValue(req.Context(), httputils.HttpRequestKey, req)
 
 	t.Run("Cookie nit found", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"}).Once()
+		mockSessionUseCase.On("GetSession", ctx, req).Return(0, httperrors.HttpError{Code: http.StatusBadRequest, Message: "cookie not found"}).Once()
 
 		userResponse, err := handler.UpdatePassword(ctx, user)
 
@@ -490,8 +481,8 @@ func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Incorrect username", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"}).Once()
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boys.ru", "ABC123abc1234!").Return(httperrors.HttpError{Code: http.StatusBadRequest, Message: "email doesn't meet requirements"}).Once()
 
 		userResponse, err := handler.UpdatePassword(ctx, user)
 
@@ -509,9 +500,9 @@ func TestAuthorizationHandler_UpdatePassword(t *testing.T) {
 	mockSessionUseCase.Mock.ExpectedCalls = nil
 
 	t.Run("Error changing password", func(t *testing.T) {
-		mockSessionUseCase.On("GetSession", mock.Anything, mock.Anything).Return(1, nil).Once()
-		mockUserUseCase.On("UserDataVerification", mock.Anything, mock.Anything).Return(nil).Once()
-		mockUserUseCase.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(entities.User{}, errors.New("failed changing password")).Once()
+		mockSessionUseCase.On("GetSession", ctx, req).Return(1, nil).Once()
+		mockUserUseCase.On("UserDataVerification", "san@boys.ru", "ABC123abc1234!").Return(nil).Once()
+		mockUserUseCase.On("ChangePassword", ctx, 1, "ABC123abc1234!").Return(entities.User{}, errors.New("failed changing password")).Once()
 
 		userResponse, err := handler.UpdatePassword(ctx, user)
 
