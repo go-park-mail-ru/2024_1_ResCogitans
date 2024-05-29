@@ -46,6 +46,9 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, entities.UserResponse{}, userResponse)
 		assert.Equal(t, "failed getting request", err.Error())
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
 	})
 
 	// Добавление запроса в контекст
@@ -62,6 +65,9 @@ func TestAuthorizationHandler_Authorize(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, entities.UserResponse{}, userResponse)
 		assert.Equal(t, "failed getting response writer", err.Error())
+
+		mockSessionUseCase.AssertExpectations(t)
+		mockUserUseCase.AssertExpectations(t)
 	})
 
 	// добавление ключа ответа в контекст

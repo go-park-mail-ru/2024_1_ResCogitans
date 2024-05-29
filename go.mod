@@ -3,7 +3,6 @@ module github.com/go-park-mail-ru/2024_1_ResCogitans
 go 1.22.0
 
 require (
-	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/securecookie v1.1.2

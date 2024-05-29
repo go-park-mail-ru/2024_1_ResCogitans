@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// GetPostgress gets connection to postgres database
+// GetPostgres gets connection to postgres database
 func GetPostgres() (*pgxpool.Pool, error) {
 	log := logger.Logger()
 

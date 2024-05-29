@@ -41,7 +41,16 @@ TODO - _UX_
 * файл должен содержать абсолютный путь до файла конфигурации yaml
 * файл должен лежать рядом с main.go
 
-## 1. Запуск
+## 2. Поднятие баз данных через docker
+
+### Postgres
+`docker build -t cogitans .`<br>
+`docker run -d --name <name> -p 5433:5432 <name>`
+
+### Redis
+`docker run -d --name <name> -p 6379:6379 redis redis-server --requirepass <password>`
+
+## 3. Запуск
 * go run .
 ## 4. Деплой
 * [Сайт](http://jantugan.ru)
