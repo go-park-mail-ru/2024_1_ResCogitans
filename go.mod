@@ -3,7 +3,6 @@ module github.com/go-park-mail-ru/2024_1_ResCogitans
 go 1.22.0
 
 require (
-	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/securecookie v1.1.2
@@ -32,6 +31,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect

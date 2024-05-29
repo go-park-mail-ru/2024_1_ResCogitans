@@ -11,14 +11,14 @@ import (
 )
 
 type QuizHandler struct {
-	questionUseCase *usecase.QuestionUseCase
-	commentUseCase  *usecase.CommentUseCase
-	journeyUseCase  *usecase.JourneyUseCase
+	questionUseCase usecase.QuestionUseCaseInterface
+	commentUseCase  usecase.CommentUseCaseInterface
+	journeyUseCase  usecase.JourneyUseCaseInterface
 }
 
-func NewQuizHandler(questionUseCase *usecase.QuestionUseCase,
-	commentUseCase *usecase.CommentUseCase,
-	journeyUseCase *usecase.JourneyUseCase) *QuizHandler {
+func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface,
+	commentUseCase usecase.CommentUseCaseInterface,
+	journeyUseCase usecase.JourneyUseCaseInterface) *QuizHandler {
 	return &QuizHandler{
 		questionUseCase: questionUseCase,
 		commentUseCase:  commentUseCase,
@@ -32,7 +32,7 @@ func (h *QuizHandler) CreateReview(ctx context.Context, requestData entities.Rev
 		return false, err
 	}
 	if userID == 0 {
-		return false, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
+		return false, httperrors.NewHttpError(http.StatusUnauthorized, "permission denied")
 	}
 
 	err = h.questionUseCase.CreateReview(ctx, userID, requestData)
@@ -89,7 +89,7 @@ func (h *QuizHandler) SetStat(ctx context.Context, _ entities.Statistic) ([]enti
 		return []entities.Statistic{}, err
 	}
 	if userID == 0 {
-		return []entities.Statistic{}, httperrors.NewHttpError(http.StatusUnauthorized, "Permission denied")
+		return []entities.Statistic{}, httperrors.NewHttpError(http.StatusUnauthorized, "permission denied")
 	}
 
 	stat, err := h.questionUseCase.SetStat(ctx, userID)

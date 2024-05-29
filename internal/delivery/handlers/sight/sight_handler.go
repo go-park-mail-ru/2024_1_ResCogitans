@@ -7,13 +7,14 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
+	"github.com/pkg/errors"
 )
 
 type SightHandler struct {
-	SightUseCase *usecase.SightUseCase
+	SightUseCase usecase.SightUseCaseInterface
 }
 
-func NewSightsHandler(usecase *usecase.SightUseCase) *SightHandler {
+func NewSightsHandler(usecase usecase.SightUseCaseInterface) *SightHandler {
 	return &SightHandler{
 		SightUseCase: usecase,
 	}
@@ -31,7 +32,7 @@ func (h *SightHandler) GetSight(ctx context.Context, _ entities.Sight) (entities
 	pathParams := httputils.GetPathParamsFromCtx(ctx)
 	id, err := strconv.Atoi(pathParams["id"])
 	if err != nil {
-		return entities.SightComments{}, err
+		return entities.SightComments{}, errors.Wrap(err, "error getting id from parameters")
 	}
 	sight, err := h.SightUseCase.GetSightByID(ctx, id)
 	if err != nil {

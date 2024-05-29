@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -59,7 +58,7 @@ func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			return 0, httperrors.NewHttpError(http.StatusUnauthorized, "Cookie not found")
+			return 0, httperrors.NewHttpError(http.StatusUnauthorized, "cookie not found")
 		}
 		return 0, err
 	}
@@ -68,7 +67,7 @@ func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
 		return a.SessionStorage.GetSession(ctx, sessionID)
 	}
-	return 0, fmt.Errorf("error decoding cookie: %w", err)
+	return 0, errors.New("error decoding cookie")
 }
 
 func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {

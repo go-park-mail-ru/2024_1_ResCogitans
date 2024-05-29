@@ -11,11 +11,11 @@ import (
 )
 
 type RegistrationHandler struct {
-	sessionUseCase *usecase.SessionUseCase
-	userUseCase    *usecase.UserUseCase
+	sessionUseCase usecase.SessionInterface
+	userUseCase    usecase.UserUseCaseInterface
 }
 
-func NewRegistrationHandler(sessionUseCase *usecase.SessionUseCase, userUseCase *usecase.UserUseCase) *RegistrationHandler {
+func NewRegistrationHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserUseCaseInterface) *RegistrationHandler {
 	return &RegistrationHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,
@@ -34,13 +34,13 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 	sessionID, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
 		httpError := httperrors.UnwrapHttpError(err)
-		if httpError.Message != "Session not found" && httpError.Message != "Cookie not found" && httpError.Message != "Error decoding cookie" {
+		if httpError.Message != "cookie not found" && httpError.Message != "error decoding cookie" {
 			return entities.UserResponse{}, httpError
 		}
 	}
 
 	if sessionID != 0 {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "User is already authorized")
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "user is already authorized")
 	}
 
 	taken, err := h.userUseCase.IsEmailTaken(ctx, username)
@@ -48,7 +48,7 @@ func (h *RegistrationHandler) SignUp(ctx context.Context, requestData entities.U
 		return entities.UserResponse{}, err
 	}
 	if taken {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "Username is taken")
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "username is taken")
 	}
 
 	if err := h.userUseCase.UserDataVerification(username, password); err != nil {

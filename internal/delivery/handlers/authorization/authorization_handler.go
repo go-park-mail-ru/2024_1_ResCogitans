@@ -11,11 +11,11 @@ import (
 )
 
 type AuthorizationHandler struct {
-	sessionUseCase *usecase.SessionUseCase
-	userUseCase    *usecase.UserUseCase
+	sessionUseCase usecase.SessionInterface
+	userUseCase    usecase.UserUseCaseInterface
 }
 
-func NewAuthorizationHandler(sessionUseCase *usecase.SessionUseCase, userUseCase *usecase.UserUseCase) *AuthorizationHandler {
+func NewAuthorizationHandler(sessionUseCase usecase.SessionInterface, userUseCase usecase.UserUseCaseInterface) *AuthorizationHandler {
 	return &AuthorizationHandler{
 		sessionUseCase: sessionUseCase,
 		userUseCase:    userUseCase,
@@ -33,18 +33,14 @@ func (h *AuthorizationHandler) Authorize(ctx context.Context, requestData entiti
 
 	sessionID, err := h.sessionUseCase.GetSession(ctx, request)
 	if err != nil {
-		if !httperrors.IsHttpError(err) {
-			return entities.UserResponse{}, err
-		}
-
 		httpError := httperrors.UnwrapHttpError(err)
-		if httpError.Message != "Cookie not found" && httpError.Message != "Error decoding cookie" {
+		if httpError.Message != "cookie not found" && httpError.Message != "error decoding cookie" {
 			return entities.UserResponse{}, httpError
 		}
 	}
 
 	if sessionID != 0 {
-		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "User is already authorized")
+		return entities.UserResponse{}, httperrors.NewHttpError(http.StatusBadRequest, "user is already authorized")
 	}
 
 	if err := h.userUseCase.UserDataVerification(username, password); err != nil {
