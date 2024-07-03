@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/initialization"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/server"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/router"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"google.golang.org/grpc"
@@ -21,9 +23,9 @@ func main() {
 	}
 	logger.Info("Start config")
 
-	conn, err := grpc.Dial("localhost:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.SessionService.Host, cfg.SessionService.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		logger.Error("did not connect: %v", err)
 	}
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
@@ -32,13 +34,16 @@ func main() {
 		}
 	}(conn)
 
-	pdb, rdb, cdb, err := initialization.DataBaseInitialization()
+	postgresDB, CSRFDB, err := initialization.DataBaseInitialization()
 	if err != nil {
 		logger.Error("DataBase initialization error", "error", err)
+		return
 	}
 
-	storages := initialization.StorageInit(pdb, rdb, cdb)
-	usecases := initialization.UseCaseInit(storages, conn)
+	SessionUseCase := usecase.NewSessionUseCase(conn)
+
+	storages := initialization.StorageInit(postgresDB, CSRFDB)
+	usecases := initialization.UseCaseInit(storages, SessionUseCase)
 	handlers := initialization.HandlerInit(usecases)
 
 	router := router.SetupRouter(cfg, handlers)

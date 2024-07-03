@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/gen"
 	"google.golang.org/grpc"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/service/gen"
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
-	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 )
@@ -37,18 +36,13 @@ func NewSessionUseCase(conn *grpc.ClientConn) *SessionUseCase {
 }
 
 func (s *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
-	sessionID := uuid.New().String()
 	response, err := s.client.CreateSession(ctx, &gen.SaveSessionRequest{
-		SessionID: sessionID,
-		UserID:    int32(userID),
+		UserID: int32(userID),
 	})
-	if response.Error != "" {
-		return errors.New(response.Error)
-	}
 	if err != nil {
 		return err
 	}
-	encoded, err := CookieHandler.Encode(sessionId, sessionID)
+	encoded, err := CookieHandler.Encode(sessionId, response.SessionID)
 	if err != nil {
 		return err
 	}
@@ -70,7 +64,6 @@ func (s *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 		}
 		return 0, err
 	}
-
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
 		ans, err := s.client.GetSession(ctx, &gen.GetSessionRequest{SessionID: sessionID})
@@ -79,7 +72,7 @@ func (s *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 		}
 		return int(ans.UserID), nil
 	}
-	return 0, httperrors.NewHttpError(http.StatusInternalServerError, "Error decoding cookie")
+	return 0, httperrors.NewHttpError(http.StatusInternalServerError, err.Error())
 }
 
 func (s *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {

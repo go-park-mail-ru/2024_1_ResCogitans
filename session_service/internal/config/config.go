@@ -1,4 +1,4 @@
-package cfg
+package config
 
 import (
 	"os"
@@ -9,15 +9,21 @@ import (
 )
 
 type Config struct {
-	Env   string `yaml:"env" env:"ENV" env-required:"true"`
-	Redis `yaml:"redis"`
+	Env    string `yaml:"env" env:"ENV" env-required:"true"`
+	Redis  `yaml:"redis"`
+	Server `yaml:"server"`
 }
 
 type Redis struct {
-	Host     string `yaml:"host" env:"DB_REDIS_HOST"`
-	Port     int    `yaml:"port" env:"DB_REDIS_PORT"`
-	DB       int    `yaml:"db" env:"DB_REDIS_DB"`
-	Password string `yaml:"password" env:"DB_REDIS_PASSWORD"`
+	Host     string `yaml:"host" env:"DB_SESSION_HOST"`
+	Port     int    `yaml:"port" env:"DB_SESSION_PORT"`
+	DB       int    `yaml:"db" env:"DB_SESSION_DB"`
+	Password string `yaml:"password" env:"DB_SESSION_PASSWORD"`
+}
+
+type Server struct {
+	Protocol string `yaml:"protocol" env:"SERVICE_PROTOCOL"`
+	Port     string `yaml:"port" env:"SERVICE_PORT"`
 }
 
 func LoadConfig() (*Config, error) {

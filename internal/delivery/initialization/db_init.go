@@ -6,16 +6,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func DataBaseInitialization() (*pgxpool.Pool, *redis.Client, *redis.Client, error) {
+func DataBaseInitialization() (*pgxpool.Pool, *redis.Client, error) {
 	pdb, err := db.GetPostgres()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	rdb, err := db.GetRedis()
 	if err != nil {
 		pdb.Close()
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	cdb, err := db.GetCSRFRedis()
@@ -24,5 +24,5 @@ func DataBaseInitialization() (*pgxpool.Pool, *redis.Client, *redis.Client, erro
 		_ = rdb.Close()
 	}
 
-	return pdb, rdb, cdb, nil
+	return pdb, cdb, nil
 }

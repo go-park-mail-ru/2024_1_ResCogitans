@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package service;
+package session;
 
-option go_package = "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/service/gen;gen";
+option go_package = "session_service/gen";
 
 service SessionService {
   rpc CreateSession (SaveSessionRequest) returns (SaveSessionResponse);
@@ -11,12 +11,11 @@ service SessionService {
 }
 
 message SaveSessionRequest {
-  string sessionID = 1;
-  int32 userID = 2;
+  int32 userID = 1;
 }
 
 message SaveSessionResponse {
-  string error = 1;
+  string sessionID = 1;
 }
 
 message GetSessionRequest {
@@ -25,7 +24,6 @@ message GetSessionRequest {
 
 message GetSessionResponse {
   int32 userID = 1;
-  string error = 2;
 }
 
 message DeleteSessionRequest {
@@ -33,5 +31,4 @@ message DeleteSessionRequest {
 }
 
 message DeleteSessionResponse {
-  string error = 1;
 }

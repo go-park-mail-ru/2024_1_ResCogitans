@@ -2,12 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v5.26.1
-// source: session_service.proto
+// source: session.proto
 
 package gen
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,9 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SessionService_CreateSession_FullMethodName = "/service.SessionService/CreateSession"
-	SessionService_GetSession_FullMethodName    = "/service.SessionService/GetSession"
-	SessionService_DeleteSession_FullMethodName = "/service.SessionService/DeleteSession"
+	SessionService_CreateSession_FullMethodName = "/session.SessionService/CreateSession"
+	SessionService_GetSession_FullMethodName    = "/session.SessionService/GetSession"
+	SessionService_DeleteSession_FullMethodName = "/session.SessionService/DeleteSession"
 )
 
 // SessionServiceClient is the client API for SessionService service.
@@ -162,7 +163,7 @@ func _SessionService_DeleteSession_Handler(srv interface{}, ctx context.Context,
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SessionService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "service.SessionService",
+	ServiceName: "session.SessionService",
 	HandlerType: (*SessionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -179,5 +180,5 @@ var SessionService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "session_service.proto",
+	Metadata: "session.proto",
 }

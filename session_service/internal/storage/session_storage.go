@@ -1,4 +1,4 @@
-package session
+package storage
 
 import (
 	"context"
@@ -8,6 +8,12 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
+
+type SessionStorageInterface interface {
+	SaveSession(ctx context.Context, sessionID string, userID int) error
+	GetSession(ctx context.Context, sessionID string) (int, error)
+	DeleteSession(ctx context.Context, sessionID string) error
+}
 
 type RedisStorage struct {
 	client *redis.Client

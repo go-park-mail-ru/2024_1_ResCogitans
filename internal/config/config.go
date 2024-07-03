@@ -13,6 +13,7 @@ type Config struct {
 	Env            string `yaml:"env" env:"ENV" env-required:"true"`
 	StoragePath    string `yaml:"storage_path" env-required:"true"`
 	HTTPServer     `yaml:"http_server"`
+	SessionService `yaml:"session_service"`
 	Dsn            `yaml:"dsn"`
 	Redis          `yaml:"redis"`
 	CSRF           `yaml:"csrf"`
@@ -25,6 +26,11 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 	User        string        `yaml:"user" env-required:"true"`
 	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
+}
+
+type SessionService struct {
+	Host string `env:"SESSION_HOST"`
+	Port int    `env:"SESSION_PORT"`
 }
 
 type Dsn struct {

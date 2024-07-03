@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	cfg "github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/config"
+	cfg "github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/internal/config"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -18,7 +18,7 @@ func GetSessionRedis() (*redis.Client, error) {
 		DB:       config.Redis.DB,
 	})
 
-	// Проверяем соединение с Redis
+	// Проверка соединения с Redis
 	_, err = rdb.Ping(rdb.Context()).Result()
 	if err != nil {
 		return nil, err

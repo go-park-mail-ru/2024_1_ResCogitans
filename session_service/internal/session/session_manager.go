@@ -2,43 +2,34 @@ package session
 
 import (
 	"context"
-	"strconv"
-	"time"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/service/gen"
-	"github.com/go-redis/redis/v8"
-	"github.com/pkg/errors"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/gen"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/internal/storage"
+	"github.com/google/uuid"
 )
 
 type SessionManager struct {
 	gen.UnimplementedSessionServiceServer
-	storage *redis.Client
+	storage *storage.RedisStorage
 }
 
-func NewSessionManager(client *redis.Client) *SessionManager {
+func NewSessionManager(storage *storage.RedisStorage) *SessionManager {
 	return &SessionManager{
-		storage: client,
+		storage: storage,
 	}
 }
 
 func (sm *SessionManager) CreateSession(ctx context.Context, req *gen.SaveSessionRequest) (*gen.SaveSessionResponse, error) {
-	err := sm.storage.Set(ctx, req.SessionID, req.UserID, 24*time.Hour).Err()
+	sessionID := uuid.New().String()
+	err := sm.storage.SaveSession(ctx, sessionID, int(req.UserID))
 	if err != nil {
 		return nil, err
 	}
-	println("created session")
-	return &gen.SaveSessionResponse{}, nil
+	return &gen.SaveSessionResponse{SessionID: sessionID}, nil
 }
 
 func (sm *SessionManager) GetSession(ctx context.Context, req *gen.GetSessionRequest) (*gen.GetSessionResponse, error) {
-	userIDStr, err := sm.storage.Get(ctx, req.SessionID).Result()
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, errors.New("session not found")
-		}
-		return nil, err
-	}
-	userID, err := strconv.Atoi(userIDStr)
+	userID, err := sm.storage.GetSession(ctx, req.SessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +37,7 @@ func (sm *SessionManager) GetSession(ctx context.Context, req *gen.GetSessionReq
 }
 
 func (sm *SessionManager) DeleteSession(ctx context.Context, req *gen.DeleteSessionRequest) (*gen.DeleteSessionResponse, error) {
-	err := sm.storage.Del(ctx, req.SessionID).Err()
+	err := sm.storage.DeleteSession(ctx, req.SessionID)
 	if err != nil {
 		return nil, err
 	}
