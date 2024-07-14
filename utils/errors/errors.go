@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slog"
 )
 
 type HttpError struct {
@@ -42,22 +42,22 @@ func IsHttpError(err error) bool {
 
 var errInternalBytes = []byte(`{"error": "internal error"}`)
 
-func WriteHttpError(errIn error, w http.ResponseWriter) {
+func WriteHttpError(errIn error, w http.ResponseWriter, logger *slog.Logger) {
 	httpError := UnwrapHttpError(errIn)
 	w.Header().Add("Content-Type", "application/json")
 	bytes, err := json.Marshal(httpError)
 	if err != nil {
-		logger.Logger().Error("error marshal err", "error", err.Error())
+		logger.Error("error marshal err", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, writeErr := w.Write(errInternalBytes); writeErr != nil {
-			logger.Logger().Error("error writing fallback error", "error", writeErr.Error())
+			logger.Error("error writing fallback error", "error", writeErr.Error())
 		}
 		return
 	}
 
 	w.WriteHeader(httpError.Code)
 	if _, writeErr := w.Write(bytes); writeErr != nil {
-		logger.Logger().Error("error writing http error", "error", writeErr)
+		logger.Error("error writing http error", "error", writeErr)
 		return
 	}
 }

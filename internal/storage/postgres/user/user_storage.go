@@ -2,9 +2,13 @@ package user
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
+	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pkg/errors"
 )
 
 // UserStorage struct
@@ -47,6 +51,9 @@ func (us *UserStorage) GetUserByEmail(ctx context.Context, email string) (entiti
 	var user entities.User
 	err := us.db.QueryRow(ctx, `SELECT id, email, passwrd, salt FROM user_data WHERE email = $1`, email).Scan(&user.ID, &user.Username, &user.Password, &user.Salt)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return entities.User{}, httperrors.NewHttpError(http.StatusBadRequest, "user not found")
+		}
 		return entities.User{}, err
 	}
 	return user, nil

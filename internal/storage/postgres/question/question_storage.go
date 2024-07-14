@@ -6,7 +6,6 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -42,7 +41,6 @@ func (qs *QuestionStorage) GetQuestions(ctx context.Context) ([]entities.Questio
 	var questions []*entities.QuestionResponse
 	err := pgxscan.Select(ctx, qs.db, &questions, `SELECT id AS question_id, text FROM question ORDER BY question_id`)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return []entities.QuestionResponse{}, err
 	}
 
@@ -59,7 +57,6 @@ func (qs *QuestionStorage) GetReview(ctx context.Context, userID int) ([]entitie
 	err := pgxscan.Select(ctx, qs.db, &review, `SELECT user_id, rating, question_id, created_at FROM quiz WHERE user_id = $1`, userID)
 
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return []entities.Review{}, err
 	}
 
@@ -79,7 +76,6 @@ func (qs *QuestionStorage) SetStat(ctx context.Context, userID int) ([]entities.
 -- 	WHERE user_id = $1 
 	GROUP BY r.question_id, q.text, r.rating`, userID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return []entities.Statistic{}, err
 	}
 
@@ -99,7 +95,6 @@ func (qs *QuestionStorage) GetAvgStat(ctx context.Context) ([]entities.Statistic
   GROUP BY q.id, r.question_id, q.text
   ORDER BY q.id`)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return []entities.Statistic{}, err
 	}
 
@@ -119,7 +114,6 @@ func (qs *QuestionStorage) GetUserStat(ctx context.Context, userID int) ([]entit
   WHERE user_id = $1
   ORDER BY q.id `, userID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return []entities.Statistic{}, err
 	}
 

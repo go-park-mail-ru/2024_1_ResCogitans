@@ -10,10 +10,10 @@ import (
 )
 
 type JourneyHandler struct {
-	JourneyUseCase *usecase.JourneyUseCase
+	JourneyUseCase usecase.JourneyUseCaseInterface
 }
 
-func NewJourneyHandler(usecase *usecase.JourneyUseCase) *JourneyHandler {
+func NewJourneyHandler(usecase usecase.JourneyUseCaseInterface) *JourneyHandler {
 	return &JourneyHandler{
 		JourneyUseCase: usecase,
 	}

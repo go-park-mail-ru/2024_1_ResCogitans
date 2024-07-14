@@ -2,13 +2,13 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
-	storage "github.com/go-park-mail-ru/2024_1_ResCogitans/internal/storage/storage_interfaces"
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/session_service/gen"
+	"google.golang.org/grpc"
+
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
-	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 )
@@ -26,22 +26,23 @@ type SessionInterface interface {
 }
 
 type SessionUseCase struct {
-	SessionStorage storage.SessionStorageInterface
+	client gen.SessionServiceClient
 }
 
-func NewSessionUseCase(storage storage.SessionStorageInterface) *SessionUseCase {
+func NewSessionUseCase(conn *grpc.ClientConn) *SessionUseCase {
 	return &SessionUseCase{
-		SessionStorage: storage,
+		client: gen.NewSessionServiceClient(conn),
 	}
 }
 
-func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
-	sessionID := uuid.New().String()
-	err := a.SessionStorage.SaveSession(ctx, sessionID, userID)
+func (s *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWriter, userID int) error {
+	response, err := s.client.CreateSession(ctx, &gen.SaveSessionRequest{
+		UserID: int32(userID),
+	})
 	if err != nil {
 		return err
 	}
-	encoded, err := CookieHandler.Encode(sessionId, sessionID)
+	encoded, err := CookieHandler.Encode(sessionId, response.SessionID)
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func (a *SessionUseCase) CreateSession(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
+func (s *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, error) {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
@@ -63,15 +64,18 @@ func (a *SessionUseCase) GetSession(ctx context.Context, r *http.Request) (int, 
 		}
 		return 0, err
 	}
-
 	var sessionID string
 	if err = CookieHandler.Decode(sessionId, cookie.Value, &sessionID); err == nil {
-		return a.SessionStorage.GetSession(ctx, sessionID)
+		ans, err := s.client.GetSession(ctx, &gen.GetSessionRequest{SessionID: sessionID})
+		if err != nil {
+			return 0, err
+		}
+		return int(ans.UserID), nil
 	}
-	return 0, fmt.Errorf("error decoding cookie: %w", err)
+	return 0, httperrors.NewHttpError(http.StatusInternalServerError, err.Error())
 }
 
-func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (s *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(sessionId)
 	if err != nil {
 		return err
@@ -82,7 +86,7 @@ func (a *SessionUseCase) ClearSession(ctx context.Context, w http.ResponseWriter
 	if err != nil {
 		return err
 	}
-	err = a.SessionStorage.DeleteSession(ctx, sessionID)
+	_, err = s.client.DeleteSession(ctx, &gen.DeleteSessionRequest{SessionID: sessionID})
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,7 +27,6 @@ func (cs *CommentStorage) GetCommentsBySightID(ctx context.Context, id int) ([]e
     			ON f.user_id = p.user_id 
     			WHERE sight_id =  $1`, id)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return nil, err
 	}
 
@@ -46,7 +44,6 @@ func (cs *CommentStorage) GetCommentsByUserID(ctx context.Context, userID int) (
 		`SELECT f.id, f.user_id, f.sight_id, f.rating, f.feedback FROM feedback AS f 
                 WHERE user_id =  $1 `, userID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return nil, err
 	}
 
@@ -72,7 +69,6 @@ func (cs *CommentStorage) EditComment(ctx context.Context, commentID int, commen
 func (cs *CommentStorage) DeleteComment(ctx context.Context, commentID int) error {
 	_, err := cs.db.Exec(ctx, `DELETE FROM feedback WHERE id = $1`, commentID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return err
 	}
 	return nil

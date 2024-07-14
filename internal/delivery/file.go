@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slog"
 )
 
 type FileHandler struct{}
@@ -61,9 +61,7 @@ func ValidateFileSize(handler *multipart.FileHeader) bool {
 	return fileSize <= maxFileSizeBytes
 }
 
-func SaveFile(r *http.Request) (string, error) {
-	logger := logger.Logger()
-
+func SaveFile(r *http.Request, logger *slog.Logger) (string, error) {
 	r.ParseMultipartForm(10 << 20)
 	file, handler, err := r.FormFile("file")
 	if err != nil {

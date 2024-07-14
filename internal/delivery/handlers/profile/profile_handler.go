@@ -10,15 +10,15 @@ import (
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/usecase"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/wrapper"
+	"golang.org/x/exp/slog"
 )
 
 type ProfileHandler struct {
-	userProfileUseCase *usecase.ProfileUseCase
+	userProfileUseCase usecase.ProfileUseCaseInterface
 }
 
-func NewProfileHandler(userProfileUseCase *usecase.ProfileUseCase) *ProfileHandler {
+func NewProfileHandler(userProfileUseCase usecase.ProfileUseCaseInterface) *ProfileHandler {
 	return &ProfileHandler{
 		userProfileUseCase: userProfileUseCase,
 	}
@@ -60,9 +60,7 @@ func (h *ProfileHandler) Edit(ctx context.Context, requestData entities.UserProf
 }
 
 // UploadFile TODO: нужно будет убрать это инженерное решение (костыль) после фикса обертки
-func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
-	logger := logger.Logger()
-
+func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
 	userID, err := strconv.Atoi(wrapper.GetPathParams(r)["id"])
 	if err != nil {
 		logger.Error("Handler error", "error", err)
@@ -70,7 +68,7 @@ func (h *ProfileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path, err := delivery.SaveFile(r)
+	path, err := delivery.SaveFile(r, logger)
 	if err != nil {
 		logger.Error("Handler error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

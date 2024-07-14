@@ -9,11 +9,11 @@ import (
 )
 
 type AuthMiddleware struct {
-	s *usecase.SessionUseCase
-	c *usecase.CSRFUseCase
+	s usecase.SessionInterface
+	c usecase.CSRFInterface
 }
 
-func NewAuthMiddleware(session *usecase.SessionUseCase, csrf *usecase.CSRFUseCase) *AuthMiddleware {
+func NewAuthMiddleware(session usecase.SessionInterface, csrf usecase.CSRFInterface) *AuthMiddleware {
 	return &AuthMiddleware{
 		s: session,
 		c: csrf,

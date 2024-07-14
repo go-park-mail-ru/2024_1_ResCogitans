@@ -6,7 +6,6 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,13 +34,11 @@ func (js *JourneyStorage) CreateJourney(ctx context.Context, journey entities.Jo
 func (js *JourneyStorage) DeleteJourney(ctx context.Context, journeyID int) error {
 	_, err := js.db.Exec(ctx, `DELETE FROM journey_sight WHERE journey_id = $1`, journeyID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return err
 	}
 
 	_, err = js.db.Exec(ctx, `DELETE FROM journey WHERE id = $1`, journeyID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return err
 	}
 
@@ -55,7 +52,6 @@ func (js *JourneyStorage) GetJourneys(ctx context.Context, userID int) ([]entiti
     		   INNER JOIN profile_data AS p ON p.user_id = $1 
                WHERE j.user_id = $1;`, userID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return nil, err
 	}
 
@@ -72,7 +68,6 @@ func (js *JourneyStorage) AddJourneySight(ctx context.Context, journeyID int, si
 	for _, sightID := range sightIDs {
 		_, err := js.db.Exec(ctx, `INSERT INTO journey_sight(journey_id, sight_id, priority) VALUES ($1, $2, $3)`, journeyID, sightID, 0)
 		if err != nil {
-			logger.Logger().Error(err.Error())
 			return err
 		}
 	}
@@ -84,7 +79,6 @@ func (js *JourneyStorage) JourneyExists(ctx context.Context, journeyID int) (boo
 	var journeyExists bool
 	err := js.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM journey WHERE id = $1)`, journeyID).Scan(&journeyExists)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return false, err
 	}
 	return journeyExists, nil
@@ -95,7 +89,6 @@ func (js *JourneyStorage) EditJourney(ctx context.Context, journeyID int, name, 
 	var journeyExists bool
 	err := js.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM journey WHERE id = $1)`, journeyID).Scan(&journeyExists)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return err
 	}
 
@@ -106,7 +99,6 @@ func (js *JourneyStorage) EditJourney(ctx context.Context, journeyID int, name, 
 	// Обновляем имя и описание поездки
 	_, err = js.db.Exec(ctx, `UPDATE journey SET name = $1, description = $2 WHERE id = $3`, name, description, journeyID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return err
 	}
 
@@ -122,7 +114,6 @@ func (js *JourneyStorage) GetJourneySights(ctx context.Context, journeyID int) (
 	var idList []*int
 	err := pgxscan.Select(ctx, js.db, &idList, `SELECT js.sight_id FROM journey_sight AS js WHERE js.journey_id = $1`, journeyID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return nil, err
 	}
 	return idList, nil
@@ -136,7 +127,6 @@ func (js *JourneyStorage) GetJourney(ctx context.Context, journeyID int) (entiti
     			INNER JOIN profile_data AS p ON p.user_id = j.user_id 
                 WHERE j.id = $1;`, journeyID)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return entities.Journey{}, err
 	}
 	return *journey[0], nil

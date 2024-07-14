@@ -11,14 +11,14 @@ import (
 )
 
 type QuizHandler struct {
-	questionUseCase *usecase.QuestionUseCase
-	commentUseCase  *usecase.CommentUseCase
-	journeyUseCase  *usecase.JourneyUseCase
+	questionUseCase usecase.QuestionUseCaseInterface
+	commentUseCase  usecase.CommentUseCaseInterface
+	journeyUseCase  usecase.JourneyUseCaseInterface
 }
 
-func NewQuizHandler(questionUseCase *usecase.QuestionUseCase,
-	commentUseCase *usecase.CommentUseCase,
-	journeyUseCase *usecase.JourneyUseCase) *QuizHandler {
+func NewQuizHandler(questionUseCase usecase.QuestionUseCaseInterface,
+	commentUseCase usecase.CommentUseCaseInterface,
+	journeyUseCase usecase.JourneyUseCaseInterface) *QuizHandler {
 	return &QuizHandler{
 		questionUseCase: questionUseCase,
 		commentUseCase:  commentUseCase,
