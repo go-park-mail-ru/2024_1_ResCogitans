@@ -6,79 +6,48 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pkg/errors"
 )
 
-// GetPostgress gets connection to postgres database
-func GetPostgres() (*pgxpool.Pool, error) {
-	log := logger.Logger()
-
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Error("Failed to load database config", "error", err)
-		return nil, err
-	}
-
+// GetPostgres соединение с базой данных
+func GetPostgres(cfg *config.Config) (*pgxpool.Pool, error) {
 	dsn := buildDSN(cfg.Dsn)
 
+	// создание конфигурации базы данных
 	poolConfig, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		log.Error("Failed to parse database config", "error", err)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse database config")
 	}
 
-	poolConfig.MaxConns = 10
-	poolConfig.MaxConnLifetime = time.Hour
+	poolConfig.MaxConns = 10               // Максимальное число пользователей
+	poolConfig.MaxConnLifetime = time.Hour // Время жизни соединения
 
-	pool, err := pgxpool.New(context.Background(), dsn)
+	// Соединение с базой данных с использованием созданной конфигурацией
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
-		log.Error("Failed to connect to database", "error", err)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to connect to database")
 	}
 
 	return pool, nil
 }
 
+// buildDSN создание пути для базы данных
 func buildDSN(cfg config.Dsn) string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName)
 }
 
-func GetRedis() (*redis.Client, error) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return nil, err
-	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
-		Password: cfg.Redis.Password,
-		DB:       cfg.Redis.DB,
-	})
-
-	// Проверяем соединение с Redis
-	_, err = rdb.Ping(rdb.Context()).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	return rdb, nil
-}
-
-func GetCSRFRedis() (*redis.Client, error) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return nil, err
-	}
+func GetCSRFRedis(cfg *config.Config) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.CSRF.Host, cfg.CSRF.Port),
 		Password: cfg.CSRF.Password,
 		DB:       cfg.CSRF.DB,
 	})
 
-	// Проверяем соединение с Redis
-	_, err = rdb.Ping(rdb.Context()).Result()
+	// Проверка соединения с базой данных
+	_, err := rdb.Ping(rdb.Context()).Result()
 	if err != nil {
 		return nil, err
 	}

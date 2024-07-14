@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/entities"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -29,7 +28,6 @@ func (ss *SightStorage) GetSightsList(ctx context.Context) ([]entities.Sight, er
 														INNER JOIN image_data AS im 
 														ON sight.id = im.sight_id `)
 	if err != nil {
-		logger.Logger().Error(err.Error())
 		return nil, err
 	}
 

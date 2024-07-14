@@ -9,13 +9,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	httperrors "github.com/go-park-mail-ru/2024_1_ResCogitans/utils/errors"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/httputils"
-	"github.com/go-park-mail-ru/2024_1_ResCogitans/utils/logger"
+	"golang.org/x/exp/slog"
 )
 
 type ServeHTTPFunc[T Validator, Resp any] func(ctx context.Context, request T) (Resp, error)
 
 type Wrapper[T Validator, Resp any] struct {
 	ServeHTTP ServeHTTPFunc[T, Resp]
+	Logger    *slog.Logger
 }
 
 type Validator interface {
@@ -24,7 +25,6 @@ type Validator interface {
 
 func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq *http.Request) {
 	ctx := httpReq.Context()
-	logger := logger.Logger()
 
 	pathParams := GetPathParams(httpReq)
 	ctx = httputils.SetPathParamsToCtx(ctx, pathParams)
@@ -37,29 +37,29 @@ func (w *Wrapper[T, Resp]) HandlerWrapper(resWriter http.ResponseWriter, httpReq
 	if httpReq.ContentLength > 0 {
 		err := json.NewDecoder(limitedReader).Decode(&requestData)
 		if err != nil {
-			logger.Error("Error decoding request body", "error", err)
-			httperrors.WriteHttpError(err, resWriter)
+			w.Logger.Error("Error decoding request body", "error", err)
+			httperrors.WriteHttpError(err, resWriter, w.Logger)
 			return
 		}
 
 		if err = requestData.Validate(); err != nil {
-			logger.Error("Validation error", "error", err)
-			httperrors.WriteHttpError(err, resWriter)
+			w.Logger.Error("Validation error", "error", err)
+			httperrors.WriteHttpError(err, resWriter, w.Logger)
 			return
 		}
 	}
 
 	response, err := w.ServeHTTP(ctx, requestData)
 	if err != nil {
-		logger.Error("Handler error", "error", err.Error())
-		httperrors.WriteHttpError(err, resWriter)
+		w.Logger.Error("Handler error", "error", err)
+		httperrors.WriteHttpError(err, resWriter, w.Logger)
 		return
 	}
 
 	rawJSON, err := json.Marshal(response)
 	if err != nil {
-		logger.Error("Error encoding response", "error", err)
-		httperrors.WriteHttpError(err, resWriter)
+		w.Logger.Error("Error encoding response", "error", err)
+		httperrors.WriteHttpError(err, resWriter, w.Logger)
 		return
 	}
 

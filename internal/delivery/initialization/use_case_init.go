@@ -15,7 +15,7 @@ type UseCases struct {
 	SessionUseCase  usecase.SessionInterface
 }
 
-func UseCaseInit(storages *Storages, session *usecase.SessionUseCase) *UseCases {
+func UseCaseInit(storages *Storages, sessionUseCase *usecase.SessionUseCase) *UseCases {
 	return &UseCases{
 		UserUseCase:     usecase.NewUserUseCase(storages.UserStorage),
 		ProfileUseCase:  usecase.NewProfileUseCase(storages.ProfileStorage),
@@ -24,6 +24,6 @@ func UseCaseInit(storages *Storages, session *usecase.SessionUseCase) *UseCases 
 		CommentUseCase:  usecase.NewCommentUseCase(storages.CommentStorage),
 		QuestionUseCase: usecase.NewQuestionUseCase(storages.QuestionStorage),
 		CSRFUseCase:     usecase.NewCSRFUseCase(storages.CSRFStorage),
-		SessionUseCase:  session,
+		SessionUseCase:  sessionUseCase,
 	}
 }

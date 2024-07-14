@@ -1,28 +1,31 @@
 package initialization
 
 import (
+	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/config"
 	"github.com/go-park-mail-ru/2024_1_ResCogitans/internal/delivery/db"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func DataBaseInitialization() (*pgxpool.Pool, *redis.Client, error) {
-	pdb, err := db.GetPostgres()
+type DBs struct {
+	PostgresDB *pgxpool.Pool
+	CsrfDB     *redis.Client
+}
+
+// DataBaseInitialization Инициализация баз данных
+func DataBaseInitialization(cfg *config.Config) (*DBs, error) {
+	postgresDB, err := db.GetPostgres(cfg) // Инициализация основной базы данных
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	rdb, err := db.GetRedis()
+	csrfDB, err := db.GetCSRFRedis(cfg) // Инициализация базы данных для csrf
 	if err != nil {
-		pdb.Close()
-		return nil, nil, err
+		postgresDB.Close()
+		return nil, err
 	}
-
-	cdb, err := db.GetCSRFRedis()
-	if err != nil {
-		pdb.Close()
-		_ = rdb.Close()
-	}
-
-	return pdb, cdb, nil
+	return &DBs{
+		PostgresDB: postgresDB,
+		CsrfDB:     csrfDB,
+	}, nil
 }
